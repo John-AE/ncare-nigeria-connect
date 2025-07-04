@@ -1,9 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import PatientRegistrationForm from "../PatientRegistrationForm";
+import { useAuth } from "../AuthProvider";
 
 const NurseDashboard = () => {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { profile } = useAuth();
+  const [showPatientForm, setShowPatientForm] = useState(false);
 
   const quickStats = [
     { label: "Patients Today", value: "12", color: "bg-primary" },
@@ -23,7 +27,7 @@ const NurseDashboard = () => {
       {/* Header */}
       <div className="border-b border-border pb-4">
         <h1 className="text-3xl font-bold text-foreground">Nurse Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, {user.username}</p>
+        <p className="text-muted-foreground">Welcome back, {profile?.username}</p>
       </div>
 
       {/* Quick Stats */}
@@ -53,7 +57,11 @@ const NurseDashboard = () => {
             <CardDescription>Register new patients and manage records</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start" size="lg">
+            <Button 
+              className="w-full justify-start" 
+              size="lg"
+              onClick={() => setShowPatientForm(true)}
+            >
               Register New Patient
             </Button>
             <Button variant="outline" className="w-full justify-start" size="lg">
@@ -124,6 +132,11 @@ const NurseDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <PatientRegistrationForm
+        isOpen={showPatientForm}
+        onClose={() => setShowPatientForm(false)}
+      />
     </div>
   );
 };

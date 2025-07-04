@@ -10,14 +10,19 @@ import DoctorDashboard from "./components/dashboards/DoctorDashboard";
 import NurseDashboard from "./components/dashboards/NurseDashboard";
 import FinanceDashboard from "./components/dashboards/FinanceDashboard";
 import Layout from "./components/Layout";
+import { AuthProvider, useAuth } from "./components/AuthProvider";
 
 const queryClient = new QueryClient();
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode; allowedRole: string }) => {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user, profile, loading } = useAuth();
   
-  if (!user.username || user.role !== allowedRole) {
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+  
+  if (!user || !profile || profile.role !== allowedRole) {
     return <LoginPage />;
   }
   
@@ -26,42 +31,44 @@ const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode; 
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route 
-            path="/doctor-dashboard" 
-            element={
-              <ProtectedRoute allowedRole="doctor">
-                <DoctorDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/nurse-dashboard" 
-            element={
-              <ProtectedRoute allowedRole="nurse">
-                <NurseDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/finance-dashboard" 
-            element={
-              <ProtectedRoute allowedRole="finance">
-                <FinanceDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route 
+              path="/doctor-dashboard" 
+              element={
+                <ProtectedRoute allowedRole="doctor">
+                  <DoctorDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/nurse-dashboard" 
+              element={
+                <ProtectedRoute allowedRole="nurse">
+                  <NurseDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/finance-dashboard" 
+              element={
+                <ProtectedRoute allowedRole="finance">
+                  <FinanceDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

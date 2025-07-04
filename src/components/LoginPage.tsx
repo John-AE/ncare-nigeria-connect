@@ -6,21 +6,23 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "./AuthProvider";
 
 type UserRole = "doctor" | "nurse" | "finance";
 
 const LoginPage = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<UserRole | "">("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showDemoAccounts, setShowDemoAccounts] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, profile } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!username || !password || !role) {
+    if (!email || !password) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields",
@@ -31,40 +33,73 @@ const LoginPage = () => {
 
     setIsLoading(true);
     
-    // Simulate authentication - in real app, this would call an API
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      const { error } = await signIn(email, password);
       
-      // For demo purposes, accept any credentials
-      localStorage.setItem("user", JSON.stringify({ username, role }));
-      
-      toast({
-        title: "Login Successful",
-        description: `Welcome, ${username}!`
-      });
-
-      // Redirect based on role
-      switch (role) {
-        case "doctor":
-          navigate("/doctor-dashboard");
-          break;
-        case "nurse":
-          navigate("/nurse-dashboard");
-          break;
-        case "finance":
-          navigate("/finance-dashboard");
-          break;
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message || "Invalid credentials. Please try again.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!"
+        });
       }
     } catch (error) {
       toast({
         title: "Login Failed",
-        description: "Invalid credentials. Please try again.",
+        description: "An unexpected error occurred.",
         variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const loginWithDemo = async (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setIsLoading(true);
+    
+    try {
+      const { error } = await signIn(demoEmail, demoPassword);
+      
+      if (error) {
+        toast({
+          title: "Demo Login Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Demo Login Failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Redirect if already logged in and profile is loaded
+  if (profile) {
+    switch (profile.role) {
+      case "doctor":
+        navigate("/doctor-dashboard");
+        break;
+      case "nurse":
+        navigate("/nurse-dashboard");
+        break;
+      case "finance":
+        navigate("/finance-dashboard");
+        break;
+    }
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
@@ -83,13 +118,13 @@ const LoginPage = () => {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -106,20 +141,6 @@ const LoginPage = () => {
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="doctor">Doctor</SelectItem>
-                  <SelectItem value="nurse">Nurse</SelectItem>
-                  <SelectItem value="finance">Finance Staff</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
             <Button 
               type="submit" 
               className="w-full" 
@@ -129,8 +150,46 @@ const LoginPage = () => {
             </Button>
           </form>
           
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Demo credentials: Any username/password with role selection</p>
+          <div className="mt-4 space-y-2">
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => setShowDemoAccounts(!showDemoAccounts)}
+            >
+              {showDemoAccounts ? "Hide" : "Show"} Demo Accounts
+            </Button>
+            
+            {showDemoAccounts && (
+              <div className="space-y-2 p-3 bg-muted rounded-md">
+                <p className="text-sm font-medium">Demo Accounts:</p>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => loginWithDemo("nurse@demo.com", "password123")}
+                  >
+                    Nurse: nurse@demo.com / password123
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => loginWithDemo("doctor@demo.com", "password123")}
+                  >
+                    Doctor: doctor@demo.com / password123
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => loginWithDemo("finance@demo.com", "password123")}
+                  >
+                    Finance: finance@demo.com / password123
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

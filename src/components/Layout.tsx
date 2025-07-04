@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "./AuthProvider";
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,10 +11,10 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { profile, signOut } = useAuth();
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
+  const handleLogout = async () => {
+    await signOut();
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out."
@@ -45,15 +46,15 @@ const Layout = ({ children }: LayoutProps) => {
               <div>
                 <h1 className="text-lg font-semibold text-foreground">Hospital Management System</h1>
                 <p className="text-sm text-muted-foreground">
-                  {getRoleDisplayName(user.role)} Portal
+                  {getRoleDisplayName(profile?.role || "")} Portal
                 </p>
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-foreground">{user.username}</p>
-                <p className="text-xs text-muted-foreground">{getRoleDisplayName(user.role)}</p>
+                <p className="text-sm font-medium text-foreground">{profile?.username}</p>
+                <p className="text-xs text-muted-foreground">{getRoleDisplayName(profile?.role || "")}</p>
               </div>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 Logout
