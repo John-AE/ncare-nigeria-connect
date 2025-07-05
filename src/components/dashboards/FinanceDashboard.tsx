@@ -28,7 +28,7 @@ const FinanceDashboard = () => {
         .from('bills')
         .select(`
           *,
-          patients!inner(first_name, last_name)
+          patients(first_name, last_name)
         `)
         .order('created_at', { ascending: false });
 
