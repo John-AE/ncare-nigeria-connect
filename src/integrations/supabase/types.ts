@@ -12,6 +12,7 @@ export type Database = {
       bills: {
         Row: {
           amount: number
+          amount_paid: number
           created_at: string
           created_by: string
           description: string | null
@@ -24,6 +25,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          amount_paid?: number
           created_at?: string
           created_by: string
           description?: string | null
@@ -36,6 +38,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          amount_paid?: number
           created_at?: string
           created_by?: string
           description?: string | null
@@ -137,7 +140,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_payment_status: {
+        Args: { bill_amount: number; amount_paid: number }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
