@@ -145,7 +145,21 @@ const AppointmentSchedulingForm = ({ isOpen, onClose }: AppointmentSchedulingFor
           created_by: profile.user_id
         });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a unique constraint violation (double booking)
+        if (error.code === '23505' && error.message.includes('appointments_unique_time_slot')) {
+          toast({
+            title: "Time Slot Unavailable",
+            description: "This time slot has already been booked by another user. Please select a different time.",
+            variant: "destructive",
+          });
+          // Refresh the booked slots to show current availability
+          await fetchBookedSlots();
+          setSelectedTimeSlot(""); // Clear the selected slot
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -163,7 +177,7 @@ const AppointmentSchedulingForm = ({ isOpen, onClose }: AppointmentSchedulingFor
       console.error('Error scheduling appointment:', error);
       toast({
         title: "Error",
-        description: "Failed to schedule appointment",
+        description: "Failed to schedule appointment. Please try again.",
         variant: "destructive",
       });
     } finally {
