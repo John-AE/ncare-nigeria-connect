@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import PatientRegistrationForm from "../PatientRegistrationForm";
+import AppointmentSchedulingForm from "../AppointmentSchedulingForm";
 import { useAuth } from "../AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 
 const NurseDashboard = () => {
   const { profile } = useAuth();
   const [showPatientForm, setShowPatientForm] = useState(false);
+  const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [patients, setPatients] = useState<any[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<any[]>([]);
@@ -157,7 +159,13 @@ const NurseDashboard = () => {
                     <p><span className="font-medium">Blood Group:</span> {selectedPatient.blood_group || 'N/A'}</p>
                   </div>
                   <div className="flex space-x-2 mt-3">
-                    <Button size="sm" variant="outline">Schedule Appointment</Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setShowAppointmentForm(true)}
+                    >
+                      Schedule Appointment
+                    </Button>
                     <Button size="sm" variant="outline">Print History</Button>
                   </div>
                 </div>
@@ -172,7 +180,11 @@ const NurseDashboard = () => {
             <CardDescription>Book and manage doctor appointments</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start" size="lg">
+            <Button 
+              className="w-full justify-start" 
+              size="lg"
+              onClick={() => setShowAppointmentForm(true)}
+            >
               Schedule New Appointment
             </Button>
             <Button variant="outline" className="w-full justify-start" size="lg">
@@ -188,6 +200,11 @@ const NurseDashboard = () => {
       <PatientRegistrationForm
         isOpen={showPatientForm}
         onClose={() => setShowPatientForm(false)}
+      />
+      
+      <AppointmentSchedulingForm
+        isOpen={showAppointmentForm}
+        onClose={() => setShowAppointmentForm(false)}
       />
     </div>
   );
