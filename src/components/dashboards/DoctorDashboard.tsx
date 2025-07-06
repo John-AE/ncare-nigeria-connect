@@ -1,9 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const DoctorDashboard = () => {
   const { profile } = useAuth();
@@ -12,6 +17,37 @@ const DoctorDashboard = () => {
   const [pendingBills, setPendingBills] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [todaysSchedule, setTodaysSchedule] = useState<any[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDateAppointments, setSelectedDateAppointments] = useState<any[]>([]);
+  const [selectedDateCount, setSelectedDateCount] = useState(0);
+
+  // Fetch appointments for selected date
+  useEffect(() => {
+    if (selectedDate) {
+      fetchSelectedDateAppointments();
+    }
+  }, [selectedDate]);
+
+  const fetchSelectedDateAppointments = async () => {
+    try {
+      const dateString = format(selectedDate, 'yyyy-MM-dd');
+      
+      const { data: appointmentsData, count } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          patients(first_name, last_name)
+        `, { count: 'exact' })
+        .eq('scheduled_date', dateString)
+        .eq('status', 'scheduled')
+        .order('start_time');
+
+      setSelectedDateAppointments(appointmentsData || []);
+      setSelectedDateCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching selected date appointments:', error);
+    }
+  };
 
   // Fetch dashboard stats
   useEffect(() => {
@@ -74,18 +110,6 @@ const DoctorDashboard = () => {
     { label: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, color: "bg-primary" }
   ];
 
-  const upcomingAppointments = [
-    { patient: "Sarah Wilson", time: "2:00 PM", complaint: "Chest pain", priority: "High" },
-    { patient: "David Brown", time: "2:15 PM", complaint: "Routine checkup", priority: "Low" },
-    { patient: "Emma Davis", time: "2:30 PM", complaint: "Headache", priority: "Medium" }
-  ];
-
-  const recentDiagnoses = [
-    { patient: "John Doe", diagnosis: "Hypertension", time: "1:30 PM", billStatus: "Generated" },
-    { patient: "Jane Smith", diagnosis: "Common Cold", time: "1:15 PM", billStatus: "Pending" },
-    { patient: "Mike Johnson", diagnosis: "Diabetes Follow-up", time: "1:00 PM", billStatus: "Generated" }
-  ];
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -115,71 +139,72 @@ const DoctorDashboard = () => {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Patient Consultations */}
+        {/* Date Selector and Appointments */}
         <Card>
           <CardHeader>
-            <CardTitle>Patient Consultations</CardTitle>
-            <CardDescription>Manage patient visits and medical records</CardDescription>
+            <CardTitle>Appointments by Date</CardTitle>
+            <CardDescription>Select a date to view appointments</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button className="w-full justify-start" size="lg">
-              Start New Consultation
-            </Button>
-            <Button variant="outline" className="w-full justify-start" size="lg">
-              View Patient History
-            </Button>
-            <Button variant="outline" className="w-full justify-start" size="lg">
-              Enter Diagnosis
-            </Button>
-            <Button variant="outline" className="w-full justify-start" size="lg">
-              Prescribe Medication
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Billing & Services */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Billing & Medical Services</CardTitle>
-            <CardDescription>Generate bills and manage service catalog</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button className="w-full justify-start" size="lg">
-              Create New Bill
-            </Button>
-            <Button variant="outline" className="w-full justify-start" size="lg">
-              View Service Catalog
-            </Button>
-            <Button variant="outline" className="w-full justify-start" size="lg">
-              Review Generated Bills
-            </Button>
-            <Button variant="outline" className="w-full justify-start" size="lg">
-              Update Service Prices
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Appointments */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Appointments</CardTitle>
-            <CardDescription>Next scheduled patient visits</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {upcomingAppointments.map((appointment, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium">{appointment.patient}</p>
-                    <p className="text-sm text-muted-foreground">{appointment.complaint}</p>
-                    <p className="text-xs text-muted-foreground">{appointment.time}</p>
-                  </div>
-                  <Badge variant={appointment.priority === "High" ? "destructive" : 
-                                 appointment.priority === "Medium" ? "secondary" : "outline"}>
-                    {appointment.priority}
-                  </Badge>
-                </div>
-              ))}
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Date</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium">Appointments</h4>
+                <Badge variant="secondary">{selectedDateCount} appointments</Badge>
+              </div>
+              
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {selectedDateAppointments.length > 0 ? (
+                  selectedDateAppointments.map((appointment) => (
+                    <div key={appointment.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
+                      <div className="flex-1">
+                        <p className="font-medium">
+                          {appointment.patients?.first_name} {appointment.patients?.last_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {appointment.start_time} - {appointment.end_time}
+                        </p>
+                        {appointment.notes && (
+                          <p className="text-xs text-muted-foreground">{appointment.notes}</p>
+                        )}
+                      </div>
+                      <Badge variant="outline">
+                        {appointment.status}
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    No appointments for {format(selectedDate, "PPP")}
+                  </p>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -187,7 +212,7 @@ const DoctorDashboard = () => {
         {/* Today's Schedule */}
         <Card>
           <CardHeader>
-            <CardTitle>Today's Schedule</CardTitle>
+            <CardTitle>Today&apos;s Schedule</CardTitle>
             <CardDescription>Scheduled appointments for today</CardDescription>
           </CardHeader>
           <CardContent>
