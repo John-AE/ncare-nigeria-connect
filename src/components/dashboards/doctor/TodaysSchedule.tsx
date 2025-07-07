@@ -1,0 +1,68 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+export const TodaysSchedule = () => {
+  const [todaysSchedule, setTodaysSchedule] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTodaysSchedule = async () => {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Get today's schedule with patient details
+        const { data: scheduleData } = await supabase
+          .from('appointments')
+          .select(`
+            *,
+            patients(first_name, last_name)
+          `)
+          .eq('scheduled_date', today)
+          .eq('status', 'scheduled')
+          .order('start_time');
+
+        setTodaysSchedule(scheduleData || []);
+      } catch (error) {
+        console.error('Error fetching today\'s schedule:', error);
+      }
+    };
+
+    fetchTodaysSchedule();
+  }, []);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Today&apos;s Schedule</CardTitle>
+        <CardDescription>Scheduled appointments for today</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {todaysSchedule.length > 0 ? (
+            todaysSchedule.map((appointment) => (
+              <div key={appointment.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
+                <div className="flex-1">
+                  <p className="font-medium">
+                    {appointment.patients?.first_name} {appointment.patients?.last_name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {appointment.start_time} - {appointment.end_time}
+                  </p>
+                  {appointment.notes && (
+                    <p className="text-xs text-muted-foreground">{appointment.notes}</p>
+                  )}
+                </div>
+                <Badge variant="outline">
+                  {appointment.status}
+                </Badge>
+              </div>
+            ))
+          ) : (
+            <p className="text-muted-foreground text-center py-4">No appointments scheduled for today</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
