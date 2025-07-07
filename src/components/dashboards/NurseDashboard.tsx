@@ -78,6 +78,48 @@ const NurseDashboard = () => {
     };
 
     fetchStats();
+
+    // Set up real-time listeners
+    const patientsChannel = supabase
+      .channel('patients-changes-nurse')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'patients' },
+        () => setTotalPatients(prev => prev + 1)
+      )
+      .subscribe();
+
+    const billsChannel = supabase
+      .channel('bills-changes-nurse')
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'bills' },
+        (payload) => {
+          if (!payload.new.is_paid) {
+            setTotalPendingBills(prev => prev + 1);
+          }
+        }
+      )
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'bills' },
+        (payload) => {
+          const oldRecord = payload.old;
+          const newRecord = payload.new;
+          
+          // If bill status changed from unpaid to paid
+          if (!oldRecord.is_paid && newRecord.is_paid) {
+            setTotalPendingBills(prev => prev - 1);
+          }
+          // If bill status changed from paid to unpaid
+          else if (oldRecord.is_paid && !newRecord.is_paid) {
+            setTotalPendingBills(prev => prev + 1);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(patientsChannel);
+      supabase.removeChannel(billsChannel);
+    };
   }, []);
 
   // Fetch all patients for search
@@ -97,6 +139,21 @@ const NurseDashboard = () => {
     };
 
     fetchPatients();
+
+    // Set up real-time listener for patients list
+    const patientsListChannel = supabase
+      .channel('patients-list-changes')
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'patients' },
+        (payload) => {
+          setPatients(prev => [payload.new, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(patientsListChannel);
+    };
   }, []);
 
   // Filter patients based on search query

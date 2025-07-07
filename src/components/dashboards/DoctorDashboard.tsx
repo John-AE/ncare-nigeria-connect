@@ -101,6 +101,50 @@ const DoctorDashboard = () => {
     };
 
     fetchStats();
+
+    // Set up real-time listeners
+    const patientsChannel = supabase
+      .channel('patients-changes')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'patients' },
+        () => setTotalPatients(prev => prev + 1)
+      )
+      .subscribe();
+
+    const billsChannel = supabase
+      .channel('bills-changes')
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'bills' },
+        (payload) => {
+          if (!payload.new.is_paid) {
+            setPendingBills(prev => prev + 1);
+          }
+        }
+      )
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'bills' },
+        (payload) => {
+          const oldRecord = payload.old;
+          const newRecord = payload.new;
+          
+          // If bill status changed from unpaid to paid
+          if (!oldRecord.is_paid && newRecord.is_paid) {
+            setPendingBills(prev => prev - 1);
+            setTotalRevenue(prev => prev + Number(newRecord.amount_paid));
+          }
+          // If bill status changed from paid to unpaid
+          else if (oldRecord.is_paid && !newRecord.is_paid) {
+            setPendingBills(prev => prev + 1);
+            setTotalRevenue(prev => prev - Number(oldRecord.amount_paid));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(patientsChannel);
+      supabase.removeChannel(billsChannel);
+    };
   }, []);
 
   const quickStats = [
