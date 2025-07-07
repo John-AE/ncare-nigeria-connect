@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 interface AppointmentSchedulingFormProps {
   isOpen: boolean;
   onClose: () => void;
+  preSelectedPatient?: any;
 }
 
 interface Patient {
@@ -30,7 +31,7 @@ interface Doctor {
   user_id: string;
 }
 
-const AppointmentSchedulingForm = ({ isOpen, onClose }: AppointmentSchedulingFormProps) => {
+const AppointmentSchedulingForm = ({ isOpen, onClose, preSelectedPatient }: AppointmentSchedulingFormProps) => {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -84,8 +85,15 @@ const AppointmentSchedulingForm = ({ isOpen, onClose }: AppointmentSchedulingFor
 
     if (isOpen) {
       fetchData();
+      
+      // Pre-fill patient if provided
+      if (preSelectedPatient) {
+        setSelectedPatient(preSelectedPatient.id);
+        setPatientSearch(`${preSelectedPatient.first_name} ${preSelectedPatient.last_name}`);
+        setFilteredPatients([]);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, preSelectedPatient]);
 
   // Filter patients based on search
   useEffect(() => {
@@ -204,8 +212,9 @@ const AppointmentSchedulingForm = ({ isOpen, onClose }: AppointmentSchedulingFor
               placeholder="Search patient by name..."
               value={patientSearch}
               onChange={(e) => setPatientSearch(e.target.value)}
+              disabled={!!preSelectedPatient}
             />
-            {filteredPatients.length > 0 && (
+            {filteredPatients.length > 0 && !preSelectedPatient && (
               <div className="max-h-32 overflow-y-auto border rounded-md">
                 {filteredPatients.map((patient) => (
                   <div

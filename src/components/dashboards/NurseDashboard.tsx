@@ -49,6 +49,7 @@ const NurseDashboard = () => {
       <AppointmentSchedulingForm
         isOpen={showAppointmentForm}
         onClose={() => setShowAppointmentForm(false)}
+        preSelectedPatient={selectedPatient}
       />
     </div>
   );
