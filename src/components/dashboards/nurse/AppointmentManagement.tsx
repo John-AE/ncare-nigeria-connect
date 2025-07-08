@@ -20,12 +20,6 @@ export const AppointmentManagement = ({ onScheduleAppointment }: AppointmentMana
         >
           Schedule New Appointment
         </Button>
-        <Button variant="outline" className="w-full justify-start" size="lg">
-          View Today&apos;s Schedule
-        </Button>
-        <Button variant="outline" className="w-full justify-start" size="lg">
-          Reschedule Appointments
-        </Button>
       </CardContent>
     </Card>
   );

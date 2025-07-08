@@ -153,11 +153,8 @@ const FinanceDashboard = () => {
     { label: "Outstanding Amount", value: "₦45,000", color: "bg-destructive" }
   ];
 
-  const pendingBills = [
-    { patient: "John Doe", amount: "₦15,000", date: "Today", services: "Consultation, Lab Test" },
-    { patient: "Jane Smith", amount: "₦8,500", date: "Today", services: "Checkup, Prescription" },
-    { patient: "Mike Johnson", amount: "₦22,000", date: "Yesterday", services: "Surgery, Medication" }
-  ];
+  // Filter bills to show only pending ones
+  const pendingBills = bills.filter(bill => bill.payment_status !== 'fully_paid');
 
   const paymentHistory = [
     { patient: "Sarah Wilson", amount: "₦10,000", paid: "₦6,000", percentage: 60, time: "11:30 AM", method: "Cash" },
@@ -283,16 +280,35 @@ const FinanceDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {pendingBills.map((bill, index) => (
-                <div key={index} className="p-3 border border-border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-medium">{bill.patient}</p>
-                    <Badge variant="outline">{bill.amount}</Badge>
+              {loading ? (
+                <p className="text-muted-foreground">Loading bills...</p>
+              ) : pendingBills.length === 0 ? (
+                <p className="text-muted-foreground">No pending bills found</p>
+              ) : (
+                pendingBills.slice(0, 5).map((bill) => (
+                  <div 
+                    key={bill.id} 
+                    className="p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      setSelectedBill(bill);
+                      setIsPaymentDialogOpen(true);
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium">{bill.patient_name}</p>
+                      <Badge variant={getStatusBadgeVariant(bill.payment_status)}>
+                        ₦{bill.amount.toLocaleString()}
+                      </Badge>
+                    </div>
+                    {bill.description && (
+                      <p className="text-sm text-muted-foreground mb-1">{bill.description}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Generated: {new Date(bill.created_at).toLocaleDateString()}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-1">{bill.services}</p>
-                  <p className="text-xs text-muted-foreground">Generated: {bill.date}</p>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
