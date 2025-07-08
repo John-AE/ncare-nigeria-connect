@@ -64,6 +64,51 @@ export type Database = {
           },
         ]
       }
+      bill_items: {
+        Row: {
+          bill_id: string
+          created_at: string
+          id: string
+          quantity: number
+          service_id: string
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          bill_id: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          service_id: string
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          bill_id?: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          service_id?: string
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_items_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bills: {
         Row: {
           amount: number
@@ -195,6 +240,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          updated_at?: string
         }
         Relationships: []
       }

@@ -3,6 +3,7 @@ import { useDoctorDashboardStats } from "@/hooks/useDoctorDashboardStats";
 import { QuickStatsCards } from "./doctor/QuickStatsCards";
 import { DateAppointments } from "./doctor/DateAppointments";
 import { TodaysSchedule } from "./doctor/TodaysSchedule";
+import { BillingCard } from "./doctor/BillingCard";
 
 const DoctorDashboard = () => {
   const { profile } = useAuth();
@@ -23,6 +24,11 @@ const DoctorDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <DateAppointments />
         <TodaysSchedule />
+      </div>
+
+      {/* Billing Section */}
+      <div className="grid grid-cols-1 gap-6">
+        <BillingCard />
       </div>
     </div>
   );
