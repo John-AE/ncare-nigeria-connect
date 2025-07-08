@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -18,8 +19,10 @@ const FinanceDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBill, setSelectedBill] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [recentPayments, setRecentPayments] = useState([]);
 
   // Fetch bills with patient information
   const fetchBills = async () => {
@@ -51,6 +54,35 @@ const FinanceDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch recent payments
+  const fetchRecentPayments = async () => {
+    try {
+      const { data: paymentsData, error } = await supabase
+        .from('bills')
+        .select(`
+          *,
+          patients(first_name, last_name)
+        `)
+        .not('amount_paid', 'is', null)
+        .gt('amount_paid', 0)
+        .order('updated_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      const paymentsWithDetails = paymentsData.map(bill => ({
+        ...bill,
+        patient_name: `${bill.patients.first_name} ${bill.patients.last_name}`,
+        payment_status: getPaymentStatus(bill.amount, bill.amount_paid || 0),
+        percentage: Math.round((bill.amount_paid / bill.amount) * 100)
+      }));
+
+      setRecentPayments(paymentsWithDetails);
+    } catch (error) {
+      console.error('Error fetching recent payments:', error);
     }
   };
 
@@ -88,6 +120,15 @@ const FinanceDashboard = () => {
       return;
     }
 
+    if (!paymentMethod) {
+      toast({
+        title: "Payment Method Required",
+        description: "Please select a payment method",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newAmountPaid = (selectedBill.amount_paid || 0) + parseFloat(paymentAmount);
     const isFullyPaid = newAmountPaid >= selectedBill.amount;
 
@@ -99,6 +140,7 @@ const FinanceDashboard = () => {
           is_paid: isFullyPaid,
           paid_at: isFullyPaid ? new Date().toISOString() : null,
           paid_by: user.id,
+          payment_method: paymentMethod,
           updated_at: new Date().toISOString()
         })
         .eq('id', selectedBill.id);
@@ -112,8 +154,10 @@ const FinanceDashboard = () => {
 
       setIsPaymentDialogOpen(false);
       setPaymentAmount("");
+      setPaymentMethod("");
       setSelectedBill(null);
       fetchBills(); // Refresh the bills list
+      fetchRecentPayments(); // Refresh recent payments
     } catch (error) {
       console.error('Error recording payment:', error);
       toast({
@@ -144,6 +188,7 @@ const FinanceDashboard = () => {
 
   useEffect(() => {
     fetchBills();
+    fetchRecentPayments();
   }, []);
 
   const quickStats = [
@@ -156,11 +201,14 @@ const FinanceDashboard = () => {
   // Filter bills to show only pending ones
   const pendingBills = bills.filter(bill => bill.payment_status !== 'fully_paid');
 
-  const paymentHistory = [
-    { patient: "Sarah Wilson", amount: "₦10,000", paid: "₦6,000", percentage: 60, time: "11:30 AM", method: "Cash" },
-    { patient: "David Brown", amount: "₦18,000", paid: "₦18,000", percentage: 100, time: "10:15 AM", method: "Bank Transfer" },
-    { patient: "Emma Davis", amount: "₦12,000", paid: "₦4,000", percentage: 33, time: "9:45 AM", method: "Mobile Money" }
-  ];
+  const getPaymentMethodDisplay = (method) => {
+    switch (method) {
+      case 'cash': return 'Cash';
+      case 'debit_card': return 'Debit Card';
+      case 'bank_transfer': return 'Bank Transfer';
+      default: return method || 'N/A';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -321,26 +369,34 @@ const FinanceDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {paymentHistory.map((payment, index) => (
-                <div key={index} className="p-3 border border-border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-medium">{payment.patient}</p>
-                    <Badge variant={payment.percentage === 100 ? "default" : "secondary"}>
-                      {payment.method}
-                    </Badge>
+              {loading ? (
+                <p className="text-muted-foreground">Loading recent payments...</p>
+              ) : recentPayments.length === 0 ? (
+                <p className="text-muted-foreground">No recent payments found</p>
+              ) : (
+                recentPayments.map((payment, index) => (
+                  <div key={index} className="p-3 border border-border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium">{payment.patient_name}</p>
+                      <Badge variant={payment.percentage === 100 ? "default" : "secondary"}>
+                        {getPaymentMethodDisplay(payment.payment_method)}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">
+                        ₦{(payment.amount_paid || 0).toLocaleString()} of ₦{payment.amount.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(payment.updated_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <Progress value={payment.percentage} className="h-2" />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {payment.percentage}% paid
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-muted-foreground">
-                      {payment.paid} of {payment.amount}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{payment.time}</span>
-                  </div>
-                  <Progress value={payment.percentage} className="h-2" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {payment.percentage}% paid
-                  </p>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -393,6 +449,22 @@ const FinanceDashboard = () => {
                   max={selectedBill.amount - (selectedBill.amount_paid || 0)}
                   step="0.01"
                 />
+              </div>
+              
+              <div>
+                <label htmlFor="payment-method" className="block text-sm font-medium mb-2">
+                  Payment Method
+                </label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="debit_card">Debit Card</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}

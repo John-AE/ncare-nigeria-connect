@@ -121,6 +121,7 @@ export type Database = {
           paid_at: string | null
           paid_by: string | null
           patient_id: string
+          payment_method: string | null
           updated_at: string
         }
         Insert: {
@@ -134,6 +135,7 @@ export type Database = {
           paid_at?: string | null
           paid_by?: string | null
           patient_id: string
+          payment_method?: string | null
           updated_at?: string
         }
         Update: {
@@ -147,6 +149,7 @@ export type Database = {
           paid_at?: string | null
           paid_by?: string | null
           patient_id?: string
+          payment_method?: string | null
           updated_at?: string
         }
         Relationships: [
