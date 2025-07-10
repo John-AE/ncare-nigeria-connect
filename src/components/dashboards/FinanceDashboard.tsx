@@ -191,11 +191,18 @@ const FinanceDashboard = () => {
     fetchRecentPayments();
   }, []);
 
+  // Calculate real-time stats from database
+  const pendingBillsCount = bills.filter(bill => bill.payment_status !== 'fully_paid').length;
+  const partialPaymentsCount = bills.filter(bill => bill.payment_status === 'partially_paid').length;
+  const outstandingAmount = bills
+    .filter(bill => bill.payment_status !== 'fully_paid')
+    .reduce((total, bill) => total + (bill.amount - (bill.amount_paid || 0)), 0);
+  
   const quickStats = [
     { label: "Today's Revenue", value: "₦125,000", color: "bg-accent" },
-    { label: "Pending Bills", value: "18", color: "bg-primary" },
-    { label: "Partial Payments", value: "7", color: "bg-secondary" },
-    { label: "Outstanding Amount", value: "₦45,000", color: "bg-destructive" }
+    { label: "Pending Bills", value: pendingBillsCount.toString(), color: "bg-primary" },
+    { label: "Partial Payments", value: partialPaymentsCount.toString(), color: "bg-rose" },
+    { label: "Outstanding Amount", value: `₦${outstandingAmount.toLocaleString()}`, color: "bg-destructive" }
   ];
 
   // Filter bills to show only pending ones

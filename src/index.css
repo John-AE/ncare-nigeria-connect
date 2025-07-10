@@ -33,6 +33,10 @@
     --accent: 158 64% 52%;
     --accent-foreground: 0 0% 100%;
 
+    /* Rose color (#F43F5E) for partial payments */
+    --rose: 343 75% 59%;
+    --rose-foreground: 0 0% 100%;
+
     /* Professional red (#EF4444) for urgent/destructive actions */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
