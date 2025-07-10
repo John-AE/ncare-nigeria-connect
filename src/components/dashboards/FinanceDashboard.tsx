@@ -198,8 +198,26 @@ const FinanceDashboard = () => {
     .filter(bill => bill.payment_status !== 'fully_paid')
     .reduce((total, bill) => total + (bill.amount - (bill.amount_paid || 0)), 0);
   
+  // Calculate today's revenue from payments made today
+  const today = new Date().toDateString();
+  const todaysRevenue = bills
+    .filter(bill => {
+      if (!bill.paid_at && !bill.updated_at) return false;
+      
+      // Check if payment was made today (either fully paid today or partially paid today)
+      const paymentDate = bill.paid_at ? new Date(bill.paid_at) : new Date(bill.updated_at);
+      return paymentDate.toDateString() === today && (bill.amount_paid || 0) > 0;
+    })
+    .reduce((total, bill) => {
+      // For bills paid today, add the amount paid
+      // For partial payments made today, we need to be more careful to only count today's payment
+      // Since we don't track individual payment transactions, we'll count the full amount_paid
+      // This is a simplification - in a full system you'd track individual payment transactions
+      return total + (bill.amount_paid || 0);
+    }, 0);
+  
   const quickStats = [
-    { label: "Today's Revenue", value: "₦125,000", color: "bg-accent" },
+    { label: "Today's Revenue", value: `₦${todaysRevenue.toLocaleString()}`, color: "bg-accent" },
     { label: "Pending Bills", value: pendingBillsCount.toString(), color: "bg-primary" },
     { label: "Partial Payments", value: partialPaymentsCount.toString(), color: "bg-rose" },
     { label: "Outstanding Amount", value: `₦${outstandingAmount.toLocaleString()}`, color: "bg-destructive" }
