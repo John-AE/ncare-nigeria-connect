@@ -4,21 +4,40 @@ import { supabase } from "@/integrations/supabase/client";
 export interface NurseDashboardStats {
   totalPatients: number;
   totalPendingBills: number;
+  newPatientsToday: number;
+  todaysAppointments: number;
 }
 
 export const useNurseDashboardStats = () => {
   const [stats, setStats] = useState<NurseDashboardStats>({
     totalPatients: 0,
     totalPendingBills: 0,
+    newPatientsToday: 0,
+    todaysAppointments: 0,
   });
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        const today = new Date().toISOString().split('T')[0];
+        
         // Get total patients
         const { count: patientCount } = await supabase
           .from('patients')
           .select('*', { count: 'exact', head: true });
+        
+        // Get new patients registered today
+        const { count: newPatientsCount } = await supabase
+          .from('patients')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', `${today}T00:00:00.000Z`)
+          .lt('created_at', `${today}T23:59:59.999Z`);
+        
+        // Get today's appointments
+        const { count: todaysAppointmentsCount } = await supabase
+          .from('appointments')
+          .select('*', { count: 'exact', head: true })
+          .eq('scheduled_date', today);
         
         // Get total pending bills
         const { count: billCount } = await supabase
@@ -29,6 +48,8 @@ export const useNurseDashboardStats = () => {
         setStats({
           totalPatients: patientCount || 0,
           totalPendingBills: billCount || 0,
+          newPatientsToday: newPatientsCount || 0,
+          todaysAppointments: todaysAppointmentsCount || 0,
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -42,7 +63,45 @@ export const useNurseDashboardStats = () => {
       .channel('patients-changes-nurse')
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'patients' },
-        () => setStats(prev => ({ ...prev, totalPatients: prev.totalPatients + 1 }))
+        (payload) => {
+          const today = new Date().toISOString().split('T')[0];
+          const createdToday = payload.new.created_at?.startsWith(today);
+          
+          setStats(prev => ({
+            ...prev,
+            totalPatients: prev.totalPatients + 1,
+            newPatientsToday: createdToday ? prev.newPatientsToday + 1 : prev.newPatientsToday
+          }));
+        }
+      )
+      .subscribe();
+
+    const appointmentsChannel = supabase
+      .channel('appointments-changes-nurse')
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'appointments' },
+        (payload) => {
+          const today = new Date().toISOString().split('T')[0];
+          const scheduledToday = payload.new.scheduled_date === today;
+          
+          if (scheduledToday) {
+            setStats(prev => ({ ...prev, todaysAppointments: prev.todaysAppointments + 1 }));
+          }
+        }
+      )
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'appointments' },
+        (payload) => {
+          const today = new Date().toISOString().split('T')[0];
+          const oldScheduledToday = payload.old.scheduled_date === today;
+          const newScheduledToday = payload.new.scheduled_date === today;
+          
+          if (oldScheduledToday && !newScheduledToday) {
+            setStats(prev => ({ ...prev, todaysAppointments: prev.todaysAppointments - 1 }));
+          } else if (!oldScheduledToday && newScheduledToday) {
+            setStats(prev => ({ ...prev, todaysAppointments: prev.todaysAppointments + 1 }));
+          }
+        }
       )
       .subscribe();
 
@@ -80,6 +139,7 @@ export const useNurseDashboardStats = () => {
 
     return () => {
       supabase.removeChannel(patientsChannel);
+      supabase.removeChannel(appointmentsChannel);
       supabase.removeChannel(billsChannel);
     };
   }, []);

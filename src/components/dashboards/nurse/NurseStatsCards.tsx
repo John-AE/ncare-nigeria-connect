@@ -8,11 +8,13 @@ interface NurseStatsCardsProps {
 export const NurseStatsCards = ({ stats }: NurseStatsCardsProps) => {
   const quickStats = [
     { label: "Total Patients", value: stats.totalPatients.toString(), color: "bg-primary" },
+    { label: "New Patients Today", value: stats.newPatientsToday.toString(), color: "bg-accent" },
+    { label: "Today's Appointments", value: stats.todaysAppointments.toString(), color: "bg-success" },
     { label: "Total Pending Bills", value: stats.totalPendingBills.toString(), color: "bg-destructive" }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {quickStats.map((stat, index) => (
         <Card key={index}>
           <CardContent className="p-6">
