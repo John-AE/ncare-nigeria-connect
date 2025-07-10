@@ -37,6 +37,10 @@
     --rose: 343 75% 59%;
     --rose-foreground: 0 0% 100%;
 
+    /* Amber color (#D97706) for appointments */
+    --amber: 32 95% 44%;
+    --amber-foreground: 0 0% 100%;
+
     /* Professional red (#EF4444) for urgent/destructive actions */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;

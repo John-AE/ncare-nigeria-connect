@@ -9,7 +9,7 @@ export const NurseStatsCards = ({ stats }: NurseStatsCardsProps) => {
   const quickStats = [
     { label: "Total Patients", value: stats.totalPatients.toString(), color: "bg-primary" },
     { label: "New Patients Today", value: stats.newPatientsToday.toString(), color: "bg-accent" },
-    { label: "Today's Appointments", value: stats.todaysAppointments.toString(), color: "bg-success" },
+    { label: "Today's Appointments", value: stats.todaysAppointments.toString(), color: "bg-amber" },
     { label: "Total Pending Bills", value: stats.totalPendingBills.toString(), color: "bg-destructive" }
   ];
 
