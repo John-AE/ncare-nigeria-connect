@@ -14,12 +14,22 @@ const Layout = ({ children }: LayoutProps) => {
   const { profile, signOut } = useAuth();
 
   const handleLogout = async () => {
-    await signOut();
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out."
-    });
-    navigate("/");
+    try {
+      await signOut();
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out."
+      });
+      navigate("/");
+    } catch (error) {
+      console.error('Logout failed:', error);
+      toast({
+        title: "Logged Out",
+        description: "You have been logged out.",
+        variant: "default"
+      });
+      navigate("/");
+    }
   };
 
   const getRoleDisplayName = (role: string) => {
