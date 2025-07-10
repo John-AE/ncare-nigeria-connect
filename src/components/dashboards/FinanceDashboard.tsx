@@ -217,10 +217,10 @@ const FinanceDashboard = () => {
     }, 0);
   
   const quickStats = [
-    { label: "Today's Revenue", value: `₦${todaysRevenue.toLocaleString()}`, color: "bg-accent" },
-    { label: "Pending Bills", value: pendingBillsCount.toString(), color: "bg-primary" },
-    { label: "Partial Payments", value: partialPaymentsCount.toString(), color: "bg-rose" },
-    { label: "Outstanding Amount", value: `₦${outstandingAmount.toLocaleString()}`, color: "bg-destructive" }
+    { label: "Today's Revenue", value: `₦${todaysRevenue.toLocaleString()}`, color: "bg-accent", showNaira: true },
+    { label: "Pending Bills", value: pendingBillsCount.toString(), color: "bg-primary", showNaira: false },
+    { label: "Partial Payments", value: partialPaymentsCount.toString(), color: "bg-rose", showNaira: false },
+    { label: "Total Outstanding Amount", value: `₦${outstandingAmount.toLocaleString()}`, color: "bg-destructive", showNaira: true }
   ];
 
   // Filter bills to show only pending ones
@@ -250,7 +250,11 @@ const FinanceDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
                 <div className={`h-10 w-10 rounded-full ${stat.color} flex items-center justify-center`}>
-                  <span className="text-lg font-bold text-white">₦</span>
+                  {stat.showNaira ? (
+                    <span className="text-lg font-bold text-white">₦</span>
+                  ) : (
+                    <span className="text-lg font-bold text-white">#</span>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
