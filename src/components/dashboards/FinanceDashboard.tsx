@@ -63,6 +63,12 @@ const FinanceDashboard = () => {
           onBillSelect={handleBillSelect}
         />
 
+        {/* Payment Tracking */}
+        <PaymentTracking
+          recentPayments={recentPayments}
+          loading={loading}
+        />
+
         {/* Financial Reports */}
         <FinancialReports />
 
@@ -71,12 +77,6 @@ const FinanceDashboard = () => {
           pendingBills={pendingBills}
           loading={loading}
           onBillSelect={handleBillSelect}
-        />
-
-        {/* Payment Tracking */}
-        <PaymentTracking
-          recentPayments={recentPayments}
-          loading={loading}
         />
       </div>
 
