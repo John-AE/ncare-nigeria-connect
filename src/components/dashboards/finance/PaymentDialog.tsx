@@ -34,6 +34,7 @@ export const PaymentDialog = ({
   useEffect(() => {
     const fetchPaidByProfile = async () => {
       if (selectedBill?.paid_by) {
+        console.log('Fetching profile for paid_by:', selectedBill.paid_by);
         try {
           const { data, error } = await supabase
             .from('profiles')
@@ -42,12 +43,14 @@ export const PaymentDialog = ({
             .single();
           
           if (error) throw error;
+          console.log('Found profile:', data);
           setPaidByProfile(data);
         } catch (error) {
           console.error('Error fetching paid by profile:', error);
           setPaidByProfile(null);
         }
       } else {
+        console.log('No paid_by field set on bill');
         setPaidByProfile(null);
       }
     };

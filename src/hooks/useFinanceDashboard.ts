@@ -103,6 +103,7 @@ export const useFinanceDashboard = () => {
   // Handle payment
   const handlePayment = async () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
+    console.log('Current user from localStorage:', user);
     
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
       toast({
@@ -126,6 +127,7 @@ export const useFinanceDashboard = () => {
     const isFullyPaid = newAmountPaid >= selectedBill.amount;
 
     try {
+      console.log('Recording payment with paid_by:', user.id);
       const { error } = await supabase
         .from('bills')
         .update({
