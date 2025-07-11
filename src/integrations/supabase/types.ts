@@ -219,6 +219,48 @@ export type Database = {
         }
         Relationships: []
       }
+      prescriptions: {
+        Row: {
+          created_at: string
+          id: string
+          instructions: string | null
+          quantity: number
+          service_id: string
+          visit_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          quantity?: number
+          service_id: string
+          visit_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          quantity?: number
+          service_id?: string
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescriptions_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescriptions_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -278,6 +320,63 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      visits: {
+        Row: {
+          appointment_id: string
+          complaints: string | null
+          created_at: string
+          diagnosis: string | null
+          doctor_id: string
+          id: string
+          patient_id: string
+          treatment_plan: string | null
+          updated_at: string
+          visit_date: string
+          visit_time: string
+        }
+        Insert: {
+          appointment_id: string
+          complaints?: string | null
+          created_at?: string
+          diagnosis?: string | null
+          doctor_id: string
+          id?: string
+          patient_id: string
+          treatment_plan?: string | null
+          updated_at?: string
+          visit_date: string
+          visit_time: string
+        }
+        Update: {
+          appointment_id?: string
+          complaints?: string | null
+          created_at?: string
+          diagnosis?: string | null
+          doctor_id?: string
+          id?: string
+          patient_id?: string
+          treatment_plan?: string | null
+          updated_at?: string
+          visit_date?: string
+          visit_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

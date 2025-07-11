@@ -1,10 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export const TodaysSchedule = () => {
   const [todaysSchedule, setTodaysSchedule] = useState<any[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTodaysSchedule = async () => {
@@ -41,7 +44,7 @@ export const TodaysSchedule = () => {
         <div className="space-y-3">
           {todaysSchedule.length > 0 ? (
             todaysSchedule.map((appointment) => (
-              <div key={appointment.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
+              <div key={appointment.id} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex-1">
                   <p className="font-medium">
                     {appointment.patients?.first_name} {appointment.patients?.last_name}
@@ -53,9 +56,18 @@ export const TodaysSchedule = () => {
                     <p className="text-xs text-muted-foreground">{appointment.notes}</p>
                   )}
                 </div>
-                <Badge variant="outline">
-                  {appointment.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    {appointment.status}
+                  </Badge>
+                  <Button 
+                    size="sm" 
+                    onClick={() => navigate(`/record-visit/${appointment.id}`)}
+                    className="text-xs"
+                  >
+                    Record Visit
+                  </Button>
+                </div>
               </div>
             ))
           ) : (
