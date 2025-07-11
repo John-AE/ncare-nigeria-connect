@@ -59,12 +59,20 @@ export const PaymentDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Record Payment</DialogTitle>
-          <DialogDescription>
-            Record a payment for {selectedBill?.patient_name}
-          </DialogDescription>
-        </DialogHeader>
+         <DialogHeader>
+           <DialogTitle>
+             {selectedBill?.is_paid || selectedBill?.payment_status === 'fully_paid' 
+               ? 'Bill Details' 
+               : 'Record Payment'
+             }
+           </DialogTitle>
+           <DialogDescription>
+             {selectedBill?.is_paid || selectedBill?.payment_status === 'fully_paid'
+               ? `Bill details for ${selectedBill?.patient_name}`
+               : `Record a payment for ${selectedBill?.patient_name}`
+             }
+           </DialogDescription>
+         </DialogHeader>
         
         {selectedBill && (
           <div className="space-y-4">
@@ -132,47 +140,55 @@ export const PaymentDialog = ({
               </div>
             </div>
             
-            <div>
-              <label htmlFor="payment-amount" className="block text-sm font-medium mb-2">
-                Payment Amount (₦)
-              </label>
-              <Input
-                id="payment-amount"
-                type="number"
-                placeholder="Enter payment amount"
-                value={paymentAmount}
-                onChange={(e) => onPaymentAmountChange(e.target.value)}
-                min="0"
-                max={selectedBill.amount - (selectedBill.amount_paid || 0)}
-                step="0.01"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="payment-method" className="block text-sm font-medium mb-2">
-                Payment Method
-              </label>
-              <Select value={paymentMethod} onValueChange={onPaymentMethodChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select payment method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="debit_card">Debit Card</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Payment Form - Only show if bill is not fully paid */}
+            {!selectedBill.is_paid && selectedBill.payment_status !== 'fully_paid' && (
+              <>
+                <Separator />
+                <div>
+                  <label htmlFor="payment-amount" className="block text-sm font-medium mb-2">
+                    Payment Amount (₦)
+                  </label>
+                  <Input
+                    id="payment-amount"
+                    type="number"
+                    placeholder="Enter payment amount"
+                    value={paymentAmount}
+                    onChange={(e) => onPaymentAmountChange(e.target.value)}
+                    min="0"
+                    max={selectedBill.amount - (selectedBill.amount_paid || 0)}
+                    step="0.01"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="payment-method" className="block text-sm font-medium mb-2">
+                    Payment Method
+                  </label>
+                  <Select value={paymentMethod} onValueChange={onPaymentMethodChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select payment method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="debit_card">Debit Card</SelectItem>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
           </div>
         )}
         
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {selectedBill?.is_paid || selectedBill?.payment_status === 'fully_paid' ? 'Close' : 'Cancel'}
           </Button>
-          <Button onClick={onPayment}>
-            Record Payment
-          </Button>
+          {(!selectedBill?.is_paid && selectedBill?.payment_status !== 'fully_paid') && (
+            <Button onClick={onPayment}>
+              Record Payment
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
