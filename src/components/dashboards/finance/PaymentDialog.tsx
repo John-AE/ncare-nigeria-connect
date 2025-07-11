@@ -3,7 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { getStatusBadgeVariant, getStatusLabel } from "@/lib/financeUtils";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PaymentDialogProps {
   isOpen: boolean;
@@ -26,6 +29,33 @@ export const PaymentDialog = ({
   onPaymentMethodChange,
   onPayment
 }: PaymentDialogProps) => {
+  const [paidByProfile, setPaidByProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchPaidByProfile = async () => {
+      if (selectedBill?.paid_by) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('user_id', selectedBill.paid_by)
+            .single();
+          
+          if (error) throw error;
+          setPaidByProfile(data);
+        } catch (error) {
+          console.error('Error fetching paid by profile:', error);
+          setPaidByProfile(null);
+        }
+      } else {
+        setPaidByProfile(null);
+      }
+    };
+
+    if (isOpen && selectedBill) {
+      fetchPaidByProfile();
+    }
+  }, [selectedBill, isOpen]);
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -38,6 +68,49 @@ export const PaymentDialog = ({
         
         {selectedBill && (
           <div className="space-y-4">
+            {/* Bill Information */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Bill ID:</span>
+                <span className="text-sm font-mono">{selectedBill.id}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Patient:</span>
+                <span className="text-sm">{selectedBill.patient_name}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Description:</span>
+                <span className="text-sm">{selectedBill.description || 'N/A'}</span>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Payment Status and Audit Information */}
+            {selectedBill.is_paid && selectedBill.paid_at && (
+              <div className="space-y-2 bg-muted/50 p-3 rounded-lg">
+                <h4 className="text-sm font-medium text-muted-foreground">Payment Audit Information</h4>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Paid by:</span>
+                    <span className="text-sm font-medium">{paidByProfile?.username || 'Loading...'}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Payment date:</span>
+                    <span className="text-sm">{new Date(selectedBill.paid_at).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Payment time:</span>
+                    <span className="text-sm">{new Date(selectedBill.paid_at).toLocaleTimeString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Payment method:</span>
+                    <span className="text-sm">{selectedBill.payment_method || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="font-medium">Total Amount:</p>
