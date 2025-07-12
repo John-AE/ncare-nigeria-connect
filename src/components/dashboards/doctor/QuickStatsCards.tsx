@@ -27,7 +27,7 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
     },
     { 
       label: "Total Revenue", 
-      value: `$${stats.totalRevenue.toFixed(2)}`, 
+      value: `₦${stats.totalRevenue.toFixed(2)}`, 
       bgColor: "bg-gradient-to-r from-emerald-400 to-emerald-500",
       textColor: "text-white"
     }
