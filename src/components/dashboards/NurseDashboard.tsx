@@ -28,7 +28,7 @@ const NurseDashboard = () => {
       <NurseStatsCards stats={stats} />
 
       {/* Main Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PatientManagement
           onRegisterPatient={() => setShowPatientForm(true)}
           onScheduleAppointment={() => setShowAppointmentForm(true)}
@@ -38,12 +38,11 @@ const NurseDashboard = () => {
         <AppointmentManagement
           onScheduleAppointment={() => setShowAppointmentForm(true)}
         />
-
-        <DateAppointments />
       </div>
 
-      {/* Recent Registrations */}
-      <div className="mt-6">
+      {/* Full Width Cards */}
+      <div className="space-y-6">
+        <DateAppointments />
         <RecentRegistrations />
       </div>
 

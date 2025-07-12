@@ -38,7 +38,7 @@ export const RecentRegistrations = () => {
       .from('patients')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(10);
+      .limit(5);
 
     if (error) {
       console.error('Error fetching recent patients:', error);
