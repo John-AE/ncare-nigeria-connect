@@ -35,9 +35,11 @@ type PatientFormData = z.infer<typeof patientSchema>;
 interface PatientRegistrationFormProps {
   isOpen: boolean;
   onClose: () => void;
+  patientData?: any;
+  readOnly?: boolean;
 }
 
-const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormProps) => {
+const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = false }: PatientRegistrationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { user } = useAuth();
@@ -45,7 +47,20 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
-    defaultValues: {
+    defaultValues: patientData ? {
+      first_name: patientData.first_name || '',
+      last_name: patientData.last_name || '',
+      date_of_birth: patientData.date_of_birth || '',
+      gender: patientData.gender || undefined,
+      phone: patientData.phone || '',
+      email: patientData.email || '',
+      address: patientData.address || '',
+      emergency_contact_name: patientData.emergency_contact_name || '',
+      emergency_contact_phone: patientData.emergency_contact_phone || '',
+      blood_group: patientData.blood_group || '',
+      allergies: patientData.allergies || '',
+      medical_history: patientData.medical_history || '',
+    } : {
       first_name: '',
       last_name: '',
       date_of_birth: '',
@@ -62,6 +77,8 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
   });
 
   const onSubmit = async (data: PatientFormData) => {
+    if (readOnly) return;
+    
     if (!user) {
       toast({
         title: 'Authentication Error',
@@ -116,9 +133,9 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Register New Patient</DialogTitle>
+            <DialogTitle>{readOnly ? "Patient Details" : "Register New Patient"}</DialogTitle>
             <DialogDescription>
-              Fill in the patient's information to create a new medical record.
+              {readOnly ? "View patient information details." : "Fill in the patient's information to create a new medical record."}
             </DialogDescription>
           </DialogHeader>
 
@@ -131,9 +148,9 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter first name" {...field} />
-                      </FormControl>
+                <FormControl>
+                  <Input placeholder="Enter first name" {...field} disabled={readOnly} />
+                </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -145,9 +162,9 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter last name" {...field} />
-                      </FormControl>
+                <FormControl>
+                  <Input placeholder="Enter last name" {...field} disabled={readOnly} />
+                </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -162,7 +179,7 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                     <FormItem>
                       <FormLabel>Date of Birth</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} disabled={readOnly} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -175,7 +192,7 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Gender</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={readOnly}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select gender" />
@@ -199,9 +216,9 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter phone number" {...field} />
-                      </FormControl>
+                <FormControl>
+                  <Input placeholder="Enter phone number" {...field} disabled={readOnly} />
+                </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -214,7 +231,7 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="Enter email address" {...field} />
+                        <Input type="email" placeholder="Enter email address" {...field} disabled={readOnly} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -229,7 +246,7 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                   <FormItem>
                     <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter address" {...field} />
+                      <Textarea placeholder="Enter address" {...field} disabled={readOnly} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -243,7 +260,7 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                   <FormItem>
                     <FormLabel>Blood Group</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter blood group (e.g., O+, A-, B+)" {...field} />
+                      <Input placeholder="Enter blood group (e.g., O+, A-, B+)" {...field} disabled={readOnly} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -257,7 +274,7 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                   <FormItem>
                     <FormLabel>Allergies</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="List any known allergies" {...field} />
+                      <Textarea placeholder="List any known allergies" {...field} disabled={readOnly} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -271,7 +288,7 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                   <FormItem>
                     <FormLabel>Medical History</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter relevant medical history" {...field} />
+                      <Textarea placeholder="Enter relevant medical history" {...field} disabled={readOnly} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -286,7 +303,7 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                     <FormItem>
                       <FormLabel>Emergency Contact Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter emergency contact name" {...field} />
+                        <Input placeholder="Enter emergency contact name" {...field} disabled={readOnly} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -300,7 +317,7 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
                     <FormItem>
                       <FormLabel>Emergency Contact Phone</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter emergency contact phone" {...field} />
+                        <Input placeholder="Enter emergency contact phone" {...field} disabled={readOnly} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -310,11 +327,13 @@ const PatientRegistrationForm = ({ isOpen, onClose }: PatientRegistrationFormPro
 
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
+                  {readOnly ? "Close" : "Cancel"}
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Registering...' : 'Register Patient'}
-                </Button>
+                {!readOnly && (
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Registering...' : 'Register Patient'}
+                  </Button>
+                )}
               </div>
             </form>
           </Form>

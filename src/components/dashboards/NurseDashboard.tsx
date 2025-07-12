@@ -5,6 +5,7 @@ import { NurseStatsCards } from "./nurse/NurseStatsCards";
 import { PatientManagement } from "./nurse/PatientManagement";
 import { AppointmentManagement } from "./nurse/AppointmentManagement";
 import { DateAppointments } from "./doctor/DateAppointments";
+import { RecentRegistrations } from "./nurse/RecentRegistrations";
 import PatientRegistrationForm from "../PatientRegistrationForm";
 import AppointmentSchedulingForm from "../AppointmentSchedulingForm";
 
@@ -27,7 +28,7 @@ const NurseDashboard = () => {
       <NurseStatsCards stats={stats} />
 
       {/* Main Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         <PatientManagement
           onRegisterPatient={() => setShowPatientForm(true)}
           onScheduleAppointment={() => setShowAppointmentForm(true)}
@@ -39,6 +40,11 @@ const NurseDashboard = () => {
         />
 
         <DateAppointments />
+      </div>
+
+      {/* Recent Registrations */}
+      <div className="mt-6">
+        <RecentRegistrations />
       </div>
 
       <PatientRegistrationForm

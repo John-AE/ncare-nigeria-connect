@@ -1,0 +1,126 @@
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { Eye } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { supabase } from "@/integrations/supabase/client";
+import PatientRegistrationForm from "../../PatientRegistrationForm";
+
+interface Patient {
+  id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  gender: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  blood_group?: string;
+  allergies?: string;
+  medical_history?: string;
+  created_at: string;
+}
+
+export const RecentRegistrations = () => {
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [showPatientDetails, setShowPatientDetails] = useState(false);
+
+  useEffect(() => {
+    fetchRecentPatients();
+  }, []);
+
+  const fetchRecentPatients = async () => {
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error('Error fetching recent patients:', error);
+    } else {
+      setPatients(data || []);
+    }
+  };
+
+  const handleViewDetails = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setShowPatientDetails(true);
+  };
+
+  const handleCloseDetails = () => {
+    setShowPatientDetails(false);
+    setSelectedPatient(null);
+  };
+
+  return (
+    <>
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-foreground">Recent Registrations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-hidden rounded-lg border border-border">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border bg-muted/50">
+                  <TableHead className="font-medium text-muted-foreground">Patient Name</TableHead>
+                  <TableHead className="font-medium text-muted-foreground">Date of Birth</TableHead>
+                  <TableHead className="font-medium text-muted-foreground">Gender</TableHead>
+                  <TableHead className="font-medium text-muted-foreground w-24">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {patients.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                      No recent registrations found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  patients.map((patient) => (
+                    <TableRow 
+                      key={patient.id} 
+                      className="border-border hover:bg-muted/50 transition-colors"
+                    >
+                      <TableCell className="font-medium text-foreground">
+                        {patient.first_name} {patient.last_name}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {format(new Date(patient.date_of_birth), 'MMM dd, yyyy')}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {patient.gender}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewDetails(patient)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <PatientRegistrationForm
+        isOpen={showPatientDetails}
+        onClose={handleCloseDetails}
+        patientData={selectedPatient}
+        readOnly={true}
+      />
+    </>
+  );
+};
