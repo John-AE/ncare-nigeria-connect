@@ -64,14 +64,20 @@ export const useNurseDashboardStats = () => {
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'patients' },
         (payload) => {
+          console.log('Patient real-time INSERT received:', payload);
           const today = new Date().toISOString().split('T')[0];
           const createdToday = payload.new.created_at?.startsWith(today);
           
-          setStats(prev => ({
-            ...prev,
-            totalPatients: prev.totalPatients + 1,
-            newPatientsToday: createdToday ? prev.newPatientsToday + 1 : prev.newPatientsToday
-          }));
+          setStats(prev => {
+            console.log('Updating stats - before:', prev);
+            const newStats = {
+              ...prev,
+              totalPatients: prev.totalPatients + 1,
+              newPatientsToday: createdToday ? prev.newPatientsToday + 1 : prev.newPatientsToday
+            };
+            console.log('Updating stats - after:', newStats);
+            return newStats;
+          });
         }
       )
       .subscribe();
