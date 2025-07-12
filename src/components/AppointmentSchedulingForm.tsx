@@ -139,8 +139,11 @@ const AppointmentSchedulingForm = ({ isOpen, onClose, preSelectedPatient }: Appo
 
     setLoading(true);
     try {
-      const [hours, minutes] = selectedTimeSlot.split(':');
-      const endTime = `${hours}:${(parseInt(minutes) + 15).toString().padStart(2, '0')}`;
+      const [hours, minutes] = selectedTimeSlot.split(':').map(Number);
+      const startDate = new Date();
+      startDate.setHours(hours, minutes, 0, 0);
+      const endDate = new Date(startDate.getTime() + 15 * 60 * 1000); // Add 15 minutes
+      const endTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
 
       const { error } = await supabase
         .from('appointments')
