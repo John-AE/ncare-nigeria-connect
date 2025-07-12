@@ -14,32 +14,44 @@ export const FinanceStatsCards = ({
   outstandingAmount
 }: FinanceStatsCardsProps) => {
   const quickStats = [
-    { label: "Today's Revenue", value: `₦${todaysRevenue.toLocaleString()}`, color: "bg-accent", showNaira: true },
-    { label: "Pending Bills", value: pendingBillsCount.toString(), color: "bg-primary", showNaira: false },
-    { label: "Partial Payments", value: partialPaymentsCount.toString(), color: "bg-rose", showNaira: false },
-    { label: "Total Outstanding Amount", value: `₦${outstandingAmount.toLocaleString()}`, color: "bg-destructive", showNaira: true }
+    { 
+      label: "Today's Revenue", 
+      value: `₦${todaysRevenue.toLocaleString()}`, 
+      bgColor: "bg-gradient-to-r from-violet-400 to-violet-500",
+      textColor: "text-white"
+    },
+    { 
+      label: "Pending Bills", 
+      value: pendingBillsCount.toString(), 
+      bgColor: "bg-gradient-to-r from-cyan-400 to-cyan-500",
+      textColor: "text-white"
+    },
+    { 
+      label: "Partial Payments", 
+      value: partialPaymentsCount.toString(), 
+      bgColor: "bg-gradient-to-r from-teal-400 to-teal-500",
+      textColor: "text-white"
+    },
+    { 
+      label: "Total Outstanding Amount", 
+      value: `₦${outstandingAmount.toLocaleString()}`, 
+      bgColor: "bg-gradient-to-r from-rose-400 to-rose-500",
+      textColor: "text-white"
+    }
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {quickStats.map((stat, index) => (
-        <Card key={index}>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className={`h-10 w-10 rounded-full ${stat.color} flex items-center justify-center`}>
-                {stat.showNaira ? (
-                  <span className="text-lg font-bold text-white">₦</span>
-                ) : (
-                  <span className="text-lg font-bold text-white">#</span>
-                )}
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div 
+          key={index} 
+          className={`${stat.bgColor} ${stat.textColor} rounded-full px-6 py-4 shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl`}
+        >
+          <div className="flex flex-col items-center justify-center text-center">
+            <p className="text-2xl font-bold mb-1">{stat.value}</p>
+            <p className="text-sm font-medium opacity-90">{stat.label}</p>
+          </div>
+        </div>
       ))}
     </div>
   );
