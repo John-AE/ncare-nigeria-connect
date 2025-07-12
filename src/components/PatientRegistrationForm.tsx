@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -47,20 +47,7 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
-    defaultValues: patientData ? {
-      first_name: patientData.first_name || '',
-      last_name: patientData.last_name || '',
-      date_of_birth: patientData.date_of_birth || '',
-      gender: patientData.gender || undefined,
-      phone: patientData.phone || '',
-      email: patientData.email || '',
-      address: patientData.address || '',
-      emergency_contact_name: patientData.emergency_contact_name || '',
-      emergency_contact_phone: patientData.emergency_contact_phone || '',
-      blood_group: patientData.blood_group || '',
-      allergies: patientData.allergies || '',
-      medical_history: patientData.medical_history || '',
-    } : {
+    defaultValues: {
       first_name: '',
       last_name: '',
       date_of_birth: '',
@@ -75,6 +62,41 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
       medical_history: '',
     },
   });
+
+  // Update form when patientData changes
+  useEffect(() => {
+    if (patientData) {
+      form.reset({
+        first_name: patientData.first_name || '',
+        last_name: patientData.last_name || '',
+        date_of_birth: patientData.date_of_birth || '',
+        gender: patientData.gender || undefined,
+        phone: patientData.phone || '',
+        email: patientData.email || '',
+        address: patientData.address || '',
+        emergency_contact_name: patientData.emergency_contact_name || '',
+        emergency_contact_phone: patientData.emergency_contact_phone || '',
+        blood_group: patientData.blood_group || '',
+        allergies: patientData.allergies || '',
+        medical_history: patientData.medical_history || '',
+      });
+    } else {
+      form.reset({
+        first_name: '',
+        last_name: '',
+        date_of_birth: '',
+        gender: undefined,
+        phone: '',
+        email: '',
+        address: '',
+        emergency_contact_name: '',
+        emergency_contact_phone: '',
+        blood_group: '',
+        allergies: '',
+        medical_history: '',
+      });
+    }
+  }, [patientData, form]);
 
   const onSubmit = async (data: PatientFormData) => {
     if (readOnly) return;
