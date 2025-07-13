@@ -87,18 +87,22 @@ export const DateAppointments = () => {
               selectedDateAppointments.map((appointment) => (
                  <div key={appointment.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
                    <div className="flex-1">
-                     <p className="font-medium">
-                       {appointment.patients?.first_name} {appointment.patients?.last_name}
-                     </p>
-                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                       <span>{appointment.start_time} - {appointment.end_time}</span>
+                     <div className="flex items-center gap-2 flex-wrap">
+                       <p className="font-medium">
+                         {appointment.patients?.first_name} {appointment.patients?.last_name}
+                       </p>
                        {appointment.patients?.date_of_birth && (
-                         <span>• Age {differenceInYears(new Date(), new Date(appointment.patients.date_of_birth))}</span>
+                         <span className="text-sm text-muted-foreground">
+                           Age {differenceInYears(new Date(), new Date(appointment.patients.date_of_birth))}
+                         </span>
                        )}
                        {appointment.patients?.gender && (
-                         <span>• {appointment.patients.gender}</span>
+                         <span className="text-sm text-muted-foreground">• {appointment.patients.gender}</span>
                        )}
                      </div>
+                     <p className="text-sm text-muted-foreground">
+                       {format(new Date(`2000-01-01T${appointment.start_time}`), 'h:mm a')} - {format(new Date(`2000-01-01T${appointment.end_time}`), 'h:mm a')}
+                     </p>
                      {appointment.notes && (
                        <p className="text-xs text-muted-foreground">{appointment.notes}</p>
                      )}
