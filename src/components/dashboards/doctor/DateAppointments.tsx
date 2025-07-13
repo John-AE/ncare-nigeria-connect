@@ -43,7 +43,7 @@ export const DateAppointments = () => {
   };
 
   return (
-    <Card>
+    <Card className="transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
       <CardHeader>
         <CardTitle>Appointments by Date</CardTitle>
         <CardDescription>Select a date to view appointments</CardDescription>

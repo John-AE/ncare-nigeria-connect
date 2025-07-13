@@ -59,7 +59,7 @@ export const RecentRegistrations = () => {
 
   return (
     <>
-      <Card className="bg-card border-border">
+      <Card className="bg-card border-border transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">Recent Registrations</CardTitle>
         </CardHeader>
@@ -86,7 +86,7 @@ export const RecentRegistrations = () => {
                   patients.map((patient) => (
                     <TableRow 
                       key={patient.id} 
-                      className="border-border hover:bg-muted/50 transition-colors"
+                      className="border-border hover:bg-muted/50 transition-all duration-200 hover:scale-[1.01] hover:shadow-sm"
                     >
                       <TableCell className="font-medium text-foreground">
                         {patient.first_name} {patient.last_name}

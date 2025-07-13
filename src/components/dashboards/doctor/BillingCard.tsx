@@ -283,7 +283,7 @@ export const BillingCard = () => {
   }, {} as Record<string, Service[]>);
 
   return (
-    <Card>
+    <Card className="transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Receipt className="h-5 w-5" />

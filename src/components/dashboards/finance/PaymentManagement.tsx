@@ -20,7 +20,7 @@ export const PaymentManagement = ({
   onBillSelect
 }: PaymentManagementProps) => {
   return (
-    <Card>
+    <Card className="transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
       <CardHeader>
         <CardTitle>Payment Management</CardTitle>
         <CardDescription>Search and manage bill payments</CardDescription>

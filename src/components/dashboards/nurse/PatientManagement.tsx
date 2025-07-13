@@ -72,7 +72,7 @@ export const PatientManagement = ({
   };
 
   return (
-    <Card>
+    <Card className="transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
       <CardHeader>
         <CardTitle>Patient Management</CardTitle>
         <CardDescription>Register new patients and search existing records</CardDescription>

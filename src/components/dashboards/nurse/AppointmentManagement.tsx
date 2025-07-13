@@ -7,7 +7,7 @@ interface AppointmentManagementProps {
 
 export const AppointmentManagement = ({ onScheduleAppointment }: AppointmentManagementProps) => {
   return (
-    <Card>
+    <Card className="transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
       <CardHeader>
         <CardTitle>Appointment Scheduling</CardTitle>
         <CardDescription>Book and manage doctor appointments</CardDescription>

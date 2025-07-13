@@ -10,7 +10,7 @@ interface PendingBillsProps {
 
 export const PendingBills = ({ pendingBills, loading, onBillSelect }: PendingBillsProps) => {
   return (
-    <Card>
+    <Card className="transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
       <CardHeader>
         <CardTitle>Pending Bills</CardTitle>
         <CardDescription>Bills awaiting payment</CardDescription>
@@ -25,7 +25,7 @@ export const PendingBills = ({ pendingBills, loading, onBillSelect }: PendingBil
             pendingBills.slice(0, 5).map((bill) => (
               <div 
                 key={bill.id} 
-                className="p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                className="p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-sm"
                 onClick={() => onBillSelect(bill)}
               >
                 <div className="flex items-center justify-between mb-2">
