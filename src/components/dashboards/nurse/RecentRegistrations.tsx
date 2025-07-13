@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, differenceInYears } from "date-fns";
 import { Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,7 @@ export const RecentRegistrations = () => {
                 <TableRow className="border-border bg-muted/50">
                   <TableHead className="font-medium text-muted-foreground">Patient Name</TableHead>
                   <TableHead className="font-medium text-muted-foreground">Date of Birth</TableHead>
+                  <TableHead className="font-medium text-muted-foreground">Age</TableHead>
                   <TableHead className="font-medium text-muted-foreground">Gender</TableHead>
                   <TableHead className="font-medium text-muted-foreground w-24">Actions</TableHead>
                 </TableRow>
@@ -77,7 +78,7 @@ export const RecentRegistrations = () => {
               <TableBody>
                 {patients.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                       No recent registrations found
                     </TableCell>
                   </TableRow>
@@ -92,6 +93,9 @@ export const RecentRegistrations = () => {
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {format(new Date(patient.date_of_birth), 'MMM dd, yyyy')}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {differenceInYears(new Date(), new Date(patient.date_of_birth))} years
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {patient.gender}
