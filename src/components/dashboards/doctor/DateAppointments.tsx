@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { format, differenceInYears } from "date-fns";
 import { cn } from "@/lib/utils";
 
 export const DateAppointments = () => {
@@ -29,7 +29,7 @@ export const DateAppointments = () => {
         .from('appointments')
         .select(`
           *,
-          patients(first_name, last_name)
+          patients(first_name, last_name, date_of_birth, gender)
         `, { count: 'exact' })
         .eq('scheduled_date', dateString)
         .eq('status', 'scheduled')
@@ -85,18 +85,24 @@ export const DateAppointments = () => {
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {selectedDateAppointments.length > 0 ? (
               selectedDateAppointments.map((appointment) => (
-                <div key={appointment.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium">
-                      {appointment.patients?.first_name} {appointment.patients?.last_name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {appointment.start_time} - {appointment.end_time}
-                    </p>
-                    {appointment.notes && (
-                      <p className="text-xs text-muted-foreground">{appointment.notes}</p>
-                    )}
-                  </div>
+                 <div key={appointment.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
+                   <div className="flex-1">
+                     <p className="font-medium">
+                       {appointment.patients?.first_name} {appointment.patients?.last_name}
+                     </p>
+                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                       <span>{appointment.start_time} - {appointment.end_time}</span>
+                       {appointment.patients?.date_of_birth && (
+                         <span>• Age {differenceInYears(new Date(), new Date(appointment.patients.date_of_birth))}</span>
+                       )}
+                       {appointment.patients?.gender && (
+                         <span>• {appointment.patients.gender}</span>
+                       )}
+                     </div>
+                     {appointment.notes && (
+                       <p className="text-xs text-muted-foreground">{appointment.notes}</p>
+                     )}
+                   </div>
                   <Badge variant="outline">
                     {appointment.status}
                   </Badge>
