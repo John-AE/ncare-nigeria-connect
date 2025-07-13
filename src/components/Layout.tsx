@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthProvider";
+import { AppBreadcrumb } from "./AppBreadcrumb";
 
 interface LayoutProps {
   children: ReactNode;
@@ -76,6 +77,7 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <AppBreadcrumb />
         {children}
       </main>
 
