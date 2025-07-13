@@ -292,6 +292,8 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
                         <SelectItem value="AS">AS</SelectItem>
                         <SelectItem value="SS">SS</SelectItem>
                         <SelectItem value="SC">SC</SelectItem>
+                        <SelectItem value="CC">CC</SelectItem>
+                        <SelectItem value="AC">AC</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
