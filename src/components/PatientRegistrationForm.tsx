@@ -280,10 +280,20 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
                 name="blood_group"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Blood Group</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter blood group (e.g., O+, A-, B+)" {...field} disabled={readOnly} />
-                    </FormControl>
+                    <FormLabel>Blood Genotype</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={readOnly}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select blood genotype" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="AA">AA</SelectItem>
+                        <SelectItem value="AS">AS</SelectItem>
+                        <SelectItem value="SS">SS</SelectItem>
+                        <SelectItem value="SC">SC</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
