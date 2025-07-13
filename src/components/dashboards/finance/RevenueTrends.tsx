@@ -311,6 +311,7 @@ export const RevenueTrends = () => {
                     data={paymentMethodData}
                     cx="50%"
                     cy="50%"
+                    innerRadius={60}
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="amount"
