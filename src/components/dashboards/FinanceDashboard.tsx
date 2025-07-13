@@ -5,6 +5,7 @@ import { FinancialReports } from "./finance/FinancialReports";
 import { PendingBills } from "./finance/PendingBills";
 import { PaymentTracking } from "./finance/PaymentTracking";
 import { PaymentDialog } from "./finance/PaymentDialog";
+import { RevenueTrends } from "./finance/RevenueTrends";
 
 const FinanceDashboard = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -51,6 +52,9 @@ const FinanceDashboard = () => {
         partialPaymentsCount={partialPaymentsCount}
         outstandingAmount={outstandingAmount}
       />
+
+      {/* Revenue Analytics */}
+      <RevenueTrends />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
