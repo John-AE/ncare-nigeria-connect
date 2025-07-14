@@ -371,12 +371,12 @@ export const RecordVisit = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>Prescriptions & Services</CardTitle>
+              <CardTitle>Services</CardTitle>
               <CardDescription>Add medications and services for this visit</CardDescription>
             </div>
             <Button onClick={addPrescription} size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              Add Prescription
+              Add Service
             </Button>
           </div>
         </CardHeader>
@@ -432,7 +432,7 @@ export const RecordVisit = () => {
           ))}
           {prescriptions.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              No prescriptions added yet. Click "Add Prescription" to get started.
+              No services added yet. Click "Add Service" to get started.
             </div>
           )}
         </CardContent>
