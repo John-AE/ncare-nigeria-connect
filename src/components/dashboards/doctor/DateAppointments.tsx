@@ -3,13 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, UserCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, differenceInYears } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export const DateAppointments = () => {
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedDateAppointments, setSelectedDateAppointments] = useState<any[]>([]);
   const [selectedDateCount, setSelectedDateCount] = useState(0);
@@ -19,6 +21,28 @@ export const DateAppointments = () => {
     if (selectedDate) {
       fetchSelectedDateAppointments();
     }
+  }, [selectedDate]);
+
+  // Set up real-time listener for appointment updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('appointment-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'appointments'
+        },
+        () => {
+          fetchSelectedDateAppointments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedDate]);
 
   const fetchSelectedDateAppointments = async () => {
@@ -32,13 +56,39 @@ export const DateAppointments = () => {
           patients(first_name, last_name, date_of_birth, gender)
         `, { count: 'exact' })
         .eq('scheduled_date', dateString)
-        .eq('status', 'scheduled')
+        .in('status', ['scheduled', 'arrived'])
         .order('start_time');
 
       setSelectedDateAppointments(appointmentsData || []);
       setSelectedDateCount(count || 0);
     } catch (error) {
       console.error('Error fetching selected date appointments:', error);
+    }
+  };
+
+  const markAsArrived = async (appointmentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'arrived' })
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Patient marked as arrived",
+      });
+
+      // Refresh the appointments list
+      fetchSelectedDateAppointments();
+    } catch (error) {
+      console.error('Error marking patient as arrived:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark patient as arrived. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -107,9 +157,22 @@ export const DateAppointments = () => {
                        <p className="text-xs text-muted-foreground">{appointment.notes}</p>
                      )}
                    </div>
-                  <Badge variant="outline">
-                    {appointment.status}
-                  </Badge>
+                   <div className="flex items-center gap-2">
+                     <Badge variant={appointment.status === 'arrived' ? 'default' : 'outline'}>
+                       {appointment.status}
+                     </Badge>
+                     {appointment.status === 'scheduled' && (
+                       <Button
+                         size="sm"
+                         variant="outline"
+                         onClick={() => markAsArrived(appointment.id)}
+                         className="text-xs"
+                       >
+                         <UserCheck className="h-3 w-3 mr-1" />
+                         Mark Arrived
+                       </Button>
+                     )}
+                   </div>
                 </div>
               ))
             ) : (

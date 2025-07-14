@@ -22,7 +22,7 @@ export const TodaysSchedule = () => {
             patients(first_name, last_name)
           `)
           .eq('scheduled_date', today)
-          .eq('status', 'scheduled')
+          .in('status', ['scheduled', 'arrived'])
           .order('start_time');
 
         setTodaysSchedule(scheduleData || []);
@@ -32,6 +32,26 @@ export const TodaysSchedule = () => {
     };
 
     fetchTodaysSchedule();
+
+    // Set up real-time listener for appointment updates
+    const channel = supabase
+      .channel('todays-schedule-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'appointments'
+        },
+        () => {
+          fetchTodaysSchedule();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
@@ -57,16 +77,18 @@ export const TodaysSchedule = () => {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline">
+                  <Badge variant={appointment.status === 'arrived' ? 'default' : 'outline'}>
                     {appointment.status}
                   </Badge>
-                  <Button 
-                    size="sm" 
-                    onClick={() => navigate(`/record-visit/${appointment.id}`)}
-                    className="text-xs"
-                  >
-                    Record Visit
-                  </Button>
+                  {appointment.status === 'arrived' && (
+                    <Button 
+                      size="sm" 
+                      onClick={() => navigate(`/record-visit/${appointment.id}`)}
+                      className="text-xs"
+                    >
+                      Record Visit
+                    </Button>
+                  )}
                 </div>
               </div>
             ))
