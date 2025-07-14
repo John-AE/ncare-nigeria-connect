@@ -3,6 +3,7 @@ import { useDoctorDashboardStats } from "@/hooks/useDoctorDashboardStats";
 import { QuickStatsCards } from "./doctor/QuickStatsCards";
 import { DateAppointments } from "./doctor/DateAppointments";
 import { TodaysSchedule } from "./doctor/TodaysSchedule";
+import CompletedAppointmentsBills from "./doctor/CompletedAppointmentsBills";
 
 
 const DoctorDashboard = () => {
@@ -25,6 +26,9 @@ const DoctorDashboard = () => {
         <DateAppointments />
         <TodaysSchedule />
       </div>
+
+      {/* Completed Appointments and Bills */}
+      <CompletedAppointmentsBills />
 
     </div>
   );
