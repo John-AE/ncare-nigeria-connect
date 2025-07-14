@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 
 interface AppointmentManagementProps {
   onScheduleAppointment: () => void;
+  onSetupRecurring?: () => void;
 }
 
-export const AppointmentManagement = ({ onScheduleAppointment }: AppointmentManagementProps) => {
+export const AppointmentManagement = ({ onScheduleAppointment, onSetupRecurring }: AppointmentManagementProps) => {
   return (
     <Card className="transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
       <CardHeader>
@@ -20,6 +21,16 @@ export const AppointmentManagement = ({ onScheduleAppointment }: AppointmentMana
         >
           Schedule New Appointment
         </Button>
+        {onSetupRecurring && (
+          <Button 
+            variant="secondary"
+            className="w-full justify-start" 
+            size="lg"
+            onClick={onSetupRecurring}
+          >
+            Set Up Recurring Appointments
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

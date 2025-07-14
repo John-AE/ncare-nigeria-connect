@@ -8,12 +8,14 @@ import { DateAppointments } from "./doctor/DateAppointments";
 import { RecentRegistrations } from "./nurse/RecentRegistrations";
 import PatientRegistrationForm from "../PatientRegistrationForm";
 import AppointmentSchedulingForm from "../AppointmentSchedulingForm";
+import RecurringAppointmentForm from "../RecurringAppointmentForm";
 
 const NurseDashboard = () => {
   const { profile } = useAuth();
   const stats = useNurseDashboardStats();
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
+  const [showRecurringForm, setShowRecurringForm] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
 
   return (
@@ -37,13 +39,19 @@ const NurseDashboard = () => {
 
         <AppointmentManagement
           onScheduleAppointment={() => setShowAppointmentForm(true)}
+          onSetupRecurring={() => setShowRecurringForm(true)}
         />
       </div>
 
       {/* Full Width Cards */}
       <div className="space-y-6">
         <DateAppointments />
-        <RecentRegistrations />
+        <RecentRegistrations 
+          onScheduleAppointment={(patient) => {
+            setSelectedPatient(patient);
+            setShowAppointmentForm(true);
+          }}
+        />
       </div>
 
       <PatientRegistrationForm
@@ -53,8 +61,16 @@ const NurseDashboard = () => {
       
       <AppointmentSchedulingForm
         isOpen={showAppointmentForm}
-        onClose={() => setShowAppointmentForm(false)}
+        onClose={() => {
+          setShowAppointmentForm(false);
+          setSelectedPatient(null);
+        }}
         preSelectedPatient={selectedPatient}
+      />
+      
+      <RecurringAppointmentForm
+        isOpen={showRecurringForm}
+        onClose={() => setShowRecurringForm(false)}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format, differenceInYears } from "date-fns";
-import { Eye } from "lucide-react";
+import { Eye, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,7 +24,11 @@ interface Patient {
   created_at: string;
 }
 
-export const RecentRegistrations = () => {
+interface RecentRegistrationsProps {
+  onScheduleAppointment?: (patient: Patient) => void;
+}
+
+export const RecentRegistrations = ({ onScheduleAppointment }: RecentRegistrationsProps = {}) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientDetails, setShowPatientDetails] = useState(false);
@@ -72,7 +76,7 @@ export const RecentRegistrations = () => {
                   <TableHead className="font-medium text-muted-foreground">Date of Birth</TableHead>
                   <TableHead className="font-medium text-muted-foreground">Age</TableHead>
                   <TableHead className="font-medium text-muted-foreground">Gender</TableHead>
-                  <TableHead className="font-medium text-muted-foreground w-24">Actions</TableHead>
+                  <TableHead className="font-medium text-muted-foreground w-32">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -101,14 +105,27 @@ export const RecentRegistrations = () => {
                         {patient.gender}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewDetails(patient)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewDetails(patient)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {onScheduleAppointment && (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => onScheduleAppointment(patient)}
+                              className="h-8 px-3 text-xs"
+                            >
+                              <Calendar className="h-3 w-3 mr-1" />
+                              Schedule
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
