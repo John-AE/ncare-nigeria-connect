@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowLeft, Plus, Trash2, Receipt, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,6 +56,9 @@ export const RecordVisit = () => {
   });
   
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [showBillPreview, setShowBillPreview] = useState(false);
+  const [showServiceDialog, setShowServiceDialog] = useState(false);
+  const [newService, setNewService] = useState({ name: "", description: "", price: 0, category: "" });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,6 +112,56 @@ export const RecordVisit = () => {
     const updated = [...prescriptions];
     updated[index] = { ...updated[index], [field]: value };
     setPrescriptions(updated);
+  };
+
+  const calculateTotal = () => {
+    return prescriptions.reduce((sum, p) => {
+      const service = services.find(s => s.id === p.serviceId);
+      return sum + (service ? service.price * p.quantity : 0);
+    }, 0);
+  };
+
+  const saveService = async () => {
+    if (!newService.name || !newService.price) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('services')
+        .insert(newService);
+      
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Service added successfully",
+      });
+
+      setNewService({ name: "", description: "", price: 0, category: "" });
+      setShowServiceDialog(false);
+      
+      // Refetch services
+      const { data: servicesData } = await supabase
+        .from('services')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      setServices(servicesData || []);
+
+    } catch (error) {
+      console.error('Error saving service:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save service",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSaveVisit = async () => {
@@ -384,12 +438,168 @@ export const RecordVisit = () => {
         </CardContent>
       </Card>
 
+      {/* Patient Billing Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Receipt className="h-5 w-5" />
+            Patient Billing
+          </CardTitle>
+          <CardDescription>Review and generate bill for this visit</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Dialog open={showBillPreview} onOpenChange={setShowBillPreview}>
+              <DialogTrigger asChild>
+                <Button disabled={prescriptions.length === 0}>
+                  <Receipt className="h-4 w-4 mr-2" />
+                  Preview Bill
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Bill Preview</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="border-b pb-4">
+                    <h3 className="font-semibold">Patient: {appointment?.patients.first_name} {appointment?.patients.last_name}</h3>
+                    <p className="text-sm text-muted-foreground">Visit Date: {appointment?.scheduled_date}</p>
+                    <p className="text-sm text-muted-foreground">Doctor: Dr. {profile?.username}</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold mb-2">Services & Medications</h4>
+                    <div className="space-y-2">
+                      {prescriptions.filter(p => p.serviceId).map((prescription, index) => {
+                        const service = services.find(s => s.id === prescription.serviceId);
+                        if (!service) return null;
+                        return (
+                          <div key={index} className="flex justify-between items-center p-2 border rounded">
+                            <div>
+                              <p className="font-medium">{service.name}</p>
+                              <p className="text-sm text-muted-foreground">Qty: {prescription.quantity}</p>
+                              {prescription.instructions && (
+                                <p className="text-xs text-muted-foreground">{prescription.instructions}</p>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium">₦{(service.price * prescription.quantity).toLocaleString()}</p>
+                              <p className="text-sm text-muted-foreground">₦{service.price.toLocaleString()} each</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center text-lg font-bold">
+                      <span>Grand Total:</span>
+                      <span>₦{calculateTotal().toLocaleString()}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 pt-4">
+                    <Button onClick={handleSaveVisit} disabled={saving} className="flex-1">
+                      {saving ? "Generating..." : "Generate Final Bill"}
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowBillPreview(false)}>
+                      Edit
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={showServiceDialog} onOpenChange={setShowServiceDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Manage Services
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Service</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="serviceName">Service Name</Label>
+                      <Input
+                        id="serviceName"
+                        value={newService.name}
+                        onChange={(e) => setNewService(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter service name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="servicePrice">Price (₦)</Label>
+                      <Input
+                        id="servicePrice"
+                        type="number"
+                        value={newService.price}
+                        onChange={(e) => setNewService(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                        placeholder="Enter price"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="serviceDescription">Description</Label>
+                    <Input
+                      id="serviceDescription"
+                      value={newService.description}
+                      onChange={(e) => setNewService(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Enter description"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="serviceCategory">Category</Label>
+                    <Input
+                      id="serviceCategory"
+                      value={newService.category}
+                      onChange={(e) => setNewService(prev => ({ ...prev, category: e.target.value }))}
+                      placeholder="Enter category"
+                    />
+                  </div>
+                  <Button onClick={saveService} className="w-full">
+                    Add Service
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          {prescriptions.length > 0 && (
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <h4 className="font-semibold mb-2">Current Bill Summary</h4>
+              <div className="space-y-1">
+                {prescriptions.filter(p => p.serviceId).map((prescription, index) => {
+                  const service = services.find(s => s.id === prescription.serviceId);
+                  if (!service) return null;
+                  return (
+                    <div key={index} className="flex justify-between text-sm">
+                      <span>{service.name} x{prescription.quantity}</span>
+                      <span>₦{(service.price * prescription.quantity).toLocaleString()}</span>
+                    </div>
+                  );
+                })}
+                <div className="border-t pt-2 flex justify-between font-semibold">
+                  <span>Total:</span>
+                  <span>₦{calculateTotal().toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end gap-4">
         <Button variant="outline" onClick={() => navigate('/doctor-dashboard')}>
           Cancel
         </Button>
-        <Button onClick={handleSaveVisit} disabled={saving}>
-          {saving ? "Saving..." : "Save Visit & Generate Bill"}
+        <Button onClick={() => setShowBillPreview(true)} disabled={prescriptions.length === 0}>
+          Save Visit & Preview Bill
         </Button>
       </div>
     </div>
