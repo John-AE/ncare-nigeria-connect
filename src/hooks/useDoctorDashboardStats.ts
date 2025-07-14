@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface DashboardStats {
-  todaysAppointments: number;
+  totalAppointmentsToday: number;
+  scheduledAppointments: number;
+  arrivedPatients: number;
+  completedAppointments: number;
   totalPatients: number;
   pendingBills: number;
   totalRevenue: number;
@@ -10,7 +13,10 @@ export interface DashboardStats {
 
 export const useDoctorDashboardStats = () => {
   const [stats, setStats] = useState<DashboardStats>({
-    todaysAppointments: 0,
+    totalAppointmentsToday: 0,
+    scheduledAppointments: 0,
+    arrivedPatients: 0,
+    completedAppointments: 0,
     totalPatients: 0,
     pendingBills: 0,
     totalRevenue: 0,
@@ -21,12 +27,18 @@ export const useDoctorDashboardStats = () => {
       try {
         const today = new Date().toISOString().split('T')[0];
         
-        // Get today's appointments count
-        const { count: appointmentsCount } = await supabase
+        // Get today's appointments by status
+        const { data: appointmentsData } = await supabase
           .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .eq('scheduled_date', today)
-          .eq('status', 'scheduled');
+          .select('status')
+          .eq('scheduled_date', today);
+
+        const appointmentCounts = {
+          total: appointmentsData?.length || 0,
+          scheduled: appointmentsData?.filter(apt => apt.status === 'scheduled').length || 0,
+          arrived: appointmentsData?.filter(apt => apt.status === 'arrived').length || 0,
+          completed: appointmentsData?.filter(apt => apt.status === 'completed').length || 0,
+        };
         
         // Get total patients count
         const { count: patientsCount } = await supabase
@@ -46,7 +58,10 @@ export const useDoctorDashboardStats = () => {
           .eq('is_paid', true);
 
         setStats({
-          todaysAppointments: appointmentsCount || 0,
+          totalAppointmentsToday: appointmentCounts.total,
+          scheduledAppointments: appointmentCounts.scheduled,
+          arrivedPatients: appointmentCounts.arrived,
+          completedAppointments: appointmentCounts.completed,
           totalPatients: patientsCount || 0,
           pendingBills: billsCount || 0,
           totalRevenue: revenueData?.reduce((sum, bill) => sum + Number(bill.amount_paid), 0) || 0,

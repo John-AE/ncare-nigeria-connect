@@ -8,15 +8,33 @@ interface QuickStatsCardsProps {
 export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
   const quickStats = [
     { 
-      label: "Today's Appointments", 
-      value: stats.todaysAppointments.toString(), 
+      label: "Total Appointments Today", 
+      value: stats.totalAppointmentsToday.toString(), 
       bgColor: "bg-gradient-to-r from-blue-400 to-blue-500",
+      textColor: "text-white"
+    },
+    { 
+      label: "Scheduled", 
+      value: stats.scheduledAppointments.toString(), 
+      bgColor: "bg-gradient-to-r from-yellow-400 to-yellow-500",
+      textColor: "text-white"
+    },
+    { 
+      label: "Arrived", 
+      value: stats.arrivedPatients.toString(), 
+      bgColor: "bg-gradient-to-r from-orange-400 to-orange-500",
+      textColor: "text-white"
+    },
+    { 
+      label: "Completed", 
+      value: stats.completedAppointments.toString(), 
+      bgColor: "bg-gradient-to-r from-green-400 to-green-500",
       textColor: "text-white"
     },
     { 
       label: "Total Patients", 
       value: stats.totalPatients.toString(), 
-      bgColor: "bg-gradient-to-r from-green-400 to-green-500",
+      bgColor: "bg-gradient-to-r from-purple-400 to-purple-500",
       textColor: "text-white"
     },
     { 
@@ -34,7 +52,7 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
       {quickStats.map((stat, index) => (
         <div 
           key={index} 
