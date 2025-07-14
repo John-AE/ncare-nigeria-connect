@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
-import { Appointment, Service, Prescription, VisitData, NewService } from "@/types/recordVisit";
+import { Appointment, Service, Prescription, VisitData, NewService, CustomPrescription } from "@/types/recordVisit";
 
 export const useRecordVisit = (appointmentId: string | undefined) => {
   const navigate = useNavigate();
@@ -22,6 +22,7 @@ export const useRecordVisit = (appointmentId: string | undefined) => {
   });
   
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [customPrescriptions, setCustomPrescriptions] = useState<CustomPrescription[]>([]);
   const [showBillPreview, setShowBillPreview] = useState(false);
   const [showServiceDialog, setShowServiceDialog] = useState(false);
   const [newService, setNewService] = useState<NewService>({ 
@@ -89,11 +90,29 @@ export const useRecordVisit = (appointmentId: string | undefined) => {
     setPrescriptions(updated);
   };
 
+  const addCustomPrescription = (prescription: Omit<CustomPrescription, 'id'>) => {
+    const newPrescription: CustomPrescription = {
+      ...prescription,
+      id: crypto.randomUUID(),
+    };
+    setCustomPrescriptions(prev => [...prev, newPrescription]);
+  };
+
+  const removeCustomPrescription = (id: string) => {
+    setCustomPrescriptions(prev => prev.filter(p => p.id !== id));
+  };
+
   const calculateTotal = () => {
-    return prescriptions.reduce((sum, p) => {
-      const service = services.find(s => s.id === p.serviceId);
-      return sum + (service ? service.price * p.quantity : 0);
+    const servicesTotal = prescriptions.reduce((total, prescription) => {
+      const service = services.find(s => s.id === prescription.serviceId);
+      return total + (service ? service.price * prescription.quantity : 0);
     }, 0);
+    
+    const customPrescriptionsTotal = customPrescriptions.reduce((total, prescription) => {
+      return total + prescription.price;
+    }, 0);
+    
+    return servicesTotal + customPrescriptionsTotal;
   };
 
   const saveService = async () => {
@@ -264,6 +283,7 @@ export const useRecordVisit = (appointmentId: string | undefined) => {
     setVisitData,
     prescriptions,
     setPrescriptions,
+    customPrescriptions,
     showBillPreview,
     setShowBillPreview,
     showServiceDialog,
@@ -276,6 +296,8 @@ export const useRecordVisit = (appointmentId: string | undefined) => {
     addPrescription,
     removePrescription,
     updatePrescription,
+    addCustomPrescription,
+    removeCustomPrescription,
     calculateTotal,
     saveService,
     handleSaveVisit,

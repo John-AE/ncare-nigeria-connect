@@ -24,6 +24,15 @@ export interface Prescription {
   instructions: string;
 }
 
+export interface CustomPrescription {
+  id: string;
+  medicine: string;
+  dosage: string;
+  frequency: string;
+  otherDetails: string;
+  price: number;
+}
+
 export interface VisitData {
   complaints: string;
   diagnosis: string;

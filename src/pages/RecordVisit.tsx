@@ -29,6 +29,9 @@ export const RecordVisit = () => {
     addPrescription,
     removePrescription,
     updatePrescription,
+    addCustomPrescription,
+    removeCustomPrescription,
+    customPrescriptions,
     calculateTotal,
     saveService,
     handleSaveVisit,
@@ -89,6 +92,7 @@ export const RecordVisit = () => {
 
       <BillPreviewCard
         prescriptions={prescriptions}
+        customPrescriptions={customPrescriptions}
         services={services}
         calculateTotal={calculateTotal}
         showBillPreview={showBillPreview}
@@ -97,6 +101,8 @@ export const RecordVisit = () => {
         handleSaveVisit={handleSaveVisit}
         saving={saving}
         profile={profile}
+        addCustomPrescription={addCustomPrescription}
+        removeCustomPrescription={removeCustomPrescription}
       />
 
       <div className="flex justify-end gap-4">
