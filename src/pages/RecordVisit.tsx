@@ -30,6 +30,7 @@ interface Service {
   name: string;
   price: number;
   category: string;
+  description?: string;
 }
 
 interface Prescription {
@@ -59,6 +60,7 @@ export const RecordVisit = () => {
   const [showBillPreview, setShowBillPreview] = useState(false);
   const [showServiceDialog, setShowServiceDialog] = useState(false);
   const [newService, setNewService] = useState({ name: "", description: "", price: 0, category: "" });
+  const [editingService, setEditingService] = useState<Service | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -100,6 +102,15 @@ export const RecordVisit = () => {
     }
   }, [appointmentId, toast]);
 
+  const fetchServices = async () => {
+    const { data: servicesData } = await supabase
+      .from('services')
+      .select('*')
+      .eq('is_active', true)
+      .order('name');
+    setServices(servicesData || []);
+  };
+
   const addPrescription = () => {
     setPrescriptions([...prescriptions, { serviceId: "", quantity: 1, instructions: "" }]);
   };
@@ -132,27 +143,30 @@ export const RecordVisit = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('services')
-        .insert(newService);
-      
-      if (error) throw error;
+      if (editingService) {
+        const { error } = await supabase
+          .from('services')
+          .update(newService)
+          .eq('id', editingService.id);
+        
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('services')
+          .insert(newService);
+        
+        if (error) throw error;
+      }
 
       toast({
         title: "Success",
-        description: "Service added successfully",
+        description: `Service ${editingService ? 'updated' : 'added'} successfully`,
       });
 
       setNewService({ name: "", description: "", price: 0, category: "" });
+      setEditingService(null);
       setShowServiceDialog(false);
-      
-      // Refetch services
-      const { data: servicesData } = await supabase
-        .from('services')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-      setServices(servicesData || []);
+      fetchServices();
 
     } catch (error) {
       console.error('Error saving service:', error);
@@ -374,10 +388,98 @@ export const RecordVisit = () => {
               <CardTitle>Services</CardTitle>
               <CardDescription>Add medications and services for this visit</CardDescription>
             </div>
-            <Button onClick={addPrescription} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Service
-            </Button>
+            <div className="flex gap-2">
+              <Dialog open={showServiceDialog} onOpenChange={setShowServiceDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Manage Services
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Manage Services</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="serviceName">Service Name</Label>
+                        <Input
+                          id="serviceName"
+                          value={newService.name}
+                          onChange={(e) => setNewService(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Enter service name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="servicePrice">Price (₦)</Label>
+                        <Input
+                          id="servicePrice"
+                          type="number"
+                          value={newService.price}
+                          onChange={(e) => setNewService(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                          placeholder="Enter price"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="serviceDescription">Description</Label>
+                      <Input
+                        id="serviceDescription"
+                        value={newService.description}
+                        onChange={(e) => setNewService(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Enter description"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="serviceCategory">Category</Label>
+                      <Input
+                        id="serviceCategory"
+                        value={newService.category}
+                        onChange={(e) => setNewService(prev => ({ ...prev, category: e.target.value }))}
+                        placeholder="Enter category"
+                      />
+                    </div>
+                    <Button onClick={saveService} className="w-full">
+                      {editingService ? "Update Service" : "Add Service"}
+                    </Button>
+
+                    <div className="border-t pt-4">
+                      <h4 className="font-semibold mb-2">Existing Services</h4>
+                      <div className="max-h-40 overflow-y-auto space-y-2">
+                        {services.map(service => (
+                          <div key={service.id} className="flex items-center justify-between p-2 border rounded">
+                            <div>
+                              <p className="font-medium">{service.name}</p>
+                              <p className="text-sm text-muted-foreground">₦{service.price.toLocaleString()}</p>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setEditingService(service);
+                                setNewService({
+                                  name: service.name,
+                                  description: service.description || "",
+                                  price: service.price,
+                                  category: service.category || ""
+                                });
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Button onClick={addPrescription} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Service
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -507,64 +609,6 @@ export const RecordVisit = () => {
                       Edit
                     </Button>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={showServiceDialog} onOpenChange={setShowServiceDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Manage Services
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Service</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="serviceName">Service Name</Label>
-                      <Input
-                        id="serviceName"
-                        value={newService.name}
-                        onChange={(e) => setNewService(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Enter service name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="servicePrice">Price (₦)</Label>
-                      <Input
-                        id="servicePrice"
-                        type="number"
-                        value={newService.price}
-                        onChange={(e) => setNewService(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                        placeholder="Enter price"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="serviceDescription">Description</Label>
-                    <Input
-                      id="serviceDescription"
-                      value={newService.description}
-                      onChange={(e) => setNewService(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Enter description"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="serviceCategory">Category</Label>
-                    <Input
-                      id="serviceCategory"
-                      value={newService.category}
-                      onChange={(e) => setNewService(prev => ({ ...prev, category: e.target.value }))}
-                      placeholder="Enter category"
-                    />
-                  </div>
-                  <Button onClick={saveService} className="w-full">
-                    Add Service
-                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
