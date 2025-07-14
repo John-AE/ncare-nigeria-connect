@@ -100,8 +100,7 @@ const CompletedAppointmentsBills = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
-                      <DollarSign className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-sm font-medium">${apt.bill_amount.toFixed(2)}</span>
+                      <span className="text-sm font-medium">₦{apt.bill_amount.toLocaleString()}</span>
                     </div>
                     <Badge variant={apt.is_paid ? "default" : "secondary"} className="text-xs">
                       {apt.is_paid ? "Paid" : "Pending"}
@@ -114,7 +113,7 @@ const CompletedAppointmentsBills = () => {
             <div className="border-t pt-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Total Bills Generated:</span>
-                <span className="text-sm font-bold">${totalBillAmount.toFixed(2)}</span>
+                <span className="text-sm font-bold">₦{totalBillAmount.toLocaleString()}</span>
               </div>
             </div>
           </>
