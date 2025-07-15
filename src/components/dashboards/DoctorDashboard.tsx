@@ -29,7 +29,7 @@ const DoctorDashboard = () => {
       </div>
 
       {/* Triage Assessment / Queue */}
-      <TriageQueue />
+      <TriageQueue showRecordVisitButton={true} />
 
       {/* Completed Appointments and Bills */}
       <CompletedAppointmentsBills />

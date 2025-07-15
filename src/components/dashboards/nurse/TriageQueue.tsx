@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Clock, AlertTriangle, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, AlertTriangle, Activity, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface PatientWithVitals {
@@ -21,10 +23,15 @@ interface PatientWithVitals {
     recorded_at: string;
   };
   appointments: {
+    id: string;
     start_time: string;
     scheduled_date: string;
   } | null;
   priority_score: number;
+}
+
+interface TriageQueueProps {
+  showRecordVisitButton?: boolean;
 }
 
 // Priority scoring function based on vital signs
@@ -68,10 +75,11 @@ const getPriorityBadge = (score: number) => {
   return <Badge variant="default" className="flex items-center gap-1"><Clock className="h-3 w-3" />Low</Badge>;
 };
 
-export const TriageQueue = () => {
+export const TriageQueue = ({ showRecordVisitButton = false }: TriageQueueProps) => {
   const [queuePatients, setQueuePatients] = useState<PatientWithVitals[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchQueuePatients = async () => {
     try {
@@ -109,7 +117,7 @@ export const TriageQueue = () => {
       if (patientIds.length > 0) {
         const { data: apptData, error: apptError } = await supabase
           .from('appointments')
-          .select('patient_id, start_time, scheduled_date')
+          .select('id, patient_id, start_time, scheduled_date')
           .in('patient_id', patientIds)
           .eq('scheduled_date', today.toISOString().split('T')[0]);
         
@@ -254,6 +262,7 @@ export const TriageQueue = () => {
                 <TableHead>Priority</TableHead>
                 <TableHead>Vitals Recorded</TableHead>
                 <TableHead>Appointment Time</TableHead>
+                {showRecordVisitButton && <TableHead>Action</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -278,6 +287,22 @@ export const TriageQueue = () => {
                   <TableCell className="text-sm text-muted-foreground">
                     {patient.appointments?.start_time || 'Walk-in'}
                   </TableCell>
+                  {showRecordVisitButton && (
+                    <TableCell>
+                      {patient.appointments?.id ? (
+                        <Button
+                          size="sm"
+                          onClick={() => navigate(`/record-visit/${patient.appointments?.id}`)}
+                          className="text-xs"
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          Record Visit
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No appointment</span>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
