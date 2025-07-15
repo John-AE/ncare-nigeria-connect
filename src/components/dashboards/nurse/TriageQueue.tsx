@@ -75,47 +75,75 @@ export const TriageQueue = () => {
 
   const fetchQueuePatients = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
       
-      // Fetch patients with vital signs recorded today
-      const { data, error } = await supabase
-        .from('patients')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          gender,
-          date_of_birth,
-          vital_signs!inner(
-            body_temperature,
-            heart_rate,
-            blood_pressure_systolic,
-            blood_pressure_diastolic,
-            oxygen_saturation,
-            recorded_at
-          ),
-          appointments(
-            start_time,
-            scheduled_date
-          )
-        `)
-        .gte('vital_signs.recorded_at', today)
-        .lt('vital_signs.recorded_at', `${today}T23:59:59.999Z`);
+      // First, get vital signs recorded today
+      const { data: vitalSignsData, error: vitalSignsError } = await supabase
+        .from('vital_signs')
+        .select('*')
+        .gte('recorded_at', startOfDay)
+        .lt('recorded_at', endOfDay)
+        .order('recorded_at', { ascending: true });
 
-      if (error) throw error;
+      if (vitalSignsError) throw vitalSignsError;
+
+      if (!vitalSignsData || vitalSignsData.length === 0) {
+        setQueuePatients([]);
+        return;
+      }
+
+      // Get patient data for these vital signs
+      const patientIds = vitalSignsData.map(vs => vs.patient_id);
+      
+      const { data: patientsData, error: patientsError } = await supabase
+        .from('patients')
+        .select('id, first_name, last_name, gender, date_of_birth')
+        .in('id', patientIds);
+
+      if (patientsError) throw patientsError;
+
+      // Get appointment data for these patients
+      let appointmentsData = [];
+      if (patientIds.length > 0) {
+        const { data: apptData, error: apptError } = await supabase
+          .from('appointments')
+          .select('patient_id, start_time, scheduled_date')
+          .in('patient_id', patientIds)
+          .eq('scheduled_date', today.toISOString().split('T')[0]);
+        
+        if (apptError) console.warn('Error fetching appointments:', apptError);
+        appointmentsData = apptData || [];
+      }
 
       // Process and sort patients
-      const processedPatients = data.map(patient => {
-        const vitals = Array.isArray(patient.vital_signs) ? patient.vital_signs[0] : patient.vital_signs;
-        const appointment = Array.isArray(patient.appointments) ? patient.appointments[0] : patient.appointments;
+      const processedPatients = vitalSignsData.map(vitalRecord => {
+        const patient = patientsData?.find(p => p.id === vitalRecord.patient_id);
+        const appointment = appointmentsData.find(apt => apt.patient_id === vitalRecord.patient_id);
+        
+        if (!patient) return null; // Skip if patient not found
+        
+        const vitals = {
+          body_temperature: vitalRecord.body_temperature,
+          heart_rate: vitalRecord.heart_rate,
+          blood_pressure_systolic: vitalRecord.blood_pressure_systolic,
+          blood_pressure_diastolic: vitalRecord.blood_pressure_diastolic,
+          oxygen_saturation: vitalRecord.oxygen_saturation,
+          recorded_at: vitalRecord.recorded_at
+        };
         
         return {
-          ...patient,
+          id: patient.id,
+          first_name: patient.first_name,
+          last_name: patient.last_name,
+          gender: patient.gender,
+          date_of_birth: patient.date_of_birth,
           vital_signs: vitals,
-          appointments: appointment,
+          appointments: appointment || null,
           priority_score: calculatePriorityScore(vitals)
         };
-      });
+      }).filter(Boolean) as PatientWithVitals[]; // Remove null entries
 
       // Sort by: 1) Priority score (desc), 2) Vitals recorded time (asc), 3) Appointment time (asc)
       processedPatients.sort((a, b) => {
