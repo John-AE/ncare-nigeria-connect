@@ -75,6 +75,8 @@ export const TriageQueue = () => {
 
   const fetchQueuePatients = async () => {
     try {
+      const today = new Date().toISOString().split('T')[0];
+      
       // Fetch patients with vital signs recorded today
       const { data, error } = await supabase
         .from('patients')
@@ -97,8 +99,8 @@ export const TriageQueue = () => {
             scheduled_date
           )
         `)
-        .eq('vital_signs.recorded_at::date', new Date().toISOString().split('T')[0])
-        .order('vital_signs.recorded_at', { ascending: true });
+        .gte('vital_signs.recorded_at', today)
+        .lt('vital_signs.recorded_at', `${today}T23:59:59.999Z`);
 
       if (error) throw error;
 
