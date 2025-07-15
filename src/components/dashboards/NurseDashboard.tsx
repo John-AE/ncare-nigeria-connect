@@ -47,12 +47,7 @@ const NurseDashboard = () => {
       {/* Full Width Cards */}
       <div className="space-y-6">
         <DateAppointments />
-        <RecentRegistrations 
-          onScheduleAppointment={(patient) => {
-            setSelectedPatient(patient);
-            setShowAppointmentForm(true);
-          }}
-        />
+        <RecentRegistrations />
         <TriageQueue />
       </div>
 

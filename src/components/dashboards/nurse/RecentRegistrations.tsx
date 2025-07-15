@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format, differenceInYears } from "date-fns";
-import { Eye, Calendar, Activity } from "lucide-react";
+import { Eye, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -25,11 +25,7 @@ interface Patient {
   created_at: string;
 }
 
-interface RecentRegistrationsProps {
-  onScheduleAppointment?: (patient: Patient) => void;
-}
-
-export const RecentRegistrations = ({ onScheduleAppointment }: RecentRegistrationsProps = {}) => {
+export const RecentRegistrations = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientDetails, setShowPatientDetails] = useState(false);
@@ -136,17 +132,6 @@ export const RecentRegistrations = ({ onScheduleAppointment }: RecentRegistratio
                             <Activity className="h-3 w-3 mr-1" />
                             Record Vitals
                           </Button>
-                          {onScheduleAppointment && (
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => onScheduleAppointment(patient)}
-                              className="h-8 px-3 text-xs"
-                            >
-                              <Calendar className="h-3 w-3 mr-1" />
-                              Schedule
-                            </Button>
-                          )}
                         </div>
                       </TableCell>
                     </TableRow>
