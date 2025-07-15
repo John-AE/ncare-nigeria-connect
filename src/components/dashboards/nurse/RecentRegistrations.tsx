@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format, differenceInYears } from "date-fns";
-import { Eye, Activity } from "lucide-react";
+import { Eye, Activity, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,6 +29,7 @@ export const RecentRegistrations = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientDetails, setShowPatientDetails] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [showVitalsDialog, setShowVitalsDialog] = useState(false);
   const [vitalsPatient, setVitalsPatient] = useState<Patient | null>(null);
 
@@ -52,12 +53,22 @@ export const RecentRegistrations = () => {
 
   const handleViewDetails = (patient: Patient) => {
     setSelectedPatient(patient);
+    setIsEditing(false);
+    setShowPatientDetails(true);
+  };
+
+  const handleEditDetails = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setIsEditing(true);
     setShowPatientDetails(true);
   };
 
   const handleCloseDetails = () => {
     setShowPatientDetails(false);
     setSelectedPatient(null);
+    setIsEditing(false);
+    // Refresh the patient list after editing
+    fetchRecentPatients();
   };
 
   const handleRecordVitals = (patient: Patient) => {
@@ -124,6 +135,14 @@ export const RecentRegistrations = () => {
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditDetails(patient)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
                             variant="secondary"
                             size="sm"
                             onClick={() => handleRecordVitals(patient)}
@@ -147,7 +166,7 @@ export const RecentRegistrations = () => {
         isOpen={showPatientDetails}
         onClose={handleCloseDetails}
         patientData={selectedPatient}
-        readOnly={true}
+        readOnly={!isEditing}
       />
 
       <VitalsRecordingDialog
