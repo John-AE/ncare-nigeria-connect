@@ -6,6 +6,7 @@ import { PatientManagement } from "./nurse/PatientManagement";
 import { AppointmentManagement } from "./nurse/AppointmentManagement";
 import { DateAppointments } from "./doctor/DateAppointments";
 import { RecentRegistrations } from "./nurse/RecentRegistrations";
+import { TriageQueue } from "./nurse/TriageQueue";
 import PatientRegistrationForm from "../PatientRegistrationForm";
 import AppointmentSchedulingForm from "../AppointmentSchedulingForm";
 import RecurringAppointmentForm from "../RecurringAppointmentForm";
@@ -52,6 +53,7 @@ const NurseDashboard = () => {
             setShowAppointmentForm(true);
           }}
         />
+        <TriageQueue />
       </div>
 
       <PatientRegistrationForm
