@@ -378,6 +378,51 @@ export type Database = {
           },
         ]
       }
+      vital_signs: {
+        Row: {
+          blood_pressure_diastolic: number | null
+          blood_pressure_systolic: number | null
+          body_temperature: number | null
+          created_at: string
+          heart_rate: number | null
+          id: string
+          oxygen_saturation: number | null
+          patient_id: string
+          recorded_at: string
+          recorded_by: string
+          updated_at: string
+          weight: number | null
+        }
+        Insert: {
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          body_temperature?: number | null
+          created_at?: string
+          heart_rate?: number | null
+          id?: string
+          oxygen_saturation?: number | null
+          patient_id: string
+          recorded_at?: string
+          recorded_by: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Update: {
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          body_temperature?: number | null
+          created_at?: string
+          heart_rate?: number | null
+          id?: string
+          oxygen_saturation?: number | null
+          patient_id?: string
+          recorded_at?: string
+          recorded_by?: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

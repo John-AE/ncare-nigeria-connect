@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { format, differenceInYears } from "date-fns";
-import { Eye, Calendar } from "lucide-react";
+import { Eye, Calendar, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import PatientRegistrationForm from "../../PatientRegistrationForm";
+import { VitalsRecordingDialog } from "./VitalsRecordingDialog";
 
 interface Patient {
   id: string;
@@ -32,6 +33,8 @@ export const RecentRegistrations = ({ onScheduleAppointment }: RecentRegistratio
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientDetails, setShowPatientDetails] = useState(false);
+  const [showVitalsDialog, setShowVitalsDialog] = useState(false);
+  const [vitalsPatient, setVitalsPatient] = useState<Patient | null>(null);
 
   useEffect(() => {
     fetchRecentPatients();
@@ -59,6 +62,16 @@ export const RecentRegistrations = ({ onScheduleAppointment }: RecentRegistratio
   const handleCloseDetails = () => {
     setShowPatientDetails(false);
     setSelectedPatient(null);
+  };
+
+  const handleRecordVitals = (patient: Patient) => {
+    setVitalsPatient(patient);
+    setShowVitalsDialog(true);
+  };
+
+  const handleCloseVitals = () => {
+    setShowVitalsDialog(false);
+    setVitalsPatient(null);
   };
 
   return (
@@ -114,6 +127,15 @@ export const RecentRegistrations = ({ onScheduleAppointment }: RecentRegistratio
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleRecordVitals(patient)}
+                            className="h-8 px-3 text-xs"
+                          >
+                            <Activity className="h-3 w-3 mr-1" />
+                            Record Vitals
+                          </Button>
                           {onScheduleAppointment && (
                             <Button
                               variant="default"
@@ -141,6 +163,12 @@ export const RecentRegistrations = ({ onScheduleAppointment }: RecentRegistratio
         onClose={handleCloseDetails}
         patientData={selectedPatient}
         readOnly={true}
+      />
+
+      <VitalsRecordingDialog
+        isOpen={showVitalsDialog}
+        onClose={handleCloseVitals}
+        patient={vitalsPatient}
       />
     </>
   );
