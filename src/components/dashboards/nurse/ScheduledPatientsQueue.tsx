@@ -31,7 +31,7 @@ export const ScheduledPatientsQueue = () => {
   useEffect(() => {
     fetchArrivedPatients();
     
-    // Set up real-time listener for appointment updates
+    // Set up real-time listener for appointment and vital signs updates
     const channel = supabase
       .channel('arrived-patients-updates')
       .on(
@@ -40,6 +40,17 @@ export const ScheduledPatientsQueue = () => {
           event: 'UPDATE',
           schema: 'public',
           table: 'appointments'
+        },
+        () => {
+          fetchArrivedPatients();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'vital_signs'
         },
         () => {
           fetchArrivedPatients();
@@ -56,7 +67,8 @@ export const ScheduledPatientsQueue = () => {
     try {
       const today = format(new Date(), 'yyyy-MM-dd');
       
-      const { data, error } = await supabase
+      // First get arrived appointments
+      const { data: appointments, error: appointmentsError } = await supabase
         .from('appointments')
         .select(`
           id,
@@ -76,11 +88,39 @@ export const ScheduledPatientsQueue = () => {
         .eq('scheduled_date', today)
         .order('start_time');
 
-      if (error) {
-        console.error('Error fetching arrived patients:', error);
-      } else {
-        setArrivedPatients(data || []);
+      if (appointmentsError) {
+        console.error('Error fetching arrived patients:', appointmentsError);
+        return;
       }
+
+      if (!appointments || appointments.length === 0) {
+        setArrivedPatients([]);
+        return;
+      }
+
+      // Get patient IDs who already have vital signs recorded today
+      const patientIds = appointments.map(apt => apt.patients?.id).filter(Boolean);
+      
+      const { data: vitalSigns, error: vitalsError } = await supabase
+        .from('vital_signs')
+        .select('patient_id')
+        .in('patient_id', patientIds)
+        .gte('recorded_at', `${today}T00:00:00`)
+        .lt('recorded_at', `${today}T23:59:59`);
+
+      if (vitalsError) {
+        console.error('Error fetching vital signs:', vitalsError);
+        setArrivedPatients(appointments);
+        return;
+      }
+
+      // Filter out patients who already have vitals recorded today
+      const patientsWithVitals = new Set(vitalSigns?.map(v => v.patient_id) || []);
+      const patientsWithoutVitals = appointments.filter(
+        apt => !patientsWithVitals.has(apt.patients?.id)
+      );
+
+      setArrivedPatients(patientsWithoutVitals || []);
     } catch (error) {
       console.error('Error fetching arrived patients:', error);
     }
