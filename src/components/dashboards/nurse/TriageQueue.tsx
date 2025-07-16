@@ -32,6 +32,7 @@ interface PatientWithVitals {
 
 interface TriageQueueProps {
   showRecordVisitButton?: boolean;
+  showVitalSigns?: boolean;
 }
 
 // Priority scoring function based on vital signs
@@ -75,7 +76,7 @@ const getPriorityBadge = (score: number) => {
   return <Badge variant="default" className="flex items-center gap-1"><Clock className="h-3 w-3" />Low</Badge>;
 };
 
-export const TriageQueue = ({ showRecordVisitButton = false }: TriageQueueProps) => {
+export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = false }: TriageQueueProps) => {
   const [queuePatients, setQueuePatients] = useState<PatientWithVitals[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -260,6 +261,10 @@ export const TriageQueue = ({ showRecordVisitButton = false }: TriageQueueProps)
                 <TableHead>Patient Name</TableHead>
                 <TableHead>Age/Gender</TableHead>
                 <TableHead>Priority</TableHead>
+                {showVitalSigns && <TableHead>Temp (°C)</TableHead>}
+                {showVitalSigns && <TableHead>HR (bpm)</TableHead>}
+                {showVitalSigns && <TableHead>BP (mmHg)</TableHead>}
+                {showVitalSigns && <TableHead>O2 Sat (%)</TableHead>}
                 <TableHead>Vitals Recorded</TableHead>
                 <TableHead>Appointment Time</TableHead>
                 {showRecordVisitButton && <TableHead>Action</TableHead>}
@@ -278,6 +283,28 @@ export const TriageQueue = ({ showRecordVisitButton = false }: TriageQueueProps)
                   <TableCell>
                     {getPriorityBadge(patient.priority_score)}
                   </TableCell>
+                  {showVitalSigns && (
+                    <TableCell className="text-sm">
+                      {patient.vital_signs.body_temperature?.toFixed(1) || 'N/A'}
+                    </TableCell>
+                  )}
+                  {showVitalSigns && (
+                    <TableCell className="text-sm">
+                      {patient.vital_signs.heart_rate || 'N/A'}
+                    </TableCell>
+                  )}
+                  {showVitalSigns && (
+                    <TableCell className="text-sm">
+                      {patient.vital_signs.blood_pressure_systolic && patient.vital_signs.blood_pressure_diastolic
+                        ? `${patient.vital_signs.blood_pressure_systolic}/${patient.vital_signs.blood_pressure_diastolic}`
+                        : 'N/A'}
+                    </TableCell>
+                  )}
+                  {showVitalSigns && (
+                    <TableCell className="text-sm">
+                      {patient.vital_signs.oxygen_saturation?.toFixed(1) || 'N/A'}
+                    </TableCell>
+                  )}
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(patient.vital_signs.recorded_at).toLocaleTimeString([], {
                       hour: '2-digit',
