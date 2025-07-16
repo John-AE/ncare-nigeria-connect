@@ -5,8 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
-import { Service, Prescription, NewService } from "@/types/recordVisit";
+import { Service, Prescription, NewService, CustomPrescription } from "@/types/recordVisit";
 import { ServiceManagementDialog } from "./ServiceManagementDialog";
+import { PrescriptionDialog } from "./PrescriptionDialog";
+import { useState } from "react";
 
 interface ServicesManagementCardProps {
   services: Service[];
@@ -21,6 +23,7 @@ interface ServicesManagementCardProps {
   editingService: Service | null;
   setEditingService: (service: Service | null) => void;
   saveService: () => void;
+  addCustomPrescription: (prescription: Omit<CustomPrescription, 'id'>) => void;
 }
 
 export const ServicesManagementCard = ({
@@ -35,14 +38,16 @@ export const ServicesManagementCard = ({
   setNewService,
   editingService,
   setEditingService,
-  saveService
+  saveService,
+  addCustomPrescription
 }: ServicesManagementCardProps) => {
+  const [showPrescriptionDialog, setShowPrescriptionDialog] = useState(false);
   return (
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Services</CardTitle>
+            <CardTitle>Prescription and Services</CardTitle>
             <CardDescription>Add medications and services for this visit</CardDescription>
           </div>
           <div className="flex gap-2">
@@ -56,6 +61,14 @@ export const ServicesManagementCard = ({
               services={services}
               saveService={saveService}
             />
+            <Button
+              onClick={() => setShowPrescriptionDialog(true)}
+              size="sm"
+              variant="outline"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Prescription
+            </Button>
             <Button onClick={addPrescription} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Service
@@ -118,6 +131,12 @@ export const ServicesManagementCard = ({
             No services added yet. Click "Add Service" to get started.
           </div>
         )}
+        
+        <PrescriptionDialog
+          open={showPrescriptionDialog}
+          onOpenChange={setShowPrescriptionDialog}
+          onAddPrescription={addCustomPrescription}
+        />
       </CardContent>
     </Card>
   );

@@ -5,7 +5,7 @@ import { useRecordVisit } from "@/hooks/useRecordVisit";
 import { PatientInfoCard } from "@/components/record-visit/PatientInfoCard";
 import { VisitDetailsCard } from "@/components/record-visit/VisitDetailsCard";
 import { ServicesManagementCard } from "@/components/record-visit/ServicesManagementCard";
-import { BillPreviewCard } from "@/components/record-visit/BillPreviewCard";
+import { BillPreviewDialog } from "@/components/record-visit/BillPreviewDialog";
 
 export const RecordVisit = () => {
   const { appointmentId } = useParams();
@@ -88,21 +88,7 @@ export const RecordVisit = () => {
         editingService={editingService}
         setEditingService={setEditingService}
         saveService={saveService}
-      />
-
-      <BillPreviewCard
-        prescriptions={prescriptions}
-        customPrescriptions={customPrescriptions}
-        services={services}
-        calculateTotal={calculateTotal}
-        showBillPreview={showBillPreview}
-        setShowBillPreview={setShowBillPreview}
-        appointment={appointment}
-        handleSaveVisit={handleSaveVisit}
-        saving={saving}
-        profile={profile}
         addCustomPrescription={addCustomPrescription}
-        removeCustomPrescription={removeCustomPrescription}
       />
 
       <div className="flex justify-end gap-4">
@@ -113,6 +99,18 @@ export const RecordVisit = () => {
           Save Visit & Preview Bill
         </Button>
       </div>
+
+      <BillPreviewDialog
+        showBillPreview={showBillPreview}
+        setShowBillPreview={setShowBillPreview}
+        prescriptions={prescriptions}
+        appointment={appointment}
+        services={services}
+        calculateTotal={calculateTotal}
+        handleSaveVisit={handleSaveVisit}
+        saving={saving}
+        profile={profile}
+      />
     </div>
   );
 };
