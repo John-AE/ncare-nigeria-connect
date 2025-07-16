@@ -132,7 +132,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
         const patient = patientsData?.find(p => p.id === vitalRecord.patient_id);
         const appointment = appointmentsData.find(apt => apt.patient_id === vitalRecord.patient_id);
         
-        if (!patient) return null; // Skip if patient not found
+        if (!patient || !appointment) return null; // Skip if patient not found OR no active appointment
         
         const vitals = {
           body_temperature: vitalRecord.body_temperature,
@@ -150,7 +150,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
           gender: patient.gender,
           date_of_birth: patient.date_of_birth,
           vital_signs: vitals,
-          appointments: appointment || null,
+          appointments: appointment,
           priority_score: calculatePriorityScore(vitals)
         };
       }).filter(Boolean) as PatientWithVitals[]; // Remove null entries
