@@ -78,6 +78,7 @@ export const RecordVisit = () => {
       <ServicesManagementCard
         services={services}
         prescriptions={prescriptions}
+        customPrescriptions={customPrescriptions}
         addPrescription={addPrescription}
         removePrescription={removePrescription}
         updatePrescription={updatePrescription}
@@ -89,6 +90,7 @@ export const RecordVisit = () => {
         setEditingService={setEditingService}
         saveService={saveService}
         addCustomPrescription={addCustomPrescription}
+        removeCustomPrescription={removeCustomPrescription}
       />
 
       <div className="flex justify-end gap-4">

@@ -13,6 +13,7 @@ import { useState } from "react";
 interface ServicesManagementCardProps {
   services: Service[];
   prescriptions: Prescription[];
+  customPrescriptions: CustomPrescription[];
   addPrescription: () => void;
   removePrescription: (index: number) => void;
   updatePrescription: (index: number, field: keyof Prescription, value: string | number) => void;
@@ -24,11 +25,13 @@ interface ServicesManagementCardProps {
   setEditingService: (service: Service | null) => void;
   saveService: () => void;
   addCustomPrescription: (prescription: Omit<CustomPrescription, 'id'>) => void;
+  removeCustomPrescription: (id: string) => void;
 }
 
 export const ServicesManagementCard = ({
   services,
   prescriptions,
+  customPrescriptions,
   addPrescription,
   removePrescription,
   updatePrescription,
@@ -39,7 +42,8 @@ export const ServicesManagementCard = ({
   editingService,
   setEditingService,
   saveService,
-  addCustomPrescription
+  addCustomPrescription,
+  removeCustomPrescription
 }: ServicesManagementCardProps) => {
   const [showPrescriptionDialog, setShowPrescriptionDialog] = useState(false);
   return (
@@ -126,7 +130,41 @@ export const ServicesManagementCard = ({
             </Button>
           </div>
         ))}
-        {prescriptions.length === 0 && (
+        
+        {customPrescriptions.map((prescription) => (
+          <div key={prescription.id} className="flex gap-4 items-end p-4 border rounded-lg bg-blue-50">
+            <div className="flex-1">
+              <Label>Custom Prescription</Label>
+              <div className="p-2 bg-white rounded border">
+                <strong>{prescription.medicine}</strong>
+                <div className="text-sm text-muted-foreground">
+                  {prescription.dosage} • {prescription.frequency}
+                </div>
+              </div>
+            </div>
+            <div className="w-24">
+              <Label>Price</Label>
+              <div className="p-2 bg-white rounded border">
+                ₦{prescription.price}
+              </div>
+            </div>
+            <div className="flex-1">
+              <Label>Details</Label>
+              <div className="p-2 bg-white rounded border text-sm">
+                {prescription.otherDetails || "No additional details"}
+              </div>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => removeCustomPrescription(prescription.id)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        
+        {prescriptions.length === 0 && customPrescriptions.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
             No services added yet. Click "Add Service" to get started.
           </div>
