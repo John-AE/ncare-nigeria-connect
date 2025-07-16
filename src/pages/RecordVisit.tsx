@@ -97,7 +97,7 @@ export const RecordVisit = () => {
         <Button variant="outline" onClick={() => navigate('/doctor-dashboard')}>
           Cancel
         </Button>
-        <Button onClick={() => setShowBillPreview(true)} disabled={prescriptions.length === 0}>
+        <Button onClick={() => setShowBillPreview(true)} disabled={prescriptions.length === 0 && customPrescriptions.length === 0}>
           Save Visit & Preview Bill
         </Button>
       </div>
@@ -106,6 +106,7 @@ export const RecordVisit = () => {
         showBillPreview={showBillPreview}
         setShowBillPreview={setShowBillPreview}
         prescriptions={prescriptions}
+        customPrescriptions={customPrescriptions}
         appointment={appointment}
         services={services}
         calculateTotal={calculateTotal}

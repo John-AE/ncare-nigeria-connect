@@ -60,6 +60,7 @@ export const BillPreviewCard = ({
             showBillPreview={showBillPreview}
             setShowBillPreview={setShowBillPreview}
             prescriptions={prescriptions}
+            customPrescriptions={customPrescriptions}
             appointment={appointment}
             services={services}
             calculateTotal={calculateTotal}

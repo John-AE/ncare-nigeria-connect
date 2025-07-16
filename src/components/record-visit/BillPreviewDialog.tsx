@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Receipt } from "lucide-react";
-import { Appointment, Service, Prescription } from "@/types/recordVisit";
+import { Appointment, Service, Prescription, CustomPrescription } from "@/types/recordVisit";
 
 interface BillPreviewDialogProps {
   showBillPreview: boolean;
   setShowBillPreview: (show: boolean) => void;
   prescriptions: Prescription[];
+  customPrescriptions: CustomPrescription[];
   appointment: Appointment | null;
   services: Service[];
   calculateTotal: () => number;
@@ -19,6 +20,7 @@ export const BillPreviewDialog = ({
   showBillPreview,
   setShowBillPreview,
   prescriptions,
+  customPrescriptions,
   appointment,
   services,
   calculateTotal,
@@ -29,7 +31,7 @@ export const BillPreviewDialog = ({
   return (
     <Dialog open={showBillPreview} onOpenChange={setShowBillPreview}>
       <DialogTrigger asChild>
-        <Button disabled={prescriptions.length === 0}>
+        <Button disabled={prescriptions.length === 0 && customPrescriptions.length === 0}>
           <Receipt className="h-4 w-4 mr-2" />
           Preview Bill
         </Button>
@@ -67,6 +69,22 @@ export const BillPreviewDialog = ({
                   </div>
                 );
               })}
+              
+              {customPrescriptions.map((prescription) => (
+                <div key={prescription.id} className="flex justify-between items-center p-2 border rounded">
+                  <div>
+                    <p className="font-medium">{prescription.medicine}</p>
+                    <p className="text-sm text-muted-foreground">{prescription.dosage} • {prescription.frequency}</p>
+                    {prescription.otherDetails && (
+                      <p className="text-xs text-muted-foreground">{prescription.otherDetails}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">₦{prescription.price.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">Custom prescription</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           
