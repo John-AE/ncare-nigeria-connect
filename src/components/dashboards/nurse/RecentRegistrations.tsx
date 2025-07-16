@@ -35,19 +35,74 @@ export const RecentRegistrations = () => {
 
   useEffect(() => {
     fetchRecentPatients();
+    
+    // Set up real-time listener for vital signs updates
+    const channel = supabase
+      .channel('recent-patients-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'vital_signs'
+        },
+        () => {
+          fetchRecentPatients();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchRecentPatients = async () => {
-    const { data, error } = await supabase
-      .from('patients')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(5);
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      // First get recent patients
+      const { data: recentPatients, error: patientsError } = await supabase
+        .from('patients')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
 
-    if (error) {
+      if (patientsError) {
+        console.error('Error fetching recent patients:', patientsError);
+        return;
+      }
+
+      if (!recentPatients || recentPatients.length === 0) {
+        setPatients([]);
+        return;
+      }
+
+      // Get patient IDs who already have vital signs recorded today
+      const patientIds = recentPatients.map(patient => patient.id);
+      
+      const { data: vitalSigns, error: vitalsError } = await supabase
+        .from('vital_signs')
+        .select('patient_id')
+        .in('patient_id', patientIds)
+        .gte('recorded_at', `${today}T00:00:00`)
+        .lt('recorded_at', `${today}T23:59:59`);
+
+      if (vitalsError) {
+        console.error('Error fetching vital signs:', vitalsError);
+        setPatients(recentPatients);
+        return;
+      }
+
+      // Filter out patients who already have vitals recorded today
+      const patientsWithVitals = new Set(vitalSigns?.map(v => v.patient_id) || []);
+      const patientsWithoutVitals = recentPatients.filter(
+        patient => !patientsWithVitals.has(patient.id)
+      );
+
+      setPatients(patientsWithoutVitals || []);
+    } catch (error) {
       console.error('Error fetching recent patients:', error);
-    } else {
-      setPatients(data || []);
     }
   };
 
