@@ -5,6 +5,7 @@ import { NurseStatsCards } from "./nurse/NurseStatsCards";
 import { PatientManagement } from "./nurse/PatientManagement";
 import { AppointmentManagement } from "./nurse/AppointmentManagement";
 import { DateAppointments } from "./doctor/DateAppointments";
+import { ScheduledPatientsQueue } from "./nurse/ScheduledPatientsQueue";
 import { RecentRegistrations } from "./nurse/RecentRegistrations";
 import { TriageQueue } from "./nurse/TriageQueue";
 import PatientRegistrationForm from "../PatientRegistrationForm";
@@ -47,6 +48,7 @@ const NurseDashboard = () => {
       {/* Full Width Cards */}
       <div className="space-y-6">
         <DateAppointments />
+        <ScheduledPatientsQueue />
         <RecentRegistrations />
         <TriageQueue />
       </div>

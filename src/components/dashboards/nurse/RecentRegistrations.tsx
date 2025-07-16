@@ -85,7 +85,7 @@ export const RecentRegistrations = () => {
     <>
       <Card className="bg-card border-border transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-foreground">Recent Registrations</CardTitle>
+          <CardTitle className="text-lg font-semibold text-foreground">New Patients - Recent Registrations</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-hidden rounded-lg border border-border">
