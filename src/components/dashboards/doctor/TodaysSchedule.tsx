@@ -80,15 +80,6 @@ export const TodaysSchedule = () => {
                   <Badge variant={appointment.status === 'arrived' ? 'default' : 'outline'}>
                     {appointment.status}
                   </Badge>
-                  {appointment.status === 'arrived' && (
-                    <Button 
-                      size="sm" 
-                      onClick={() => navigate(`/record-visit/${appointment.id}`)}
-                      className="text-xs"
-                    >
-                      Record Visit
-                    </Button>
-                  )}
                 </div>
               </div>
             ))

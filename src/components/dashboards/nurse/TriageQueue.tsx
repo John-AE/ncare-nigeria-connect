@@ -287,20 +287,24 @@ export const TriageQueue = ({ showRecordVisitButton = false }: TriageQueueProps)
                   <TableCell className="text-sm text-muted-foreground">
                     {patient.appointments?.start_time || 'Walk-in'}
                   </TableCell>
-                  {showRecordVisitButton && (
+                   {showRecordVisitButton && (
                     <TableCell>
-                      {patient.appointments?.id ? (
-                        <Button
-                          size="sm"
-                          onClick={() => navigate(`/record-visit/${patient.appointments?.id}`)}
-                          className="text-xs"
-                        >
-                          <FileText className="h-3 w-3 mr-1" />
-                          Record Visit
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">No appointment</span>
-                      )}
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          if (patient.appointments?.id) {
+                            navigate(`/record-visit/${patient.appointments.id}`);
+                          } else {
+                            // For walk-in patients, we'll need to create a temporary appointment or handle differently
+                            // For now, we'll use the patient ID to navigate to a walk-in visit recording
+                            navigate(`/record-visit/walk-in/${patient.id}`);
+                          }
+                        }}
+                        className="text-xs"
+                      >
+                        <FileText className="h-3 w-3 mr-1" />
+                        Record Visit
+                      </Button>
                     </TableCell>
                   )}
                 </TableRow>
