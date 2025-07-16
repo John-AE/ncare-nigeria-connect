@@ -120,7 +120,8 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
           .from('appointments')
           .select('id, patient_id, start_time, scheduled_date')
           .in('patient_id', patientIds)
-          .eq('scheduled_date', today.toISOString().split('T')[0]);
+          .eq('scheduled_date', today.toISOString().split('T')[0])
+          .neq('status', 'completed');
         
         if (apptError) console.warn('Error fetching appointments:', apptError);
         appointmentsData = apptData || [];
