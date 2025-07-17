@@ -35,71 +35,58 @@ const CompletedAppointmentsBills = () => {
       try {
         const today = new Date().toISOString().split('T')[0];
         
-        const { data, error } = await supabase
-          .from('appointments')
+        // Get all bills created today with patient information
+        const { data: bills, error } = await supabase
+          .from('bills')
           .select(`
             id,
-            start_time,
+            amount,
+            is_paid,
+            payment_method,
             patient_id,
-            patients!inner(first_name, last_name)
+            created_at,
+            patients!inner(first_name, last_name),
+            bill_items(
+              id,
+              quantity,
+              unit_price,
+              total_price,
+              services(name)
+            )
           `)
-          .eq('scheduled_date', today)
-          .eq('status', 'completed');
+          .gte('created_at', `${today}T00:00:00`)
+          .lt('created_at', `${today}T23:59:59`)
+          .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        // Get bills with items for completed appointments (only today's bills)
-        const patientIds = data?.map(apt => apt.patient_id) || [];
-        
-        let formattedData: CompletedAppointmentBill[] = [];
-        if (patientIds.length > 0) {
-          const { data: bills } = await supabase
-            .from('bills')
-            .select(`
-              id,
-              amount,
-              is_paid,
-              payment_method,
-              patient_id,
-              created_at,
-              bill_items(
-                id,
-                quantity,
-                unit_price,
-                total_price,
-                services(name)
-              )
-            `)
-            .in('patient_id', patientIds)
-            .gte('created_at', `${today}T00:00:00`)
-            .lt('created_at', `${today}T23:59:59`);
-
-          formattedData = data?.map(apt => {
-            const patientBill = bills?.find(bill => bill.patient_id === apt.patient_id);
-            
-            // Calculate total from bill items
-            const billItems: BillItem[] = patientBill?.bill_items?.map(item => ({
-              id: item.id,
-              service_name: item.services?.name || 'Unknown Service',
-              quantity: item.quantity,
-              unit_price: item.unit_price,
-              total_price: item.total_price,
-            })) || [];
-            
-            const calculatedTotal = billItems.reduce((sum, item) => sum + item.total_price, 0);
-            
-            return {
-              appointment_id: apt.id,
-              patient_name: `${apt.patients.first_name} ${apt.patients.last_name}`,
-              appointment_time: apt.start_time,
-              bill_amount: calculatedTotal || patientBill?.amount || 0,
-              is_paid: patientBill?.is_paid || false,
-              bill_id: patientBill?.id || '',
-              payment_method: patientBill?.payment_method,
-              bill_items: billItems,
-            };
-          }) || [];
-        }
+        // Format the data to show all bills
+        const formattedData: CompletedAppointmentBill[] = bills?.map(bill => {
+          // Calculate total from bill items
+          const billItems: BillItem[] = bill.bill_items?.map(item => ({
+            id: item.id,
+            service_name: item.services?.name || 'Unknown Service',
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total_price: item.total_price,
+          })) || [];
+          
+          const calculatedTotal = billItems.reduce((sum, item) => sum + item.total_price, 0);
+          
+          return {
+            appointment_id: bill.id, // Using bill ID as appointment ID
+            patient_name: `${bill.patients.first_name} ${bill.patients.last_name}`,
+            appointment_time: new Date(bill.created_at).toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }),
+            bill_amount: calculatedTotal || bill.amount || 0,
+            is_paid: bill.is_paid || false,
+            bill_id: bill.id,
+            payment_method: bill.payment_method,
+            bill_items: billItems,
+          };
+        }) || [];
 
         setCompletedAppointments(formattedData);
       } catch (error) {
