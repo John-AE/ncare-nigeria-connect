@@ -81,9 +81,15 @@ export const CompletedConsultations = () => {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-l-8 border-l-[#65A30D]">
         <CardHeader>
-          <CardTitle>Doctor Consultation Completed</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Eye className="h-5 w-5" />
+            Doctor Consultation Completed
+            <Badge variant="outline" className="ml-auto">
+              {completedVisits.length} patients
+            </Badge>
+          </CardTitle>
           <CardDescription>Recently completed patient consultations</CardDescription>
         </CardHeader>
         <CardContent>
@@ -95,9 +101,15 @@ export const CompletedConsultations = () => {
 
   return (
     <>
-      <Card>
+      <Card className="border-l-8 border-l-[#65A30D]">
         <CardHeader>
-          <CardTitle>Doctor Consultation Completed</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Eye className="h-5 w-5" />
+            Doctor Consultation Completed
+            <Badge variant="outline" className="ml-auto">
+              {completedVisits.length} patients
+            </Badge>
+          </CardTitle>
           <CardDescription>Recently completed patient consultations</CardDescription>
         </CardHeader>
         <CardContent>
