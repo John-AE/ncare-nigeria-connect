@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { useAuth } from "../AuthProvider";
 import { useDoctorDashboardStats } from "@/hooks/useDoctorDashboardStats";
+import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { QuickStatsCards } from "./doctor/QuickStatsCards";
 import { DateAppointments } from "./doctor/DateAppointments";
 import { TodaysSchedule } from "./doctor/TodaysSchedule";
@@ -10,13 +13,32 @@ import CompletedAppointmentsBills from "./doctor/CompletedAppointmentsBills";
 const DoctorDashboard = () => {
   const { profile } = useAuth();
   const stats = useDoctorDashboardStats();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    window.location.reload();
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="border-b border-border pb-4">
-        <h1 className="text-3xl font-bold text-foreground">Doctor Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, Dr. {profile?.username}</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Doctor Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back, Dr. {profile?.username}</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Quick Stats */}
