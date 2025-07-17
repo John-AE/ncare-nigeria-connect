@@ -121,7 +121,7 @@ const CompletedAppointmentsBills = () => {
 
   return (
     <>
-      <Card className="h-fit">
+      <Card className="h-fit border-l-8 border-l-[#65A30D]">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-base font-medium">
             Today's Completed Appointments & Bills Generated
@@ -140,7 +140,7 @@ const CompletedAppointmentsBills = () => {
             <div className="text-sm text-muted-foreground">No completed appointments today</div>
           ) : (
             <>
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-96 overflow-y-auto">
                 {completedAppointments.map((apt) => (
                   <div 
                     key={apt.appointment_id} 
