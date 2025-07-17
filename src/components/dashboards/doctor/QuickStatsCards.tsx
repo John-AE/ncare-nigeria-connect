@@ -10,44 +10,51 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
     { 
       label: "Total Appointments Today", 
       value: stats.totalAppointmentsToday.toString(), 
-      bgColor: "bg-gradient-to-r from-blue-400 to-blue-500",
-      textColor: "text-white"
+      borderColor: "border-l-primary",
+      bgColor: "bg-primary/5",
+      textColor: "text-primary"
     },
     { 
       label: "Scheduled", 
       value: stats.scheduledAppointments.toString(), 
-      bgColor: "bg-gradient-to-r from-yellow-400 to-yellow-500",
-      textColor: "text-white"
+      borderColor: "border-l-amber-500",
+      bgColor: "bg-amber-50",
+      textColor: "text-amber-900"
     },
     { 
       label: "Arrived", 
       value: stats.arrivedPatients.toString(), 
-      bgColor: "bg-gradient-to-r from-orange-400 to-orange-500",
-      textColor: "text-white"
+      borderColor: "border-l-orange-500",
+      bgColor: "bg-orange-50",
+      textColor: "text-orange-900"
     },
     { 
       label: "Completed", 
       value: stats.completedAppointments.toString(), 
-      bgColor: "bg-gradient-to-r from-green-400 to-green-500",
-      textColor: "text-white"
+      borderColor: "border-l-emerald-500",
+      bgColor: "bg-emerald-50",
+      textColor: "text-emerald-900"
     },
     { 
       label: "Total Patients", 
       value: stats.totalPatients.toString(), 
-      bgColor: "bg-gradient-to-r from-purple-400 to-purple-500",
-      textColor: "text-white"
+      borderColor: "border-l-purple-500",
+      bgColor: "bg-purple-50",
+      textColor: "text-purple-900"
     },
     { 
       label: "Pending Bills", 
       value: stats.pendingBills.toString(), 
-      bgColor: "bg-gradient-to-r from-red-400 to-red-500",
-      textColor: "text-white"
+      borderColor: "border-l-rose-500",
+      bgColor: "bg-rose-50",
+      textColor: "text-rose-900"
     },
     { 
       label: "Total Revenue", 
       value: `₦${stats.totalRevenue.toFixed(2)}`, 
-      bgColor: "bg-gradient-to-r from-emerald-400 to-emerald-500",
-      textColor: "text-white"
+      borderColor: "border-l-secondary",
+      bgColor: "bg-secondary/5",
+      textColor: "text-secondary-foreground"
     }
   ];
 
@@ -56,11 +63,11 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
       {quickStats.map((stat, index) => (
         <div 
           key={index} 
-          className={`${stat.bgColor} ${stat.textColor} rounded-full px-6 py-4 shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl`}
+          className={`${stat.borderColor} ${stat.bgColor} ${stat.textColor} border-l-4 rounded-lg px-6 py-4 shadow-sm hover:shadow-md transition-all duration-200 bg-card`}
         >
-          <div className="flex flex-col items-center justify-center text-center">
+          <div className="flex flex-col">
             <p className="text-2xl font-bold mb-1">{stat.value}</p>
-            <p className="text-sm font-medium opacity-90">{stat.label}</p>
+            <p className="text-sm font-medium opacity-80">{stat.label}</p>
           </div>
         </div>
       ))}

@@ -17,26 +17,30 @@ export const FinanceStatsCards = ({
     { 
       label: "Today's Revenue", 
       value: `₦${todaysRevenue.toLocaleString()}`, 
-      bgColor: "bg-gradient-to-r from-violet-400 to-violet-500",
-      textColor: "text-white"
+      borderColor: "border-l-secondary",
+      bgColor: "bg-secondary/5",
+      textColor: "text-secondary-foreground"
     },
     { 
       label: "Pending Bills", 
       value: pendingBillsCount.toString(), 
-      bgColor: "bg-gradient-to-r from-cyan-400 to-cyan-500",
-      textColor: "text-white"
+      borderColor: "border-l-rose-500",
+      bgColor: "bg-rose-50",
+      textColor: "text-rose-900"
     },
     { 
       label: "Partial Payments", 
       value: partialPaymentsCount.toString(), 
-      bgColor: "bg-gradient-to-r from-teal-400 to-teal-500",
-      textColor: "text-white"
+      borderColor: "border-l-amber-500",
+      bgColor: "bg-amber-50",
+      textColor: "text-amber-900"
     },
     { 
       label: "Total Outstanding Amount", 
       value: `₦${outstandingAmount.toLocaleString()}`, 
-      bgColor: "bg-gradient-to-r from-rose-400 to-rose-500",
-      textColor: "text-white"
+      borderColor: "border-l-primary",
+      bgColor: "bg-primary/5",
+      textColor: "text-primary"
     }
   ];
 
@@ -45,11 +49,11 @@ export const FinanceStatsCards = ({
       {quickStats.map((stat, index) => (
         <div 
           key={index} 
-          className={`${stat.bgColor} ${stat.textColor} rounded-full px-6 py-4 shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl`}
+          className={`${stat.borderColor} ${stat.bgColor} ${stat.textColor} border-l-4 rounded-lg px-6 py-4 shadow-sm hover:shadow-md transition-all duration-200 bg-card`}
         >
-          <div className="flex flex-col items-center justify-center text-center">
+          <div className="flex flex-col">
             <p className="text-2xl font-bold mb-1">{stat.value}</p>
-            <p className="text-sm font-medium opacity-90">{stat.label}</p>
+            <p className="text-sm font-medium opacity-80">{stat.label}</p>
           </div>
         </div>
       ))}
