@@ -222,7 +222,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-l-4 border-l-[#EF4444]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
@@ -239,7 +239,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
   }
 
   return (
-    <Card>
+    <Card className="border-l-4 border-l-[#EF4444]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5" />
