@@ -59,8 +59,6 @@ export const RecentRegistrations = () => {
 
   const fetchRecentPatients = async () => {
     try {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      
       // First get recent patients
       const { data: recentPatients, error: patientsError } = await supabase
         .from('patients')
@@ -78,15 +76,13 @@ export const RecentRegistrations = () => {
         return;
       }
 
-      // Get patient IDs who already have vital signs recorded today
+      // Get patient IDs who already have ANY vital signs recorded
       const patientIds = recentPatients.map(patient => patient.id);
       
       const { data: vitalSigns, error: vitalsError } = await supabase
         .from('vital_signs')
         .select('patient_id')
-        .in('patient_id', patientIds)
-        .gte('recorded_at', `${today}T00:00:00`)
-        .lt('recorded_at', `${today}T23:59:59`);
+        .in('patient_id', patientIds);
 
       if (vitalsError) {
         console.error('Error fetching vital signs:', vitalsError);
@@ -94,7 +90,7 @@ export const RecentRegistrations = () => {
         return;
       }
 
-      // Filter out patients who already have vitals recorded today
+      // Filter out patients who already have ANY vitals recorded
       const patientsWithVitals = new Set(vitalSigns?.map(v => v.patient_id) || []);
       const patientsWithoutVitals = recentPatients.filter(
         patient => !patientsWithVitals.has(patient.id)
