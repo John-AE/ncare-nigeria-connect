@@ -35,7 +35,7 @@ export const VisitDetailsCard = ({ visitData, setVisitData }: VisitDetailsCardPr
           />
         </div>
         <div>
-          <Label htmlFor="treatment-plan">Treatment Plan</Label>
+          <Label htmlFor="treatment-plan">Instructions to Nurse/Treatment Plan</Label>
           <Textarea
             id="treatment-plan"
             placeholder="Enter treatment plan..."

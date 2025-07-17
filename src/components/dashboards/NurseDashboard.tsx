@@ -8,6 +8,7 @@ import { DateAppointments } from "./doctor/DateAppointments";
 import { ScheduledPatientsQueue } from "./nurse/ScheduledPatientsQueue";
 import { RecentRegistrations } from "./nurse/RecentRegistrations";
 import { TriageQueue } from "./nurse/TriageQueue";
+import { CompletedConsultations } from "./nurse/CompletedConsultations";
 import PatientRegistrationForm from "../PatientRegistrationForm";
 import AppointmentSchedulingForm from "../AppointmentSchedulingForm";
 import RecurringAppointmentForm from "../RecurringAppointmentForm";
@@ -49,6 +50,7 @@ const NurseDashboard = () => {
       <div className="space-y-6">
         <DateAppointments />
         <ScheduledPatientsQueue />
+        <CompletedConsultations />
         <RecentRegistrations />
         <TriageQueue />
       </div>
