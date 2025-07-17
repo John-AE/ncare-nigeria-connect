@@ -4,36 +4,15 @@ import { ArrowLeft } from "lucide-react";
 import { useRecordVisit } from "@/hooks/useRecordVisit";
 import { PatientInfoCard } from "@/components/record-visit/PatientInfoCard";
 import { VisitDetailsCard } from "@/components/record-visit/VisitDetailsCard";
-import { ServicesManagementCard } from "@/components/record-visit/ServicesManagementCard";
-import { BillPreviewDialog } from "@/components/record-visit/BillPreviewDialog";
+import { PatientBillingSystem } from "@/components/record-visit/PatientBillingSystem";
 
 export const RecordVisit = () => {
   const { appointmentId } = useParams();
   const {
     appointment,
-    services,
     loading,
-    saving,
     visitData,
     setVisitData,
-    prescriptions,
-    setPrescriptions,
-    showBillPreview,
-    setShowBillPreview,
-    showServiceDialog,
-    setShowServiceDialog,
-    newService,
-    setNewService,
-    editingService,
-    setEditingService,
-    addPrescription,
-    removePrescription,
-    updatePrescription,
-    addCustomPrescription,
-    removeCustomPrescription,
-    customPrescriptions,
-    calculateTotal,
-    saveService,
     handleSaveVisit,
     navigate,
     profile
@@ -75,45 +54,20 @@ export const RecordVisit = () => {
         <VisitDetailsCard visitData={visitData} setVisitData={setVisitData} />
       </div>
 
-      <ServicesManagementCard
-        services={services}
-        prescriptions={prescriptions}
-        customPrescriptions={customPrescriptions}
-        addPrescription={addPrescription}
-        removePrescription={removePrescription}
-        updatePrescription={updatePrescription}
-        showServiceDialog={showServiceDialog}
-        setShowServiceDialog={setShowServiceDialog}
-        newService={newService}
-        setNewService={setNewService}
-        editingService={editingService}
-        setEditingService={setEditingService}
-        saveService={saveService}
-        addCustomPrescription={addCustomPrescription}
-        removeCustomPrescription={removeCustomPrescription}
+      <PatientBillingSystem 
+        appointment={appointment} 
+        profile={profile}
+        onBillFinalized={() => {
+          handleSaveVisit();
+          navigate('/doctor-dashboard');
+        }}
       />
 
       <div className="flex justify-end gap-4">
         <Button variant="outline" onClick={() => navigate('/doctor-dashboard')}>
           Cancel
         </Button>
-        <Button onClick={() => setShowBillPreview(true)} disabled={prescriptions.length === 0 && customPrescriptions.length === 0}>
-          Save Visit & Preview Bill
-        </Button>
       </div>
-
-      <BillPreviewDialog
-        showBillPreview={showBillPreview}
-        setShowBillPreview={setShowBillPreview}
-        prescriptions={prescriptions}
-        customPrescriptions={customPrescriptions}
-        appointment={appointment}
-        services={services}
-        calculateTotal={calculateTotal}
-        handleSaveVisit={handleSaveVisit}
-        saving={saving}
-        profile={profile}
-      />
     </div>
   );
 };
