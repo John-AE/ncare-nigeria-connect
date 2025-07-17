@@ -9,26 +9,30 @@ export const NurseStatsCards = ({ stats }: NurseStatsCardsProps) => {
     { 
       label: "Total Patients", 
       value: stats.totalPatients.toString(), 
-      bgColor: "bg-gradient-to-r from-orange-400 to-orange-500",
-      textColor: "text-white"
+      borderColor: "border-l-amber-500",
+      bgColor: "bg-amber-50",
+      textColor: "text-amber-900"
     },
     { 
       label: "New Patients Today", 
       value: stats.newPatientsToday.toString(), 
-      bgColor: "bg-gradient-to-r from-purple-400 to-purple-500",
-      textColor: "text-white"
+      borderColor: "border-l-rose-500",
+      bgColor: "bg-rose-50",
+      textColor: "text-rose-900"
     },
     { 
       label: "Today's Appointments", 
       value: stats.todaysAppointments.toString(), 
-      bgColor: "bg-gradient-to-r from-amber-400 to-amber-500",
-      textColor: "text-white"
+      borderColor: "border-l-primary",
+      bgColor: "bg-primary/5",
+      textColor: "text-primary"
     },
     { 
       label: "Total Pending Bills", 
       value: stats.totalPendingBills.toString(), 
-      bgColor: "bg-gradient-to-r from-pink-400 to-pink-500",
-      textColor: "text-white"
+      borderColor: "border-l-secondary",
+      bgColor: "bg-secondary/5",
+      textColor: "text-secondary-foreground"
     }
   ];
 
@@ -37,11 +41,11 @@ export const NurseStatsCards = ({ stats }: NurseStatsCardsProps) => {
       {quickStats.map((stat, index) => (
         <div 
           key={index} 
-          className={`${stat.bgColor} ${stat.textColor} rounded-full px-6 py-4 shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl`}
+          className={`${stat.borderColor} ${stat.bgColor} ${stat.textColor} border-l-4 rounded-lg px-6 py-4 shadow-sm hover:shadow-md transition-all duration-200 bg-card`}
         >
-          <div className="flex flex-col items-center justify-center text-center">
+          <div className="flex flex-col">
             <p className="text-2xl font-bold mb-1">{stat.value}</p>
-            <p className="text-sm font-medium opacity-90">{stat.label}</p>
+            <p className="text-sm font-medium opacity-80">{stat.label}</p>
           </div>
         </div>
       ))}
