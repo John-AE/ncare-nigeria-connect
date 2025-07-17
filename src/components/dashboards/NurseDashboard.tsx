@@ -50,9 +50,9 @@ const NurseDashboard = () => {
       <div className="space-y-6">
         <DateAppointments />
         <ScheduledPatientsQueue />
-        <CompletedConsultations />
         <RecentRegistrations />
         <TriageQueue />
+        <CompletedConsultations />
       </div>
 
       <PatientRegistrationForm
