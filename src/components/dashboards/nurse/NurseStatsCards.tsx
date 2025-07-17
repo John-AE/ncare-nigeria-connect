@@ -32,7 +32,7 @@ export const NurseStatsCards = ({ stats }: NurseStatsCardsProps) => {
       value: stats.totalPendingBills.toString(), 
       borderColor: "border-l-lime",
       bgColor: "bg-lime-400/5",
-      textColor: "text-secondary-foreground"
+      textColor: "text-lime-400"
     }
   ];
 
