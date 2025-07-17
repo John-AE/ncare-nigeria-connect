@@ -63,7 +63,7 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
       {quickStats.map((stat, index) => (
         <div 
           key={index} 
-          className={`${stat.borderColor} ${stat.bgColor} ${stat.textColor} border-l-4 rounded-lg px-6 py-4 shadow-sm hover:shadow-md transition-all duration-200 bg-card`}
+          className={`${stat.borderColor} ${stat.bgColor} ${stat.textColor} border-l-8 rounded-lg px-6 py-4 shadow-sm hover:shadow-md transition-all duration-200`}
         >
           <div className="flex flex-col">
             <p className="text-2xl font-bold mb-1">{stat.value}</p>
