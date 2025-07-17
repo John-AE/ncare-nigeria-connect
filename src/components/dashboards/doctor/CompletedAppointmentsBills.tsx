@@ -48,7 +48,7 @@ const CompletedAppointmentsBills = () => {
 
         if (error) throw error;
 
-        // Get bills with items for completed appointments
+        // Get bills with items for completed appointments (only today's bills)
         const patientIds = data?.map(apt => apt.patient_id) || [];
         
         let formattedData: CompletedAppointmentBill[] = [];
@@ -61,6 +61,7 @@ const CompletedAppointmentsBills = () => {
               is_paid,
               payment_method,
               patient_id,
+              created_at,
               bill_items(
                 id,
                 quantity,
@@ -69,7 +70,9 @@ const CompletedAppointmentsBills = () => {
                 services(name)
               )
             `)
-            .in('patient_id', patientIds);
+            .in('patient_id', patientIds)
+            .gte('created_at', `${today}T00:00:00`)
+            .lt('created_at', `${today}T23:59:59`);
 
           formattedData = data?.map(apt => {
             const patientBill = bills?.find(bill => bill.patient_id === apt.patient_id);

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Receipt, Plus, Trash2, Edit, Save, X } from "lucide-react";
+import { Receipt, Plus, Trash2, Edit, Save, X, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -45,6 +45,7 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
   const [billItems, setBillItems] = useState<BillItem[]>([]);
   const [showMedicationForm, setShowMedicationForm] = useState(false);
   const [showServiceDialog, setShowServiceDialog] = useState(false);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [isFinalizingBill, setIsFinalizingBill] = useState(false);
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   
@@ -373,267 +374,347 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Receipt className="h-5 w-5" />
-          Patient Billing System
-        </CardTitle>
-        <CardDescription>
-          Real-time bill generation for {appointment?.patients?.first_name} {appointment?.patients?.last_name}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Medication Section */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h4 className="font-semibold">Medications</h4>
-            <Dialog open={showMedicationForm} onOpenChange={setShowMedicationForm}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Medication
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Medication</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="med-name">Medication Name *</Label>
-                    <Input
-                      id="med-name"
-                      value={medicationForm.name}
-                      onChange={(e) => setMedicationForm(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Enter medication name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="dosage">Dosage *</Label>
-                    <Input
-                      id="dosage"
-                      value={medicationForm.dosage}
-                      onChange={(e) => setMedicationForm(prev => ({ ...prev, dosage: e.target.value }))}
-                      placeholder="e.g., 500mg"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="frequency">Frequency *</Label>
-                    <Input
-                      id="frequency"
-                      value={medicationForm.frequency}
-                      onChange={(e) => setMedicationForm(prev => ({ ...prev, frequency: e.target.value }))}
-                      placeholder="e.g., twice daily"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="med-price">Price (₦) *</Label>
-                    <Input
-                      id="med-price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={medicationForm.price}
-                      onChange={(e) => setMedicationForm(prev => ({ ...prev, price: e.target.value }))}
-                      placeholder="Enter price in naira"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={addMedication} className="flex-1">
-                      Add Medication
-                    </Button>
-                    <Button variant="outline" onClick={() => setShowMedicationForm(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-
-        {/* Services Section */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h4 className="font-semibold">Services</h4>
-            <div className="flex gap-2">
-              <Dialog open={showServiceDialog} onOpenChange={setShowServiceDialog}>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Receipt className="h-5 w-5" />
+            Patient Billing System
+          </CardTitle>
+          <CardDescription>
+            Real-time bill generation for {appointment?.patients?.first_name} {appointment?.patients?.last_name}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Medication Section */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h4 className="font-semibold">Medications</h4>
+              <Dialog open={showMedicationForm} onOpenChange={setShowMedicationForm}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
-                    Manage Services
+                    Add Medication
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>
-                      {editingService ? 'Edit Service' : 'Manage Services'}
-                    </DialogTitle>
+                    <DialogTitle>Add Medication</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    {/* Service Form */}
-                    <div className="border rounded-lg p-4 space-y-4">
-                      <h5 className="font-medium">
-                        {editingService ? 'Edit Service' : 'Add New Service'}
-                      </h5>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Service Name *</Label>
-                          <Input
-                            value={serviceForm.name}
-                            onChange={(e) => setServiceForm(prev => ({ ...prev, name: e.target.value }))}
-                            placeholder="Enter service name"
-                          />
-                        </div>
-                        <div>
-                          <Label>Price (₦) *</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={serviceForm.price}
-                            onChange={(e) => setServiceForm(prev => ({ ...prev, price: e.target.value }))}
-                            placeholder="Enter price"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label>Category</Label>
-                        <Input
-                          value={serviceForm.category}
-                          onChange={(e) => setServiceForm(prev => ({ ...prev, category: e.target.value }))}
-                          placeholder="Enter category (optional)"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button onClick={saveOrUpdateService}>
-                          <Save className="h-4 w-4 mr-2" />
-                          {editingService ? 'Update' : 'Save'} Service
-                        </Button>
-                        {editingService && (
-                          <Button 
-                            variant="outline" 
-                            onClick={() => {
-                              setEditingService(null);
-                              setServiceForm({ name: '', price: '', category: '' });
-                            }}
-                          >
-                            <X className="h-4 w-4 mr-2" />
-                            Cancel
-                          </Button>
-                        )}
-                      </div>
+                    <div>
+                      <Label htmlFor="med-name">Medication Name *</Label>
+                      <Input
+                        id="med-name"
+                        value={medicationForm.name}
+                        onChange={(e) => setMedicationForm(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter medication name"
+                      />
                     </div>
-
-                    {/* Services List */}
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      <h5 className="font-medium">Existing Services</h5>
-                      {services.map((service) => (
-                        <div key={service.id} className="flex items-center justify-between p-2 border rounded">
-                          <div>
-                            <span className="font-medium">{service.name}</span>
-                            <span className="text-muted-foreground ml-2">₦{service.price.toLocaleString()}</span>
-                            {service.category && (
-                              <span className="text-xs bg-muted px-2 py-1 rounded ml-2">
-                                {service.category}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                setEditingService(service);
-                                setServiceForm({
-                                  name: service.name,
-                                  price: service.price.toString(),
-                                  category: service.category || ''
-                                });
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => deleteService(service.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                    <div>
+                      <Label htmlFor="dosage">Dosage *</Label>
+                      <Input
+                        id="dosage"
+                        value={medicationForm.dosage}
+                        onChange={(e) => setMedicationForm(prev => ({ ...prev, dosage: e.target.value }))}
+                        placeholder="e.g., 500mg"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="frequency">Frequency *</Label>
+                      <Input
+                        id="frequency"
+                        value={medicationForm.frequency}
+                        onChange={(e) => setMedicationForm(prev => ({ ...prev, frequency: e.target.value }))}
+                        placeholder="e.g., twice daily"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="med-price">Price (₦) *</Label>
+                      <Input
+                        id="med-price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={medicationForm.price}
+                        onChange={(e) => setMedicationForm(prev => ({ ...prev, price: e.target.value }))}
+                        placeholder="Enter price in naira"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={addMedication} className="flex-1">
+                        Add Medication
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowMedicationForm(false)}>
+                        Cancel
+                      </Button>
                     </div>
                   </div>
                 </DialogContent>
               </Dialog>
-              
-              <Select onValueChange={addService}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select service to add" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.name} - ₦{service.price.toLocaleString()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
-        </div>
 
-        {/* Bill Summary */}
-        <div className="border rounded-lg p-4 space-y-4">
-          <h4 className="font-semibold">Bill Summary</h4>
-          {billItems.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">
-              No items added to bill yet
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {billItems.map((item) => (
-                <div key={item.id} className="flex justify-between items-center p-2 border rounded">
-                  <div>
-                    <div className="font-medium">{item.name}</div>
+          {/* Services Section */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h4 className="font-semibold">Services</h4>
+              <div className="flex gap-2">
+                <Dialog open={showServiceDialog} onOpenChange={setShowServiceDialog}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Manage Services
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingService ? 'Edit Service' : 'Manage Services'}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      {/* Service Form */}
+                      <div className="border rounded-lg p-4 space-y-4">
+                        <h5 className="font-medium">
+                          {editingService ? 'Edit Service' : 'Add New Service'}
+                        </h5>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Service Name *</Label>
+                            <Input
+                              value={serviceForm.name}
+                              onChange={(e) => setServiceForm(prev => ({ ...prev, name: e.target.value }))}
+                              placeholder="Enter service name"
+                            />
+                          </div>
+                          <div>
+                            <Label>Price (₦) *</Label>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={serviceForm.price}
+                              onChange={(e) => setServiceForm(prev => ({ ...prev, price: e.target.value }))}
+                              placeholder="Enter price"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Category</Label>
+                          <Input
+                            value={serviceForm.category}
+                            onChange={(e) => setServiceForm(prev => ({ ...prev, category: e.target.value }))}
+                            placeholder="Enter category (optional)"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button onClick={saveOrUpdateService}>
+                            <Save className="h-4 w-4 mr-2" />
+                            {editingService ? 'Update' : 'Save'} Service
+                          </Button>
+                          {editingService && (
+                            <Button 
+                              variant="outline" 
+                              onClick={() => {
+                                setEditingService(null);
+                                setServiceForm({ name: '', price: '', category: '' });
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Cancel
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Services List */}
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        <h5 className="font-medium">Existing Services</h5>
+                        {services.map((service) => (
+                          <div key={service.id} className="flex items-center justify-between p-2 border rounded">
+                            <div>
+                              <span className="font-medium">{service.name}</span>
+                              <span className="text-muted-foreground ml-2">₦{service.price.toLocaleString()}</span>
+                              {service.category && (
+                                <span className="text-xs bg-muted px-2 py-1 rounded ml-2">
+                                  {service.category}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setEditingService(service);
+                                  setServiceForm({
+                                    name: service.name,
+                                    price: service.price.toString(),
+                                    category: service.category || ''
+                                  });
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => deleteService(service.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                <Select onValueChange={addService}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select service to add" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        {service.name} - ₦{service.price.toLocaleString()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Bill Summary */}
+          <div className="border rounded-lg p-4 space-y-4">
+            <h4 className="font-semibold">Bill Summary</h4>
+            {billItems.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                No items added to bill yet
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {billItems.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center p-2 border rounded">
+                    <div>
+                      <div className="font-medium">{item.name}</div>
+                      {item.type === 'medication' && (
+                        <div className="text-sm text-muted-foreground">
+                          {item.dosage} • {item.frequency}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">₦{item.price.toLocaleString()}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                <div className="border-t pt-2 flex justify-between items-center text-lg font-bold">
+                  <span>Grand Total:</span>
+                  <span>₦{calculateTotal().toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setShowPreviewDialog(true)} 
+                disabled={billItems.length === 0}
+                variant="outline"
+                className="flex-1"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Preview Bill
+              </Button>
+              <Button 
+                onClick={finalizeBill} 
+                disabled={billItems.length === 0 || isFinalizingBill}
+                className="flex-1"
+              >
+                {isFinalizingBill ? "Finalizing..." : "Finalize Bill"}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bill Preview Dialog */}
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bill Preview</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center border-b pb-4">
+              <h3 className="text-lg font-semibold">Medical Bill</h3>
+              <p className="text-muted-foreground">
+                Patient: {appointment?.patients?.first_name} {appointment?.patients?.last_name}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Date: {new Date().toLocaleDateString()}
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+              <h4 className="font-medium">Bill Items</h4>
+              {billItems.map((item, index) => (
+                <div key={item.id} className="flex justify-between items-start p-3 border rounded">
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <span className="font-medium">{index + 1}. {item.name}</span>
+                      <span className="font-medium">₦{item.price.toLocaleString()}</span>
+                    </div>
                     {item.type === 'medication' && (
-                      <div className="text-sm text-muted-foreground">
-                        {item.dosage} • {item.frequency}
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Dosage: {item.dosage} | Frequency: {item.frequency}
+                      </div>
+                    )}
+                    {item.type === 'service' && (
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Quantity: {item.quantity || 1}
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">₦{item.price.toLocaleString()}</span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => removeItem(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
               ))}
-              
-              <div className="border-t pt-2 flex justify-between items-center text-lg font-bold">
-                <span>Grand Total:</span>
+            </div>
+            
+            <div className="border-t pt-4">
+              <div className="flex justify-between items-center text-xl font-bold">
+                <span>Total Amount:</span>
                 <span>₦{calculateTotal().toLocaleString()}</span>
               </div>
             </div>
-          )}
-          
-          <Button 
-            onClick={finalizeBill} 
-            disabled={billItems.length === 0 || isFinalizingBill}
-            className="w-full"
-          >
-            {isFinalizingBill ? "Finalizing..." : "Finalize Bill"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+            
+            <div className="flex gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowPreviewDialog(false)} className="flex-1">
+                Close Preview
+              </Button>
+              <Button 
+                onClick={() => {
+                  setShowPreviewDialog(false);
+                  finalizeBill();
+                }}
+                disabled={isFinalizingBill}
+                className="flex-1"
+              >
+                {isFinalizingBill ? "Finalizing..." : "Confirm & Finalize Bill"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
