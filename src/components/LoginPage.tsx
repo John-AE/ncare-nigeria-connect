@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
 
 type UserRole = "doctor" | "nurse" | "finance";
 
@@ -15,6 +16,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showDemoAccounts, setShowDemoAccounts] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, profile } = useAuth();
@@ -85,6 +87,48 @@ const LoginPage = () => {
     }
   };
 
+  const createAdminAccount = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Create admin user account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: "admin@demo.com",
+        password: "password321",
+        options: {
+          data: {
+            username: "admin@demo.com",
+            role: "admin"
+          }
+        }
+      });
+
+      if (authError) {
+        toast({
+          title: "Admin Account Creation Failed",
+          description: authError.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Admin Account Created",
+        description: "Admin account created successfully! You can now login with admin@demo.com / password321",
+      });
+      
+      setShowAdminLogin(true);
+    } catch (error) {
+      toast({
+        title: "Admin Account Creation Failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Redirect if already logged in and profile is loaded
   if (profile) {
     switch (profile.role) {
@@ -96,6 +140,9 @@ const LoginPage = () => {
         break;
       case "finance":
         navigate("/finance-dashboard");
+        break;
+      case "admin":
+        navigate("/admin-dashboard");
         break;
     }
     return null;
@@ -187,12 +234,63 @@ const LoginPage = () => {
                   >
                     Finance: finance@demo.com / password123
                   </Button>
+                  {showAdminLogin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => loginWithDemo("admin@demo.com", "password321")}
+                    >
+                      Admin: admin@demo.com / password321
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
+      
+      {/* Admin Access Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="fixed bottom-4 right-4 text-xs text-muted-foreground hover:text-foreground"
+        onClick={() => setShowAdminLogin(!showAdminLogin)}
+      >
+        Admin?
+      </Button>
+      
+      {/* Admin Setup Dialog */}
+      {showAdminLogin && !showDemoAccounts && (
+        <Card className="fixed bottom-16 right-4 w-80 shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Admin Access</CardTitle>
+            <CardDescription className="text-sm">
+              Create or login with admin account
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={createAdminAccount}
+              disabled={isLoading}
+            >
+              Create Admin Account
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start"
+              onClick={() => loginWithDemo("admin@demo.com", "password321")}
+            >
+              Login: admin@demo.com / password321
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
