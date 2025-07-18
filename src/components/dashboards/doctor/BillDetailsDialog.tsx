@@ -12,7 +12,7 @@ import { Download, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 interface BillItem {
   id: string;
@@ -74,7 +74,7 @@ const BillDetailsDialog = ({
         `₦${item.total_price.toLocaleString()}`
       ]);
       
-      (doc as any).autoTable({
+      autoTable(doc, {
         head: [['Service', 'Quantity', 'Unit Price', 'Total']],
         body: tableData,
         startY: 90,
