@@ -87,6 +87,48 @@ const LoginPage = () => {
     }
   };
 
+  const createNewAdminAccount = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Create the new admin user account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: "johnnybgsu@gmail.com",
+        password: "Woda185",
+        options: {
+          data: {
+            username: "johnnybgsu@gmail.com",
+            role: "admin"
+          },
+          emailConfirm: false
+        }
+      });
+
+      if (authError) {
+        toast({
+          title: "Admin Account Creation Failed",
+          description: authError.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Admin Account Created",
+        description: "New admin account created successfully! You can now login with johnnybgsu@gmail.com / Woda185",
+      });
+      
+    } catch (error) {
+      toast({
+        title: "Admin Account Creation Failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const createAdminAccount = async () => {
     setIsLoading(true);
     
@@ -234,16 +276,14 @@ const LoginPage = () => {
                   >
                     Finance: finance@demo.com / password123
                   </Button>
-                  {showAdminLogin && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => loginWithDemo("admin@demo.com", "password321")}
-                    >
-                      Admin: admin@demo.com / password321
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => loginWithDemo("johnnybgsu@gmail.com", "Woda185")}
+                  >
+                    Admin: johnnybgsu@gmail.com / Woda185
+                  </Button>
                 </div>
               </div>
             )}
@@ -275,18 +315,18 @@ const LoginPage = () => {
               variant="outline"
               size="sm"
               className="w-full"
-              onClick={createAdminAccount}
+              onClick={createNewAdminAccount}
               disabled={isLoading}
             >
-              Create Admin Account
+              Create New Admin Account
             </Button>
             <Button
               variant="ghost"
               size="sm"
               className="w-full justify-start"
-              onClick={() => loginWithDemo("admin@demo.com", "password321")}
+              onClick={() => loginWithDemo("johnnybgsu@gmail.com", "Woda185")}
             >
-              Login: admin@demo.com / password321
+              Login: johnnybgsu@gmail.com / Woda185
             </Button>
           </CardContent>
         </Card>
