@@ -322,7 +322,8 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
               name: `${item.name} (${item.dosage}, ${item.frequency})`,
               price: item.price,
               category: 'Medication',
-              is_active: false // Mark as inactive since it's a custom medication
+              is_active: false, // Mark as inactive since it's a custom medication
+              hospital_id: profile.hospital_id
             })
             .select()
             .single();

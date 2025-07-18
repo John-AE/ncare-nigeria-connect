@@ -27,11 +27,21 @@ export const useDoctorDashboardStats = () => {
       try {
         const today = new Date().toISOString().split('T')[0];
         
-        // Get today's appointments by status
+        // Get current user's hospital_id
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('hospital_id')
+          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+          .single();
+
+        const hospitalId = profileData?.hospital_id;
+        
+        // Get today's appointments by status (filtered by hospital)
         const { data: appointmentsData } = await supabase
           .from('appointments')
           .select('status')
-          .eq('scheduled_date', today);
+          .eq('scheduled_date', today)
+          .eq('hospital_id', hospitalId);
 
         const appointmentCounts = {
           total: appointmentsData?.length || 0,
@@ -40,22 +50,25 @@ export const useDoctorDashboardStats = () => {
           completed: appointmentsData?.filter(apt => apt.status === 'completed').length || 0,
         };
         
-        // Get total patients count
+        // Get total patients count (filtered by hospital)
         const { count: patientsCount } = await supabase
           .from('patients')
-          .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true })
+          .eq('hospital_id', hospitalId);
         
-        // Get pending bills count
+        // Get pending bills count (filtered by hospital)
         const { count: billsCount } = await supabase
           .from('bills')
           .select('*', { count: 'exact', head: true })
-          .eq('is_paid', false);
+          .eq('is_paid', false)
+          .eq('hospital_id', hospitalId);
         
-        // Get total revenue (sum of paid bills)
+        // Get total revenue (sum of paid bills, filtered by hospital)
         const { data: revenueData } = await supabase
           .from('bills')
           .select('amount_paid')
-          .eq('is_paid', true);
+          .eq('is_paid', true)
+          .eq('hospital_id', hospitalId);
 
         setStats({
           totalAppointmentsToday: appointmentCounts.total,
