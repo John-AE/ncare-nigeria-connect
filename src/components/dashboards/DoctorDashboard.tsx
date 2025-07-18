@@ -44,11 +44,11 @@ const DoctorDashboard = () => {
       {/* Quick Stats */}
       <QuickStatsCards stats={stats} />
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <DateAppointments />
-        <TodaysSchedule />
-      </div>
+      {/* Appointments by Date - Full Width */}
+      <DateAppointments />
+
+      {/* Today's Schedule - Full Width */}
+      <TodaysSchedule />
 
       {/* Triage Assessment / Queue */}
       <TriageQueue showRecordVisitButton={true} showVitalSigns={true} />
