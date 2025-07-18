@@ -16,9 +16,6 @@ export const FinancialReports = () => {
           Outstanding Bills Report
         </Button>
         <Button variant="outline" className="w-full justify-start" size="lg">
-          Payment Methods Analysis
-        </Button>
-        <Button variant="outline" className="w-full justify-start" size="lg">
           Monthly Financial Summary
         </Button>
       </CardContent>

@@ -22,6 +22,7 @@ interface CompletedAppointmentBill {
   bill_id: string;
   payment_method?: string;
   bill_items: BillItem[];
+  patient_email?: string;
 }
 
 const CompletedAppointmentsBills = () => {
@@ -45,7 +46,7 @@ const CompletedAppointmentsBills = () => {
             payment_method,
             patient_id,
             created_at,
-            patients!inner(first_name, last_name),
+            patients!inner(first_name, last_name, email),
             bill_items(
               id,
               quantity,
@@ -85,6 +86,7 @@ const CompletedAppointmentsBills = () => {
             bill_id: bill.id,
             payment_method: bill.payment_method,
             bill_items: billItems,
+            patient_email: bill.patients.email,
           };
         }) || [];
 
@@ -172,6 +174,8 @@ const CompletedAppointmentsBills = () => {
           totalAmount={selectedBill.bill_amount}
           isPaid={selectedBill.is_paid}
           paymentMethod={selectedBill.payment_method}
+          billId={selectedBill.bill_id}
+          patientEmail={selectedBill.patient_email}
         />
       )}
     </>
