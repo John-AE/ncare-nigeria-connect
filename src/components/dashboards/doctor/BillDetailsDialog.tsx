@@ -112,35 +112,55 @@ const BillDetailsDialog = ({
   };
 
   const sendEmailWithBill = async () => {
-    if (!patientEmail) {
-      toast({
-        title: "No Email Address",
-        description: "Patient email address is not available.",
-        variant: "destructive",
-      });
-      return;
-    }
+  if (!patientEmail) {
+    toast({
+      title: "No Email Address",
+      description: "Patient email address is not available.",
+      variant: "destructive",
+    });
+    return;
+  }
 
-    setIsSendingEmail(true);
-    try {
-      // Here you would typically call an edge function to send email
-      // For now, we'll show a toast indicating the feature needs backend setup
-      toast({
-        title: "Email Feature",
-        description: "Email functionality requires backend setup. Contact your administrator.",
-        variant: "destructive",
-      });
-    } catch (error) {
+  setIsSendingEmail(true);
+  try {
+    const { error } = await supabase.functions.invoke('send-bill-email', {
+      body: {
+        email: patientEmail,
+        patient_name: patientName,
+        bill_id: billId,
+        bill_amount: totalAmount,
+        bill_items: billItems,
+        appointment_time: appointmentTime,
+        is_paid: isPaid,
+        payment_method: paymentMethod
+      }
+    });
+
+    if (error) {
       console.error('Error sending email:', error);
       toast({
         title: "Error",
         description: "Failed to send email. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsSendingEmail(false);
+    } else {
+      toast({
+        title: "Email Sent",
+        description: `Bill sent to ${patientEmail}`,
+      });
     }
-  };
+  } catch (error) {
+    console.error('Error invoking function:', error);
+    toast({
+      title: "Error",
+      description: "An error occurred while sending the email.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsSendingEmail(false);
+  }
+};
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
