@@ -177,7 +177,8 @@ export const useRecordVisit = (appointmentId: string | undefined) => {
           visit_time: appointment.start_time,
           complaints: visitData.complaints,
           diagnosis: visitData.diagnosis,
-          treatment_plan: visitData.treatment_plan
+          treatment_plan: visitData.treatment_plan,
+          hospital_id: profile.hospital_id
         })
         .select()
         .single();
@@ -214,7 +215,8 @@ export const useRecordVisit = (appointmentId: string | undefined) => {
               patient_id: appointment.patient_id,
               amount: totalAmount,
               description: `Visit on ${appointment.scheduled_date}`,
-              created_by: profile.user_id
+              created_by: profile.user_id,
+              hospital_id: profile.hospital_id
             })
             .select()
             .single();
