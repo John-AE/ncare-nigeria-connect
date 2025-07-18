@@ -292,7 +292,8 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
           patient_id: appointment.patient_id,
           amount: calculateTotal(),
           description: `Consultation visit on ${appointment.scheduled_date}`,
-          created_by: profile.user_id
+          created_by: profile.user_id,
+          hospital_id: profile.hospital_id
         })
         .select()
         .single();

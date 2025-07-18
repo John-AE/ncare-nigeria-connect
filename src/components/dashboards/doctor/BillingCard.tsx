@@ -134,7 +134,8 @@ export const BillingCard = () => {
           patient_id: selectedPatient,
           amount: total,
           created_by: profile?.user_id,
-          description: `Medical services for ${selectedPatientData?.first_name} ${selectedPatientData?.last_name}`
+          description: `Medical services for ${selectedPatientData?.first_name} ${selectedPatientData?.last_name}`,
+          hospital_id: profile?.hospital_id
         })
         .select()
         .single();

@@ -42,7 +42,7 @@ interface PatientRegistrationFormProps {
 const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = false }: PatientRegistrationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<PatientFormData>({
@@ -101,10 +101,19 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
   const onSubmit = async (data: PatientFormData) => {
     if (readOnly) return;
     
-    if (!user) {
+    if (!user || !profile) {
       toast({
         title: 'Authentication Error',
         description: 'You must be logged in to register patients',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!profile.hospital_id) {
+      toast({
+        title: 'Hospital Assignment Error',
+        description: 'You must be assigned to a hospital to register patients',
         variant: 'destructive',
       });
       return;
@@ -127,6 +136,7 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
           allergies: data.allergies || null,
           medical_history: data.medical_history || null,
           registered_by: user.id,
+          hospital_id: profile.hospital_id,
         },
       ]);
 

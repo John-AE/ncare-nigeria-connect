@@ -156,6 +156,7 @@ const RecurringAppointmentForm = ({ isOpen, onClose, preSelectedPatient }: Recur
         start_time: selectedTimeSlot,
         end_time: endTime,
         created_by: profile.user_id,
+        hospital_id: profile.hospital_id,
         notes: `Recurring appointment - ${frequency}`
       }));
 

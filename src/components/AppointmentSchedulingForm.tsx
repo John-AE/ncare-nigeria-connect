@@ -153,7 +153,8 @@ const AppointmentSchedulingForm = ({ isOpen, onClose, preSelectedPatient }: Appo
           scheduled_date: format(selectedDate, 'yyyy-MM-dd'),
           start_time: selectedTimeSlot,
           end_time: endTime,
-          created_by: profile.user_id
+          created_by: profile.user_id,
+          hospital_id: profile.hospital_id
         });
 
       if (error) {

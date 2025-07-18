@@ -63,6 +63,7 @@ export const VitalsRecordingDialog = ({ isOpen, onClose, patient }: VitalsRecord
         .insert({
           patient_id: patient.id,
           recorded_by: profile.user_id,
+          hospital_id: profile.hospital_id,
           body_temperature: vitals.body_temperature ? parseFloat(vitals.body_temperature) : null,
           heart_rate: vitals.heart_rate ? parseInt(vitals.heart_rate) : null,
           weight: vitals.weight ? parseFloat(vitals.weight) : null,

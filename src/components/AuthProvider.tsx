@@ -6,7 +6,8 @@ interface Profile {
   id: string;
   user_id: string;
   username: string;
-  role: 'doctor' | 'nurse' | 'finance';
+  role: 'doctor' | 'nurse' | 'finance' | 'admin';
+  hospital_id: string | null;
 }
 
 interface AuthContextType {

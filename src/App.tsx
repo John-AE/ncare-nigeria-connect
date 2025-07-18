@@ -9,6 +9,7 @@ import LoginPage from "./components/LoginPage";
 import DoctorDashboard from "./components/dashboards/DoctorDashboard";
 import NurseDashboard from "./components/dashboards/NurseDashboard";
 import FinanceDashboard from "./components/dashboards/FinanceDashboard";
+import { AdminDashboard } from "./components/dashboards/AdminDashboard";
 import { RecordVisit } from "./pages/RecordVisit";
 import Layout from "./components/Layout";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
@@ -61,6 +62,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRole="finance">
                   <FinanceDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin-dashboard" 
+              element={
+                <ProtectedRoute allowedRole="admin">
+                  <AdminDashboard />
                 </ProtectedRoute>
               } 
             />
