@@ -99,8 +99,7 @@ const LoginPage = () => {
           data: {
             username: "johnnybgsu@gmail.com",
             role: "admin"
-          },
-          emailConfirm: false
+          }
         }
       });
 
