@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "../../AuthProvider";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +41,7 @@ export const VitalsRecordingDialog = ({ isOpen, onClose, patient, onSuccess }: V
     blood_pressure_systolic: "",
     blood_pressure_diastolic: "",
     oxygen_saturation: "",
+    complaints: "",
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -71,6 +73,7 @@ export const VitalsRecordingDialog = ({ isOpen, onClose, patient, onSuccess }: V
           blood_pressure_systolic: vitals.blood_pressure_systolic ? parseInt(vitals.blood_pressure_systolic) : null,
           blood_pressure_diastolic: vitals.blood_pressure_diastolic ? parseInt(vitals.blood_pressure_diastolic) : null,
           oxygen_saturation: vitals.oxygen_saturation ? parseFloat(vitals.oxygen_saturation) : null,
+          complaints: vitals.complaints || null,
         });
 
       if (error) {
@@ -90,6 +93,7 @@ export const VitalsRecordingDialog = ({ isOpen, onClose, patient, onSuccess }: V
         blood_pressure_systolic: "",
         blood_pressure_diastolic: "",
         oxygen_saturation: "",
+        complaints: "",
       });
       
       if (onSuccess) {
@@ -214,6 +218,17 @@ export const VitalsRecordingDialog = ({ isOpen, onClose, patient, onSuccess }: V
                   onChange={(e) => handleInputChange('blood_pressure_diastolic', e.target.value)}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="complaints">Patient Complaints</Label>
+              <Textarea
+                id="complaints"
+                placeholder="Describe the patient's main complaints or symptoms..."
+                value={vitals.complaints}
+                onChange={(e) => handleInputChange('complaints', e.target.value)}
+                rows={3}
+              />
             </div>
           </div>
 

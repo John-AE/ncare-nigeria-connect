@@ -39,6 +39,11 @@ const NurseDashboard = () => {
     setRefreshKey(prev => prev + 1);
   };
 
+  const handleAppointmentScheduled = () => {
+    // Trigger refresh of appointments by date component
+    setRefreshKey(prev => prev + 1);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -99,6 +104,7 @@ const NurseDashboard = () => {
           setSelectedPatient(null);
         }}
         preSelectedPatient={selectedPatient}
+        onSuccess={handleAppointmentScheduled}
       />
       
       <RecurringAppointmentForm

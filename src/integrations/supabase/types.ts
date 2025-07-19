@@ -479,6 +479,7 @@ export type Database = {
           blood_pressure_diastolic: number | null
           blood_pressure_systolic: number | null
           body_temperature: number | null
+          complaints: string | null
           created_at: string
           heart_rate: number | null
           hospital_id: string | null
@@ -494,6 +495,7 @@ export type Database = {
           blood_pressure_diastolic?: number | null
           blood_pressure_systolic?: number | null
           body_temperature?: number | null
+          complaints?: string | null
           created_at?: string
           heart_rate?: number | null
           hospital_id?: string | null
@@ -509,6 +511,7 @@ export type Database = {
           blood_pressure_diastolic?: number | null
           blood_pressure_systolic?: number | null
           body_temperature?: number | null
+          complaints?: string | null
           created_at?: string
           heart_rate?: number | null
           hospital_id?: string | null

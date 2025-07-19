@@ -21,6 +21,7 @@ interface PatientWithVitals {
     blood_pressure_diastolic: number | null;
     oxygen_saturation: number | null;
     recorded_at: string;
+    complaints: string | null;
   };
   appointments: {
     id: string;
@@ -140,7 +141,8 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
           blood_pressure_systolic: vitalRecord.blood_pressure_systolic,
           blood_pressure_diastolic: vitalRecord.blood_pressure_diastolic,
           oxygen_saturation: vitalRecord.oxygen_saturation,
-          recorded_at: vitalRecord.recorded_at
+          recorded_at: vitalRecord.recorded_at,
+          complaints: vitalRecord.complaints
         };
         
         return {
@@ -261,6 +263,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
                 <TableHead>Queue #</TableHead>
                 <TableHead>Patient Name</TableHead>
                 <TableHead>Age/Gender</TableHead>
+                <TableHead>Complaints</TableHead>
                 <TableHead>Priority</TableHead>
                 {showVitalSigns && <TableHead>Temp (°C)</TableHead>}
                 {showVitalSigns && <TableHead>HR (bpm)</TableHead>}
@@ -280,6 +283,17 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
                   </TableCell>
                   <TableCell>
                     {calculateAge(patient.date_of_birth)}y / {patient.gender}
+                  </TableCell>
+                  <TableCell className="max-w-48">
+                    {patient.vital_signs.complaints ? (
+                      <div className="text-sm">
+                        <span className="block truncate" title={patient.vital_signs.complaints}>
+                          {patient.vital_signs.complaints}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">No complaints recorded</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {getPriorityBadge(patient.priority_score)}

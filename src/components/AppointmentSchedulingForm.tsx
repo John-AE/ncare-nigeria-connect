@@ -17,6 +17,7 @@ interface AppointmentSchedulingFormProps {
   isOpen: boolean;
   onClose: () => void;
   preSelectedPatient?: any;
+  onSuccess?: () => void;
 }
 
 interface Patient {
@@ -31,7 +32,7 @@ interface Doctor {
   user_id: string;
 }
 
-const AppointmentSchedulingForm = ({ isOpen, onClose, preSelectedPatient }: AppointmentSchedulingFormProps) => {
+const AppointmentSchedulingForm = ({ isOpen, onClose, preSelectedPatient, onSuccess }: AppointmentSchedulingFormProps) => {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -184,6 +185,12 @@ const AppointmentSchedulingForm = ({ isOpen, onClose, preSelectedPatient }: Appo
       setSelectedDoctor("");
       setSelectedTimeSlot("");
       setPatientSearch("");
+      
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+      
       onClose();
     } catch (error) {
       console.error('Error scheduling appointment:', error);
