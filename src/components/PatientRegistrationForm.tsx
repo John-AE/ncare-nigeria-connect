@@ -37,9 +37,10 @@ interface PatientRegistrationFormProps {
   onClose: () => void;
   patientData?: any;
   readOnly?: boolean;
+  onSuccess?: () => void;
 }
 
-const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = false }: PatientRegistrationFormProps) => {
+const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = false, onSuccess }: PatientRegistrationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { user, profile } = useAuth();
@@ -157,6 +158,9 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
 
   const handleCloseSuccess = () => {
     setShowSuccess(false);
+    if (onSuccess) {
+      onSuccess();
+    }
     onClose();
   };
 

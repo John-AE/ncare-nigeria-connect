@@ -13,7 +13,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export const DateAppointments = () => {
+interface DateAppointmentsProps {
+  onPatientArrived?: () => void;
+}
+
+export const DateAppointments = ({ onPatientArrived }: DateAppointmentsProps = {}) => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedDateAppointments, setSelectedDateAppointments] = useState<any[]>([]);
@@ -90,6 +94,11 @@ export const DateAppointments = () => {
 
       // Refresh the appointments list
       fetchSelectedDateAppointments();
+      
+      // Trigger callback to refresh other components
+      if (onPatientArrived) {
+        onPatientArrived();
+      }
     } catch (error) {
       console.error('Error marking patient as arrived:', error);
       toast({

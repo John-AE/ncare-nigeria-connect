@@ -26,9 +26,10 @@ interface VitalsRecordingDialogProps {
   isOpen: boolean;
   onClose: () => void;
   patient: Patient | null;
+  onSuccess?: () => void;
 }
 
-export const VitalsRecordingDialog = ({ isOpen, onClose, patient }: VitalsRecordingDialogProps) => {
+export const VitalsRecordingDialog = ({ isOpen, onClose, patient, onSuccess }: VitalsRecordingDialogProps) => {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,6 +91,10 @@ export const VitalsRecordingDialog = ({ isOpen, onClose, patient }: VitalsRecord
         blood_pressure_diastolic: "",
         oxygen_saturation: "",
       });
+      
+      if (onSuccess) {
+        onSuccess();
+      }
       onClose();
     } catch (error) {
       console.error('Error recording vital signs:', error);

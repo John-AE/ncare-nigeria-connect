@@ -290,46 +290,6 @@ const LoginPage = () => {
         </CardContent>
       </Card>
       
-      {/* Admin Access Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="fixed bottom-4 right-4 text-xs text-muted-foreground hover:text-foreground"
-        onClick={() => setShowAdminLogin(!showAdminLogin)}
-      >
-        Admin?
-      </Button>
-      
-      {/* Admin Setup Dialog */}
-      {showAdminLogin && !showDemoAccounts && (
-        <Card className="fixed bottom-16 right-4 w-80 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Admin Access</CardTitle>
-            <CardDescription className="text-sm">
-              Create or login with admin account
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={createNewAdminAccount}
-              disabled={isLoading}
-            >
-              Create New Admin Account
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start"
-              onClick={() => loginWithDemo("johnnybgsu@gmail.com", "Woda185")}
-            >
-              Login: johnnybgsu@gmail.com / Woda185
-            </Button>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

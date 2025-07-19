@@ -132,6 +132,11 @@ export const RecentRegistrations = () => {
     setVitalsPatient(null);
   };
 
+  const handleVitalsSuccess = () => {
+    // Re-fetch both RecentRegistrations and refresh the list to update UI
+    fetchRecentPatients();
+  };
+
   return (
     <>
       <Card className="bg-card border-border transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
@@ -224,6 +229,7 @@ export const RecentRegistrations = () => {
         isOpen={showVitalsDialog}
         onClose={handleCloseVitals}
         patient={vitalsPatient}
+        onSuccess={handleVitalsSuccess}
       />
     </>
   );

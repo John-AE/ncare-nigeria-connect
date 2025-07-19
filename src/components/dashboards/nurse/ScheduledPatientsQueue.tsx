@@ -136,6 +136,11 @@ export const ScheduledPatientsQueue = () => {
     setVitalsPatient(null);
   };
 
+  const handleVitalsSuccess = () => {
+    // Re-fetch the scheduled patients queue to update UI
+    fetchArrivedPatients();
+  };
+
   return (
     <>
       <Card className="bg-card border-border transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
@@ -206,6 +211,7 @@ export const ScheduledPatientsQueue = () => {
         isOpen={showVitalsDialog}
         onClose={handleCloseVitals}
         patient={vitalsPatient}
+        onSuccess={handleVitalsSuccess}
       />
     </>
   );

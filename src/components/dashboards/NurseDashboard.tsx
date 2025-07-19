@@ -29,6 +29,16 @@ const NurseDashboard = () => {
     window.location.reload();
   };
 
+  const handlePatientRegistrationSuccess = () => {
+    // Trigger refresh of the Recent Registrations component
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const handlePatientArrived = () => {
+    // Trigger refresh of components when a patient is marked as arrived
+    setRefreshKey(prev => prev + 1);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -69,16 +79,17 @@ const NurseDashboard = () => {
 
       {/* Full Width Cards */}
       <div className="space-y-6">
-        <DateAppointments />
-        <ScheduledPatientsQueue />
-        <RecentRegistrations />
-        <TriageQueue />
+        <DateAppointments onPatientArrived={handlePatientArrived} />
+        <ScheduledPatientsQueue key={`queue-${refreshKey}`} />
+        <RecentRegistrations key={`recent-${refreshKey}`} />
+        <TriageQueue key={`triage-${refreshKey}`} />
         <CompletedConsultations />
       </div>
 
       <PatientRegistrationForm
         isOpen={showPatientForm}
         onClose={() => setShowPatientForm(false)}
+        onSuccess={handlePatientRegistrationSuccess}
       />
       
       <AppointmentSchedulingForm
