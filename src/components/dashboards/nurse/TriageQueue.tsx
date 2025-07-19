@@ -133,7 +133,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
         const patient = patientsData?.find(p => p.id === vitalRecord.patient_id);
         const appointment = appointmentsData.find(apt => apt.patient_id === vitalRecord.patient_id);
         
-        if (!patient) return null; // Skip only if patient not found
+        if (!patient || !appointment) return null; // Skip if patient not found OR no active appointment
         
         const vitals = {
           body_temperature: vitalRecord.body_temperature,
