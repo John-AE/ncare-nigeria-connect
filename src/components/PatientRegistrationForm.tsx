@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
-import { useDashboard } from '@/contexts/DashboardContext'; // Added this line
+
 
 const patientSchema = z.object({
   first_name: z.string().min(2, 'First name must be at least 2 characters'),
@@ -46,7 +46,7 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
   const [showSuccess, setShowSuccess] = useState(false);
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const { triggers } = useDashboard(); // Added this line
+  
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
@@ -253,13 +253,6 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
         });
       }
 
-      setTimeout(() => {
-        triggers.current.refreshStats?.();
-        triggers.current.refreshPatients?.();
-        if (appointmentResult.success) {
-          triggers.current.refreshAppointments?.();
-        }
-      }, 500); // Added this block
 
       setShowSuccess(true);
       form.reset();
