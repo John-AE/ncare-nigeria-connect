@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useAuth } from "../AuthProvider";
 import { useNurseDashboardStats } from "@/hooks/useNurseDashboardStats";
+import { useAutoRefresh } from '@/hooks/useAutoRefresh'; // <-- Add this import
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NurseStatsCards } from "./nurse/NurseStatsCards";
@@ -18,6 +19,8 @@ import RecurringAppointmentForm from "../RecurringAppointmentForm";
 const NurseDashboard = () => {
   const { profile } = useAuth();
   const stats = useNurseDashboardStats();
+  useAutoRefresh(); // <-- Add this hook call
+  
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [showRecurringForm, setShowRecurringForm] = useState(false);
