@@ -99,6 +99,105 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
     }
   }, [patientData, form]);
 
+  // Helper function to create automatic appointment
+  const createAutomaticAppointment = async (patientId: string, hospitalId: string) => {
+    try {
+      // Get today's date
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Find existing appointments for today
+      const { data: existingAppointments, error: fetchError } = await supabase
+        .from('appointments')
+        .select('start_time, end_time')
+        .eq('hospital_id', hospitalId)
+        .eq('scheduled_date', today)
+        .order('start_time', { ascending: true });
+
+      if (fetchError) throw fetchError;
+
+      // Generate 15-minute time slots starting from 8:00 AM
+      const generateTimeSlots = () => {
+        const slots = [];
+        const startHour = 8;
+        const endHour = 17; // 5 PM
+        
+        for (let hour = startHour; hour < endHour; hour++) {
+          for (let minute = 0; minute < 60; minute += 15) {
+            const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`;
+            slots.push(timeString);
+          }
+        }
+        return slots;
+      };
+
+      const timeSlots = generateTimeSlots();
+
+      // Find first available slot (15-minute duration)
+      let availableSlot = null;
+      let availableEndTime = null;
+      
+      for (const slot of timeSlots) {
+        // Calculate end time (15 minutes later)
+        const [hours, minutes] = slot.split(':').map(Number);
+        const startTime = new Date();
+        startTime.setHours(hours, minutes, 0, 0);
+        
+        const endTime = new Date(startTime.getTime() + 15 * 60000); // Add 15 minutes
+        const endTimeString = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}:00`;
+        
+        // Check if this slot conflicts with existing appointments
+        const hasConflict = existingAppointments?.some(apt => {
+          const existingStart = apt.start_time;
+          const existingEnd = apt.end_time;
+          
+          // Check for time overlap
+          return (slot < existingEnd && endTimeString > existingStart);
+        });
+        
+        if (!hasConflict) {
+          availableSlot = slot;
+          availableEndTime = endTimeString;
+          break;
+        }
+      }
+
+      if (!availableSlot) {
+        return {
+          success: false,
+          error: 'No available slots for today. Please schedule manually.'
+        };
+      }
+
+      // Create the appointment
+      const { error: appointmentError } = await supabase
+        .from('appointments')
+        .insert([
+          {
+            patient_id: patientId,
+            hospital_id: hospitalId,
+            scheduled_date: today,
+            start_time: availableSlot,
+            end_time: availableEndTime,
+            status: 'scheduled',
+            created_by: user.id,
+          }
+        ]);
+
+      if (appointmentError) throw appointmentError;
+
+      return {
+        success: true,
+        appointmentTime: `${today} from ${availableSlot.substring(0, 5)} to ${availableEndTime.substring(0, 5)}`
+      };
+
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  };
+
   const onSubmit = async (data: PatientFormData) => {
     if (readOnly) return;
     
@@ -122,26 +221,52 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('patients').insert([
-        {
-          first_name: data.first_name,
-          last_name: data.last_name,
-          date_of_birth: data.date_of_birth,
-          gender: data.gender,
-          phone: data.phone || null,
-          email: data.email || null,
-          address: data.address || null,
-          emergency_contact_name: data.emergency_contact_name || null,
-          emergency_contact_phone: data.emergency_contact_phone || null,
-          blood_group: data.blood_group || null,
-          allergies: data.allergies || null,
-          medical_history: data.medical_history || null,
-          registered_by: user.id,
-          hospital_id: profile.hospital_id,
-        },
-      ]);
+      // Start a transaction to ensure both patient and appointment are created
+      const { data: patientData, error: patientError } = await supabase
+        .from('patients')
+        .insert([
+          {
+            first_name: data.first_name,
+            last_name: data.last_name,
+            date_of_birth: data.date_of_birth,
+            gender: data.gender,
+            phone: data.phone || null,
+            email: data.email || null,
+            address: data.address || null,
+            emergency_contact_name: data.emergency_contact_name || null,
+            emergency_contact_phone: data.emergency_contact_phone || null,
+            blood_group: data.blood_group || null,
+            allergies: data.allergies || null,
+            medical_history: data.medical_history || null,
+            registered_by: user.id,
+            hospital_id: profile.hospital_id,
+          },
+        ])
+        .select('patient_id')
+        .single();
 
-      if (error) throw error;
+      if (patientError) throw patientError;
+
+      // Create automatic appointment for the newly registered patient
+      const appointmentResult = await createAutomaticAppointment(
+        patientData.patient_id, 
+        profile.hospital_id
+      );
+
+      if (!appointmentResult.success) {
+        // Patient was created but appointment failed
+        toast({
+          title: 'Patient Registered',
+          description: `Patient registered successfully, but couldn't create automatic appointment: ${appointmentResult.error}`,
+          variant: 'default',
+        });
+      } else {
+        toast({
+          title: 'Success',
+          description: `Patient registered and appointment scheduled for ${appointmentResult.appointmentTime}`,
+          variant: 'default',
+        });
+      }
 
       setShowSuccess(true);
       form.reset();
@@ -184,9 +309,9 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter first name" {...field} disabled={readOnly} />
-                </FormControl>
+                      <FormControl>
+                        <Input placeholder="Enter first name" {...field} disabled={readOnly} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -198,9 +323,9 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter last name" {...field} disabled={readOnly} />
-                </FormControl>
+                      <FormControl>
+                        <Input placeholder="Enter last name" {...field} disabled={readOnly} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -252,9 +377,9 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter phone number" {...field} disabled={readOnly} />
-                </FormControl>
+                      <FormControl>
+                        <Input placeholder="Enter phone number" {...field} disabled={readOnly} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
