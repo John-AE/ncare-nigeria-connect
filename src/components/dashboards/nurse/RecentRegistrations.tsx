@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { format, differenceInYears } from "date-fns";
 import { Eye, Activity, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,13 +25,21 @@ interface Patient {
   created_at: string;
 }
 
-export const RecentRegistrations = () => {
+interface RecentRegistrationsProps {
+  refreshTrigger?: React.MutableRefObject<(() => void) | null>;
+  onVitalsRecorded?: () => void;
+}
+
+export const RecentRegistrations = forwardRef<any, RecentRegistrationsProps>(({ refreshTrigger, onVitalsRecorded }, ref) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientDetails, setShowPatientDetails] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showVitalsDialog, setShowVitalsDialog] = useState(false);
   const [vitalsPatient, setVitalsPatient] = useState<Patient | null>(null);
+
+  // Expose refresh function via ref
+  useImperativeHandle(refreshTrigger, () => fetchRecentPatients, []);
 
   useEffect(() => {
     fetchRecentPatients();
@@ -135,6 +143,10 @@ export const RecentRegistrations = () => {
   const handleVitalsSuccess = () => {
     // Re-fetch both RecentRegistrations and refresh the list to update UI
     fetchRecentPatients();
+    // Notify parent component that vitals were recorded
+    if (onVitalsRecorded) {
+      onVitalsRecorded();
+    }
   };
 
   return (
@@ -233,4 +245,6 @@ export const RecentRegistrations = () => {
       />
     </>
   );
-};
+});
+
+RecentRegistrations.displayName = "RecentRegistrations";

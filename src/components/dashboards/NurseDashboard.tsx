@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "../AuthProvider";
 import { useNurseDashboardStats } from "@/hooks/useNurseDashboardStats";
 import { RefreshCw } from "lucide-react";
@@ -22,26 +22,47 @@ const NurseDashboard = () => {
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
   const [showRecurringForm, setShowRecurringForm] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Refs to trigger refreshes without re-mounting components
+  const recentRegistrationsRefreshRef = useRef<() => void>(null);
+  const triageQueueRefreshRef = useRef<() => void>(null);
+  const dateAppointmentsRefreshRef = useRef<() => void>(null);
 
   const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
     window.location.reload();
   };
 
   const handlePatientRegistrationSuccess = () => {
-    // Trigger refresh of the Recent Registrations component
-    setRefreshKey(prev => prev + 1);
+    // Auto-refresh Recent Registrations when a patient is registered
+    if (recentRegistrationsRefreshRef.current) {
+      recentRegistrationsRefreshRef.current();
+    }
+    // Stats are automatically updated via real-time listeners in useNurseDashboardStats
+  };
+
+  const handleVitalsRecorded = () => {
+    // Auto-refresh both Recent Registrations and Triage Queue when vitals are recorded
+    if (recentRegistrationsRefreshRef.current) {
+      recentRegistrationsRefreshRef.current();
+    }
+    if (triageQueueRefreshRef.current) {
+      triageQueueRefreshRef.current();
+    }
   };
 
   const handlePatientArrived = () => {
     // Trigger refresh of components when a patient is marked as arrived
-    setRefreshKey(prev => prev + 1);
+    if (dateAppointmentsRefreshRef.current) {
+      dateAppointmentsRefreshRef.current();
+    }
   };
 
   const handleAppointmentScheduled = () => {
-    // Trigger refresh of appointments by date component
-    setRefreshKey(prev => prev + 1);
+    // Auto-refresh Appointments by Date when an appointment is scheduled
+    if (dateAppointmentsRefreshRef.current) {
+      dateAppointmentsRefreshRef.current();
+    }
+    // Stats are automatically updated via real-time listeners in useNurseDashboardStats
   };
 
   return (
@@ -84,10 +105,16 @@ const NurseDashboard = () => {
 
       {/* Full Width Cards */}
       <div className="space-y-6">
-        <DateAppointments onPatientArrived={handlePatientArrived} />
-        <ScheduledPatientsQueue key={`queue-${refreshKey}`} />
-        <RecentRegistrations key={`recent-${refreshKey}`} />
-        <TriageQueue key={`triage-${refreshKey}`} />
+        <DateAppointments 
+          onPatientArrived={handlePatientArrived}
+          refreshTrigger={dateAppointmentsRefreshRef}
+        />
+        <ScheduledPatientsQueue />
+        <RecentRegistrations 
+          refreshTrigger={recentRegistrationsRefreshRef}
+          onVitalsRecorded={handleVitalsRecorded}
+        />
+        <TriageQueue refreshTrigger={triageQueueRefreshRef} />
         <CompletedConsultations />
       </div>
 

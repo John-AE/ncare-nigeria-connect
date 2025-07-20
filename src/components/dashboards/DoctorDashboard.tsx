@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "../AuthProvider";
 import { useDoctorDashboardStats } from "@/hooks/useDoctorDashboardStats";
 import { RefreshCw } from "lucide-react";
@@ -13,10 +13,12 @@ import CompletedAppointmentsBills from "./doctor/CompletedAppointmentsBills";
 const DoctorDashboard = () => {
   const { profile } = useAuth();
   const stats = useDoctorDashboardStats();
-  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Refs to trigger refreshes without re-mounting components
+  const triageQueueRefreshRef = useRef<() => void>(null);
+  const dateAppointmentsRefreshRef = useRef<() => void>(null);
 
   const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
     window.location.reload();
   };
 
@@ -45,13 +47,17 @@ const DoctorDashboard = () => {
       <QuickStatsCards stats={stats} />
 
       {/* Appointments by Date - Full Width */}
-      <DateAppointments />
+      <DateAppointments refreshTrigger={dateAppointmentsRefreshRef} />
 
       {/* Today's Schedule - Full Width */}
       <TodaysSchedule />
 
       {/* Triage Assessment / Queue */}
-      <TriageQueue showRecordVisitButton={true} showVitalSigns={true} />
+      <TriageQueue 
+        showRecordVisitButton={true} 
+        showVitalSigns={true} 
+        refreshTrigger={triageQueueRefreshRef}
+      />
 
       {/* Completed Appointments and Bills */}
       <CompletedAppointmentsBills />

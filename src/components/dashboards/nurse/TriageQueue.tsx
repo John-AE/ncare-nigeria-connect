@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +34,7 @@ interface PatientWithVitals {
 interface TriageQueueProps {
   showRecordVisitButton?: boolean;
   showVitalSigns?: boolean;
+  refreshTrigger?: React.MutableRefObject<(() => void) | null>;
 }
 
 // Priority scoring function based on vital signs
@@ -77,11 +78,14 @@ const getPriorityBadge = (score: number) => {
   return <Badge variant="default" className="flex items-center gap-1"><Clock className="h-3 w-3" />Low</Badge>;
 };
 
-export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = false }: TriageQueueProps) => {
+export const TriageQueue = forwardRef<any, TriageQueueProps>(({ showRecordVisitButton = false, showVitalSigns = false, refreshTrigger }, ref) => {
   const [queuePatients, setQueuePatients] = useState<PatientWithVitals[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Expose refresh function via ref
+  useImperativeHandle(refreshTrigger, () => fetchQueuePatients, []);
 
   const fetchQueuePatients = async () => {
     try {
@@ -133,7 +137,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
         const patient = patientsData?.find(p => p.id === vitalRecord.patient_id);
         const appointment = appointmentsData.find(apt => apt.patient_id === vitalRecord.patient_id);
         
-        if (!patient || !appointment) return null; // Skip if patient not found OR no active appointment
+        if (!patient) return null; // Skip if patient not found
         
         const vitals = {
           body_temperature: vitalRecord.body_temperature,
@@ -357,4 +361,6 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
       </CardContent>
     </Card>
   );
-};
+});
+
+TriageQueue.displayName = "TriageQueue";
