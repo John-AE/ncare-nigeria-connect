@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useAuth } from "../AuthProvider";
 import { useNurseDashboardStats } from "@/hooks/useNurseDashboardStats";
 import { useAutoRefresh } from '@/hooks/useAutoRefresh'; // <-- Add this import
+import { DashboardProvider } from '@/contexts/DashboardContext'; // <-- ADD THIS LINE
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NurseStatsCards } from "./nurse/NurseStatsCards";
@@ -69,79 +70,81 @@ const NurseDashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="border-b border-border pb-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Nurse Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {profile?.username}</p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <NurseStatsCards stats={stats} />
-
-      {/* Main Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PatientManagement
-          onRegisterPatient={() => setShowPatientForm(true)}
-          onScheduleAppointment={() => setShowAppointmentForm(true)}
-          onPatientSelect={setSelectedPatient}
-        />
-
-        <AppointmentManagement
-          onScheduleAppointment={() => setShowAppointmentForm(true)}
-          onSetupRecurring={() => setShowRecurringForm(true)}
-        />
-      </div>
-
-      {/* Full Width Cards */}
+    <DashboardProvider> {/* <-- ADD THIS WRAPPER */}
       <div className="space-y-6">
-        <DateAppointments 
-          onPatientArrived={handlePatientArrived}
-          refreshTrigger={dateAppointmentsRefreshRef}
-        />
-        <ScheduledPatientsQueue />
-        <RecentRegistrations 
-          refreshTrigger={recentRegistrationsRefreshRef}
-          onVitalsRecorded={handleVitalsRecorded}
-        />
-        <TriageQueue refreshTrigger={triageQueueRefreshRef} />
-        <CompletedConsultations />
-      </div>
+        {/* Header */}
+        <div className="border-b border-border pb-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Nurse Dashboard</h1>
+              <p className="text-muted-foreground">Welcome back, {profile?.username}</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
+        </div>
 
-      <PatientRegistrationForm
-        isOpen={showPatientForm}
-        onClose={() => setShowPatientForm(false)}
-        onSuccess={handlePatientRegistrationSuccess}
-      />
-      
-      <AppointmentSchedulingForm
-        isOpen={showAppointmentForm}
-        onClose={() => {
-          setShowAppointmentForm(false);
-          setSelectedPatient(null);
-        }}
-        preSelectedPatient={selectedPatient}
-        onSuccess={handleAppointmentScheduled}
-      />
-      
-      <RecurringAppointmentForm
-        isOpen={showRecurringForm}
-        onClose={() => setShowRecurringForm(false)}
-      />
-    </div>
+        {/* Quick Stats */}
+        <NurseStatsCards stats={stats} />
+
+        {/* Main Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <PatientManagement
+            onRegisterPatient={() => setShowPatientForm(true)}
+            onScheduleAppointment={() => setShowAppointmentForm(true)}
+            onPatientSelect={setSelectedPatient}
+          />
+
+          <AppointmentManagement
+            onScheduleAppointment={() => setShowAppointmentForm(true)}
+            onSetupRecurring={() => setShowRecurringForm(true)}
+          />
+        </div>
+
+        {/* Full Width Cards */}
+        <div className="space-y-6">
+          <DateAppointments 
+            onPatientArrived={handlePatientArrived}
+            refreshTrigger={dateAppointmentsRefreshRef}
+          />
+          <ScheduledPatientsQueue />
+          <RecentRegistrations 
+            refreshTrigger={recentRegistrationsRefreshRef}
+            onVitalsRecorded={handleVitalsRecorded}
+          />
+          <TriageQueue refreshTrigger={triageQueueRefreshRef} />
+          <CompletedConsultations />
+        </div>
+
+        <PatientRegistrationForm
+          isOpen={showPatientForm}
+          onClose={() => setShowPatientForm(false)}
+          onSuccess={handlePatientRegistrationSuccess}
+        />
+        
+        <AppointmentSchedulingForm
+          isOpen={showAppointmentForm}
+          onClose={() => {
+            setShowAppointmentForm(false);
+            setSelectedPatient(null);
+          }}
+          preSelectedPatient={selectedPatient}
+          onSuccess={handleAppointmentScheduled}
+        />
+        
+        <RecurringAppointmentForm
+          isOpen={showRecurringForm}
+          onClose={() => setShowRecurringForm(false)}
+        />
+      </div>
+    </DashboardProvider> {/* <-- CLOSE THE WRAPPER */}
   );
 };
 
