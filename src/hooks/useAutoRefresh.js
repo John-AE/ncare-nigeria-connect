@@ -1,21 +1,19 @@
 import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
-export const useAutoRefresh = () => {
+export function useAutoRefresh(refreshCallback) {
   useEffect(() => {
-    const channel = supabase
-      .channel('global-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'vital_signs' }, () => {
-        setTimeout(() => window.location.reload(), 500);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => {
-        setTimeout(() => window.location.reload(), 500);
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'patients' }, () => {
-        setTimeout(() => window.location.reload(), 500);
-      })
-      .subscribe();
+    // Set up auto-refresh interval (every 30 seconds)
+    const interval = setInterval(() => {
+      if (refreshCallback && typeof refreshCallback === 'function') {
+        // Call custom refresh function if provided
+        refreshCallback();
+      } else {
+        // Default: reload the page
+        window.location.reload();
+      }
+    }, 30000); // 30 seconds
 
-    return () => supabase.removeChannel(channel);
-  }, []);
-};
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
+  }, [refreshCallback]);
+}
