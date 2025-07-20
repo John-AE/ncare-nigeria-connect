@@ -27,6 +27,7 @@ interface PatientWithVitals {
     id: string;
     start_time: string;
     scheduled_date: string;
+    status: string;
   } | null;
   priority_score: number;
 }
@@ -122,48 +123,84 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
 
       if (patientsError) throw patientsError;
 
-      // Get appointment data for these patients
+      // Get appointment data for these patients - IMPORTANT: Include status field
       let appointmentsData = [];
       if (patientIds.length > 0) {
         const { data: apptData, error: apptError } = await supabase
           .from('appointments')
-          .select('id, patient_id, start_time, scheduled_date')
+          .select('id, patient_id, start_time, scheduled_date, status')
           .in('patient_id', patientIds)
-          .eq('scheduled_date', today.toISOString().split('T')[0])
-          .neq('status', 'completed');
+          .eq('scheduled_date', today.toISOString().split('T')[0]);
         
         if (apptError) console.warn('Error fetching appointments:', apptError);
         appointmentsData = apptData || [];
       }
 
-      // Process and sort patients
-      const processedPatients = vitalSignsData.map(vitalRecord => {
-        const patient = patientsData?.find(p => p.id === vitalRecord.patient_id);
-        const appointment = appointmentsData.find(apt => apt.patient_id === vitalRecord.patient_id);
-        
-        if (!patient) return null; // Skip if patient not found
-        
-        const vitals = {
-          body_temperature: vitalRecord.body_temperature,
-          heart_rate: vitalRecord.heart_rate,
-          blood_pressure_systolic: vitalRecord.blood_pressure_systolic,
-          blood_pressure_diastolic: vitalRecord.blood_pressure_diastolic,
-          oxygen_saturation: vitalRecord.oxygen_saturation,
-          recorded_at: vitalRecord.recorded_at,
-          complaints: vitalRecord.complaints
-        };
-        
-        return {
-          id: patient.id,
-          first_name: patient.first_name,
-          last_name: patient.last_name,
-          gender: patient.gender,
-          date_of_birth: patient.date_of_birth,
-          vital_signs: vitals,
-          appointments: appointment,
-          priority_score: calculatePriorityScore(vitals)
-        };
-      }).filter(Boolean) as PatientWithVitals[]; // Remove null entries
+      // Get completed visits/consultations for these patients today to filter them out
+      let completedVisitsPatientIds = new Set();
+      if (patientIds.length > 0) {
+        // Check both visits and consultations tables for completed records
+        const [visitsResponse, consultationsResponse] = await Promise.allSettled([
+          supabase
+            .from('visits')
+            .select('patient_id')
+            .in('patient_id', patientIds)
+            .gte('visit_date', today.toISOString().split('T')[0])
+            .lt('visit_date', new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
+          
+          supabase
+            .from('consultations')
+            .select('patient_id')
+            .in('patient_id', patientIds)
+            .gte('consultation_date', today.toISOString().split('T')[0])
+            .lt('consultation_date', new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        ]);
+
+        // Add patient IDs from completed visits
+        if (visitsResponse.status === 'fulfilled' && visitsResponse.value.data) {
+          visitsResponse.value.data.forEach(visit => completedVisitsPatientIds.add(visit.patient_id));
+        }
+
+        // Add patient IDs from completed consultations
+        if (consultationsResponse.status === 'fulfilled' && consultationsResponse.value.data) {
+          consultationsResponse.value.data.forEach(consultation => completedVisitsPatientIds.add(consultation.patient_id));
+        }
+      }
+
+      // Process and filter patients - exclude those who have completed visits/consultations
+      const processedPatients = vitalSignsData
+        .filter(vitalRecord => !completedVisitsPatientIds.has(vitalRecord.patient_id))
+        .map(vitalRecord => {
+          const patient = patientsData?.find(p => p.id === vitalRecord.patient_id);
+          const appointment = appointmentsData.find(apt => apt.patient_id === vitalRecord.patient_id);
+          
+          if (!patient) return null; // Skip if patient not found
+          
+          // Also filter out patients with completed appointments
+          if (appointment && appointment.status === 'completed') return null;
+          
+          const vitals = {
+            body_temperature: vitalRecord.body_temperature,
+            heart_rate: vitalRecord.heart_rate,
+            blood_pressure_systolic: vitalRecord.blood_pressure_systolic,
+            blood_pressure_diastolic: vitalRecord.blood_pressure_diastolic,
+            oxygen_saturation: vitalRecord.oxygen_saturation,
+            recorded_at: vitalRecord.recorded_at,
+            complaints: vitalRecord.complaints
+          };
+          
+          return {
+            id: patient.id,
+            first_name: patient.first_name,
+            last_name: patient.last_name,
+            gender: patient.gender,
+            date_of_birth: patient.date_of_birth,
+            vital_signs: vitals,
+            appointments: appointment,
+            priority_score: calculatePriorityScore(vitals)
+          };
+        })
+        .filter(Boolean) as PatientWithVitals[]; // Remove null entries
 
       // Sort by: 1) Priority score (desc), 2) Vitals recorded time (asc), 3) Appointment time (asc)
       processedPatients.sort((a, b) => {
@@ -198,7 +235,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
   useEffect(() => {
     fetchQueuePatients();
 
-    // Set up real-time subscription for vital signs updates
+    // Set up real-time subscription for updates
     const channel = supabase
       .channel('triage-queue-updates')
       .on(
@@ -207,6 +244,33 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
           event: 'INSERT',
           schema: 'public',
           table: 'vital_signs'
+        },
+        () => fetchQueuePatients()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'visits'
+        },
+        () => fetchQueuePatients()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'consultations'
+        },
+        () => fetchQueuePatients()
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'appointments'
         },
         () => fetchQueuePatients()
       )
