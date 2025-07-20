@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useAuth } from "../AuthProvider";
 import { useNurseDashboardStats } from "@/hooks/useNurseDashboardStats";
-import { useAutoRefresh } from '@/hooks/useAutoRefresh'; //
+import { useAutoRefresh } from '@/hooks/useAutoRefresh'; // <-- Add this import
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NurseStatsCards } from "./nurse/NurseStatsCards";
@@ -15,12 +15,11 @@ import { CompletedConsultations } from "./nurse/CompletedConsultations";
 import PatientRegistrationForm from "../PatientRegistrationForm";
 import AppointmentSchedulingForm from "../AppointmentSchedulingForm";
 import RecurringAppointmentForm from "../RecurringAppointmentForm";
-import { DashboardProvider } from '@/contexts/DashboardContext';
 
 const NurseDashboard = () => {
   const { profile } = useAuth();
-  const { stats } = useNurseDashboardStats();
-  useAutoRefresh(); // <-- Add this hook call
+  const stats = useNurseDashboardStats();
+
   
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
@@ -70,24 +69,25 @@ const NurseDashboard = () => {
   };
 
   return (
-    <DashboardProvider>
-      <div className="space-y-6">
-        {/* Your existing dashboard content */}
-        <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="border-b border-border pb-4">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Nurse Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {profile?.username || 'Nurse'}</p>
+            <h1 className="text-3xl font-bold text-foreground">Nurse Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back, {profile?.username}</p>
           </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.location.reload()}
+            onClick={handleRefresh}
             className="flex items-center gap-2"
           >
             <RefreshCw className="h-4 w-4" />
             Refresh
           </Button>
         </div>
+      </div>
 
       {/* Quick Stats */}
       <NurseStatsCards stats={stats} />
@@ -142,7 +142,6 @@ const NurseDashboard = () => {
         onClose={() => setShowRecurringForm(false)}
       />
     </div>
-  </DashboardProvider>
   );
 };
 
