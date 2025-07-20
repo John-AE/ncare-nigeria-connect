@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,26 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, profile } = useAuth();
+
+  // Move navigation logic to useEffect to avoid render-time navigation
+  useEffect(() => {
+    if (profile) {
+      switch (profile.role) {
+        case "doctor":
+          navigate("/doctor-dashboard");
+          break;
+        case "nurse":
+          navigate("/nurse-dashboard");
+          break;
+        case "finance":
+          navigate("/finance-dashboard");
+          break;
+        case "admin":
+          navigate("/admin-dashboard");
+          break;
+      }
+    }
+  }, [profile, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,23 +190,20 @@ const LoginPage = () => {
     }
   };
 
-  // Redirect if already logged in and profile is loaded
+  // If profile exists and navigation is in progress, show loading
   if (profile) {
-    switch (profile.role) {
-      case "doctor":
-        navigate("/doctor-dashboard");
-        break;
-      case "nurse":
-        navigate("/nurse-dashboard");
-        break;
-      case "finance":
-        navigate("/finance-dashboard");
-        break;
-      case "admin":
-        navigate("/admin-dashboard");
-        break;
-    }
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardContent className="flex items-center justify-center p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Redirecting...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
