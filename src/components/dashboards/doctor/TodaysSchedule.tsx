@@ -61,7 +61,7 @@ export const TodaysSchedule = () => {
         <CardDescription>Scheduled appointments for today</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[300px] overflow-y-auto">
           {todaysSchedule.length > 0 ? (
             todaysSchedule.map((appointment) => (
               <div key={appointment.id} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
