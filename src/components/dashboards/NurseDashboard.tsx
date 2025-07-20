@@ -18,7 +18,7 @@ import RecurringAppointmentForm from "../RecurringAppointmentForm";
 
 const NurseDashboard = () => {
   const { profile } = useAuth();
-  const stats = useNurseDashboardStats();
+  const { stats, loading, refetch } = useNurseDashboardStats();
 
   
   const [showPatientForm, setShowPatientForm] = useState(false);
