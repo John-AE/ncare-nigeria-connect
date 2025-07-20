@@ -242,14 +242,14 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
             hospital_id: profile.hospital_id,
           },
         ])
-        .select('patient_id')
+        .select('id')
         .single();
 
       if (patientError) throw patientError;
 
       // Create automatic appointment for the newly registered patient
       const appointmentResult = await createAutomaticAppointment(
-        patientData.patient_id, 
+        patientData.id, 
         profile.hospital_id
       );
 
