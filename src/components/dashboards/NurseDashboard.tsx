@@ -144,7 +144,7 @@ const NurseDashboard = () => {
           onClose={() => setShowRecurringForm(false)}
         />
       </div>
-    </DashboardProvider> {/* <-- CLOSE THE WRAPPER */}
+    </DashboardProvider>
   );
 };
 
