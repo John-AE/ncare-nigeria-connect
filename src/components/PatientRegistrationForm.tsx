@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const patientSchema = z.object({
   first_name: z.string().min(2, 'First name must be at least 2 characters'),
@@ -38,13 +39,23 @@ interface PatientRegistrationFormProps {
   patientData?: any;
   readOnly?: boolean;
   onSuccess?: () => void;
+  isWalkIn?: boolean; // New prop to indicate if this is a walk-in registration
 }
 
-const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = false, onSuccess }: PatientRegistrationFormProps) => {
+const PatientRegistrationForm = ({ 
+  isOpen, 
+  onClose, 
+  patientData, 
+  readOnly = false, 
+  onSuccess,
+  isWalkIn = false 
+}: PatientRegistrationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [createdAppointmentId, setCreatedAppointmentId] = useState<string | null>(null);
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
@@ -122,26 +133,74 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('patients').insert([
-        {
-          first_name: data.first_name,
-          last_name: data.last_name,
-          date_of_birth: data.date_of_birth,
-          gender: data.gender,
-          phone: data.phone || null,
-          email: data.email || null,
-          address: data.address || null,
-          emergency_contact_name: data.emergency_contact_name || null,
-          emergency_contact_phone: data.emergency_contact_phone || null,
-          blood_group: data.blood_group || null,
-          allergies: data.allergies || null,
-          medical_history: data.medical_history || null,
-          registered_by: user.id,
-          hospital_id: profile.hospital_id,
-        },
-      ]);
+      // Step 1: Insert the patient
+      const { data: patientResult, error: patientError } = await supabase
+        .from('patients')
+        .insert([
+          {
+            first_name: data.first_name,
+            last_name: data.last_name,
+            date_of_birth: data.date_of_birth,
+            gender: data.gender,
+            phone: data.phone || null,
+            email: data.email || null,
+            address: data.address || null,
+            emergency_contact_name: data.emergency_contact_name || null,
+            emergency_contact_phone: data.emergency_contact_phone || null,
+            blood_group: data.blood_group || null,
+            allergies: data.allergies || null,
+            medical_history: data.medical_history || null,
+            registered_by: user.id,
+            hospital_id: profile.hospital_id,
+          },
+        ])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (patientError) throw patientError;
+
+      let appointmentId = null;
+
+      // Step 2: If this is a walk-in registration, create an appointment
+      if (isWalkIn && patientResult) {
+        const currentDate = new Date().toISOString().split('T')[0];
+        const currentTime = new Date().toLocaleTimeString('en-GB', { 
+          hour12: false, 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+
+        const { data: appointmentResult, error: appointmentError } = await supabase
+          .from('appointments')
+          .insert([
+            {
+              patient_id: patientResult.id,
+              scheduled_date: currentDate,
+              start_time: currentTime,
+              end_time: null, // Walk-ins don't have fixed end times
+              appointment_type: 'walk-in',
+              status: 'in-progress',
+              hospital_id: profile.hospital_id,
+              created_by: user.id,
+              notes: `Walk-in appointment for ${data.first_name} ${data.last_name}`,
+            },
+          ])
+          .select()
+          .single();
+
+        if (appointmentError) {
+          // If appointment creation fails, we should still show success for patient registration
+          console.error('Appointment creation failed:', appointmentError);
+          toast({
+            title: 'Patient Registered',
+            description: 'Patient registered successfully, but appointment creation failed. Please create appointment manually.',
+            variant: 'default',
+          });
+        } else {
+          appointmentId = appointmentResult.id;
+          setCreatedAppointmentId(appointmentId);
+        }
+      }
 
       setShowSuccess(true);
       form.reset();
@@ -158,9 +217,16 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
 
   const handleCloseSuccess = () => {
     setShowSuccess(false);
+    
     if (onSuccess) {
       onSuccess();
     }
+    
+    // If this was a walk-in registration and we created an appointment, navigate to record visit
+    if (isWalkIn && createdAppointmentId) {
+      navigate(`/record-visit/walk-in/${createdAppointmentId}`);
+    }
+    
     onClose();
   };
 
@@ -169,9 +235,16 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{readOnly ? "Patient Details" : "Register New Patient"}</DialogTitle>
+            <DialogTitle>
+              {readOnly ? "Patient Details" : isWalkIn ? "Register Walk-in Patient" : "Register New Patient"}
+            </DialogTitle>
             <DialogDescription>
-              {readOnly ? "View patient information details." : "Fill in the patient's information to create a new medical record."}
+              {readOnly 
+                ? "View patient information details." 
+                : isWalkIn
+                ? "Register a new walk-in patient and create their appointment."
+                : "Fill in the patient's information to create a new medical record."
+              }
             </DialogDescription>
           </DialogHeader>
 
@@ -379,7 +452,10 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
                 </Button>
                 {!readOnly && (
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? 'Registering...' : 'Register Patient'}
+                    {isSubmitting 
+                      ? (isWalkIn ? 'Registering & Creating Appointment...' : 'Registering...') 
+                      : (isWalkIn ? 'Register & Start Visit' : 'Register Patient')
+                    }
                   </Button>
                 )}
               </div>
@@ -391,13 +467,20 @@ const PatientRegistrationForm = ({ isOpen, onClose, patientData, readOnly = fals
       <Dialog open={showSuccess} onOpenChange={handleCloseSuccess}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Patient Registered Successfully</DialogTitle>
+            <DialogTitle>
+              {isWalkIn ? 'Walk-in Patient Registered Successfully' : 'Patient Registered Successfully'}
+            </DialogTitle>
             <DialogDescription>
-              The patient has been successfully registered in the system.
+              {isWalkIn 
+                ? 'The walk-in patient has been registered and their appointment has been created. You will be redirected to the visit recording page.'
+                : 'The patient has been successfully registered in the system.'
+              }
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end">
-            <Button onClick={handleCloseSuccess}>Close</Button>
+            <Button onClick={handleCloseSuccess}>
+              {isWalkIn ? 'Continue to Visit' : 'Close'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
