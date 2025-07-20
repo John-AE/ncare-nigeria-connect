@@ -145,10 +145,32 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
         appointmentsData = apptData || [];
       }
 
+      // Get visit records for today to exclude patients who already have completed visits
+      let completedVisitPatientIds: string[] = [];
+      if (patientIds.length > 0) {
+        const { data: visitsData, error: visitsError } = await supabase
+          .from('visits')
+          .select('patient_id')
+          .in('patient_id', patientIds)
+          .gte('created_at', startOfDay)
+          .lt('created_at', endOfDay);
+        
+        if (visitsError) {
+          console.warn('Error fetching visits:', visitsError);
+        } else if (visitsData) {
+          completedVisitPatientIds = visitsData.map(v => v.patient_id);
+        }
+      }
+
       // Process and sort patients with better error handling
       const processedPatients: PatientWithVitals[] = [];
       
       for (const vitalRecord of vitalSignsData) {
+        // Skip patients who already have completed visits today
+        if (completedVisitPatientIds.includes(vitalRecord.patient_id)) {
+          continue;
+        }
+
         const patient = patientsData?.find(p => p.id === vitalRecord.patient_id);
         if (!patient) {
           console.warn(`Patient not found for vital record: ${vitalRecord.id}`);
