@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { format, differenceInYears } from "date-fns";
-import { Eye, Activity, Edit } from "lucide-react";
+import { Eye, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import PatientRegistrationForm from "../../PatientRegistrationForm";
-import { VitalsRecordingDialog } from "./VitalsRecordingDialog";
 
 interface Patient {
   id: string;
@@ -35,8 +34,6 @@ export const RecentRegistrations = ({ refreshTrigger, onVitalsRecorded }: Recent
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientDetails, setShowPatientDetails] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [showVitalsDialog, setShowVitalsDialog] = useState(false);
-  const [vitalsPatient, setVitalsPatient] = useState<Patient | null>(null);
 
   // Expose refresh function via refreshTrigger ref
   useEffect(() => {
@@ -134,25 +131,6 @@ export const RecentRegistrations = ({ refreshTrigger, onVitalsRecorded }: Recent
     fetchRecentPatients();
   };
 
-  const handleRecordVitals = (patient: Patient) => {
-    setVitalsPatient(patient);
-    setShowVitalsDialog(true);
-  };
-
-  const handleCloseVitals = () => {
-    setShowVitalsDialog(false);
-    setVitalsPatient(null);
-  };
-
-  const handleVitalsSuccess = () => {
-    // Re-fetch both RecentRegistrations and refresh the list to update UI
-    fetchRecentPatients();
-    // Notify parent component that vitals were recorded
-    if (onVitalsRecorded) {
-      onVitalsRecorded();
-    }
-  };
-
   return (
     <>
       <Card className="bg-card border-border transform transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
@@ -168,7 +146,7 @@ export const RecentRegistrations = ({ refreshTrigger, onVitalsRecorded }: Recent
                   <TableHead className="font-medium text-muted-foreground">Date of Birth</TableHead>
                   <TableHead className="font-medium text-muted-foreground">Age</TableHead>
                   <TableHead className="font-medium text-muted-foreground">Gender</TableHead>
-                  <TableHead className="font-medium text-muted-foreground w-32">Actions</TableHead>
+                  <TableHead className="font-medium text-muted-foreground w-24">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -214,15 +192,6 @@ export const RecentRegistrations = ({ refreshTrigger, onVitalsRecorded }: Recent
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleRecordVitals(patient)}
-                            className="h-8 px-3 text-xs"
-                          >
-                            <Activity className="h-3 w-3 mr-1" />
-                            Record Vitals
-                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -239,13 +208,6 @@ export const RecentRegistrations = ({ refreshTrigger, onVitalsRecorded }: Recent
         onClose={handleCloseDetails}
         patientData={selectedPatient}
         readOnly={!isEditing}
-      />
-
-      <VitalsRecordingDialog
-        isOpen={showVitalsDialog}
-        onClose={handleCloseVitals}
-        patient={vitalsPatient}
-        onSuccess={handleVitalsSuccess}
       />
     </>
   );
