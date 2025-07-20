@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, UserCheck, Calendar as CalendarClock, X } from "lucide-react";
-import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, differenceInYears } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ interface DateAppointmentsProps {
   refreshTrigger?: React.MutableRefObject<(() => void) | null>;
 }
 
-export const DateAppointments = forwardRef<any, DateAppointmentsProps>(({ onPatientArrived, refreshTrigger }, ref) => {
+export const DateAppointments = ({ onPatientArrived, refreshTrigger }: DateAppointmentsProps) => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedDateAppointments, setSelectedDateAppointments] = useState<any[]>([]);
@@ -29,8 +29,12 @@ export const DateAppointments = forwardRef<any, DateAppointmentsProps>(({ onPati
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
 
-  // Expose refresh function via ref
-  useImperativeHandle(refreshTrigger, () => fetchSelectedDateAppointments, [selectedDate]);
+  // Expose refresh function via refreshTrigger ref
+  useEffect(() => {
+    if (refreshTrigger) {
+      refreshTrigger.current = fetchSelectedDateAppointments;
+    }
+  }, [refreshTrigger, selectedDate]);
 
   // Fetch appointments for selected date
   useEffect(() => {
@@ -370,6 +374,4 @@ export const DateAppointments = forwardRef<any, DateAppointmentsProps>(({ onPati
       </Dialog>
     </Card>
   );
-});
-
-DateAppointments.displayName = "DateAppointments";
+};

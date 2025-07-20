@@ -1,4 +1,4 @@
-import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState, useEffect } from "react";
 import { format, differenceInYears } from "date-fns";
 import { Eye, Activity, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +30,7 @@ interface RecentRegistrationsProps {
   onVitalsRecorded?: () => void;
 }
 
-export const RecentRegistrations = forwardRef<any, RecentRegistrationsProps>(({ refreshTrigger, onVitalsRecorded }, ref) => {
+export const RecentRegistrations = ({ refreshTrigger, onVitalsRecorded }: RecentRegistrationsProps) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showPatientDetails, setShowPatientDetails] = useState(false);
@@ -38,8 +38,12 @@ export const RecentRegistrations = forwardRef<any, RecentRegistrationsProps>(({ 
   const [showVitalsDialog, setShowVitalsDialog] = useState(false);
   const [vitalsPatient, setVitalsPatient] = useState<Patient | null>(null);
 
-  // Expose refresh function via ref
-  useImperativeHandle(refreshTrigger, () => fetchRecentPatients, []);
+  // Expose refresh function via refreshTrigger ref
+  useEffect(() => {
+    if (refreshTrigger) {
+      refreshTrigger.current = fetchRecentPatients;
+    }
+  }, [refreshTrigger]);
 
   useEffect(() => {
     fetchRecentPatients();
@@ -245,6 +249,4 @@ export const RecentRegistrations = forwardRef<any, RecentRegistrationsProps>(({ 
       />
     </>
   );
-});
-
-RecentRegistrations.displayName = "RecentRegistrations";
+};

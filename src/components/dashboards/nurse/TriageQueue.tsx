@@ -1,4 +1,4 @@
-import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,14 +78,18 @@ const getPriorityBadge = (score: number) => {
   return <Badge variant="default" className="flex items-center gap-1"><Clock className="h-3 w-3" />Low</Badge>;
 };
 
-export const TriageQueue = forwardRef<any, TriageQueueProps>(({ showRecordVisitButton = false, showVitalSigns = false, refreshTrigger }, ref) => {
+export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = false, refreshTrigger }: TriageQueueProps) => {
   const [queuePatients, setQueuePatients] = useState<PatientWithVitals[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Expose refresh function via ref
-  useImperativeHandle(refreshTrigger, () => fetchQueuePatients, []);
+  // Expose refresh function via refreshTrigger ref
+  useEffect(() => {
+    if (refreshTrigger) {
+      refreshTrigger.current = fetchQueuePatients;
+    }
+  }, [refreshTrigger]);
 
   const fetchQueuePatients = async () => {
     try {
@@ -361,6 +365,4 @@ export const TriageQueue = forwardRef<any, TriageQueueProps>(({ showRecordVisitB
       </CardContent>
     </Card>
   );
-});
-
-TriageQueue.displayName = "TriageQueue";
+};
