@@ -19,7 +19,7 @@ import { DashboardProvider } from '@/contexts/DashboardContext';
 
 const NurseDashboard = () => {
   const { profile } = useAuth();
-  const stats = useNurseDashboardStats();
+  const { stats } = useNurseDashboardStats();
   useAutoRefresh(); // <-- Add this hook call
   
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -76,7 +76,7 @@ const NurseDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Nurse Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.full_name || 'Nurse'}</p>
+            <p className="text-muted-foreground">Welcome back, {profile?.username || 'Nurse'}</p>
           </div>
           <Button
             variant="outline"
