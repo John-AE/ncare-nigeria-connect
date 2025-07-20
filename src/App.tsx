@@ -81,6 +81,14 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/record-visit/walk-in/:appointmentId" 
+              element={
+                <ProtectedRoute allowedRole="doctor">
+                  <RecordVisit />
+                </ProtectedRoute>
+              } 
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
