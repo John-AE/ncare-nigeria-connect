@@ -233,7 +233,13 @@ export const DateAppointments = ({ onPatientArrived, refreshTrigger }: DateAppoi
             <Badge variant="secondary">{selectedDateCount} appointments</Badge>
           </div>
           
-          <div className="space-y-2 max-h-64 overflow-y-auto">
+          <div 
+            className="space-y-2 overflow-y-auto" 
+            style={{ 
+              maxHeight: selectedDateAppointments.length > 3 ? '280px' : 'auto',
+              height: selectedDateAppointments.length > 0 ? 'auto' : '120px'
+            }}
+          >
             {selectedDateAppointments.length > 0 ? (
               selectedDateAppointments.map((appointment) => (
                  <div key={appointment.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
