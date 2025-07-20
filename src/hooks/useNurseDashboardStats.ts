@@ -1,154 +1,127 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+// Update your useNurseDashboardStats hook to register with the dashboard context:
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/AuthProvider';
+import { useDashboard } from '@/contexts/DashboardContext'; // Add this import
 
 export interface NurseDashboardStats {
   totalPatients: number;
-  totalPendingBills: number;
   newPatientsToday: number;
   todaysAppointments: number;
+  totalPendingBills: number;
 }
 
 export const useNurseDashboardStats = () => {
   const [stats, setStats] = useState<NurseDashboardStats>({
     totalPatients: 0,
-    totalPendingBills: 0,
     newPatientsToday: 0,
     todaysAppointments: 0,
+    totalPendingBills: 0,
   });
+  const [loading, setLoading] = useState(true);
+  const { profile } = useAuth();
+  const { registerStatsRefresh } = useDashboard(); // Add this line
+
+  const fetchStats = async () => {
+    if (!profile?.hospital_id) return;
+
+    try {
+      setLoading(true);
+      const today = new Date().toISOString().split('T')[0];
+
+      // Get total patients
+      const { count: totalPatientsCount } = await supabase
+        .from('patients')
+        .select('*', { count: 'exact', head: true })
+        .eq('hospital_id', profile.hospital_id);
+
+      // Get new patients today
+      const { count: newPatientsTodayCount } = await supabase
+        .from('patients')
+        .select('*', { count: 'exact', head: true })
+        .eq('hospital_id', profile.hospital_id)
+        .gte('created_at', `${today}T00:00:00.000Z`)
+        .lte('created_at', `${today}T23:59:59.999Z`);
+
+      // Get today's appointments
+      const { count: todaysAppointmentsCount } = await supabase
+        .from('appointments')
+        .select('*', { count: 'exact', head: true })
+        .eq('hospital_id', profile.hospital_id)
+        .eq('scheduled_date', today);
+
+      // Get pending bills
+      const { count: totalPendingBillsCount } = await supabase
+        .from('bills')
+        .select('*', { count: 'exact', head: true })
+        .eq('hospital_id', profile.hospital_id)
+        .eq('status', 'pending');
+
+      setStats({
+        totalPatients: totalPatientsCount || 0,
+        newPatientsToday: newPatientsTodayCount || 0,
+        todaysAppointments: todaysAppointmentsCount || 0,
+        totalPendingBills: totalPendingBillsCount || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Get total patients
-        const { count: patientCount } = await supabase
-          .from('patients')
-          .select('*', { count: 'exact', head: true });
-        
-        // Get new patients registered today
-        const { count: newPatientsCount } = await supabase
-          .from('patients')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', `${today}T00:00:00.000Z`)
-          .lt('created_at', `${today}T23:59:59.999Z`);
-        
-        // Get today's appointments
-        const { count: todaysAppointmentsCount } = await supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .eq('scheduled_date', today);
-        
-        // Get total pending bills
-        const { count: billCount } = await supabase
-          .from('bills')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_paid', false);
-        
-        setStats({
-          totalPatients: patientCount || 0,
-          totalPendingBills: billCount || 0,
-          newPatientsToday: newPatientsCount || 0,
-          todaysAppointments: todaysAppointmentsCount || 0,
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      }
-    };
-
     fetchStats();
+    
+    // Register the refresh function with the dashboard context
+    registerStatsRefresh(fetchStats);
 
-    // Set up real-time listeners
-    const patientsChannel = supabase
-      .channel('patients-changes-nurse')
-      .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'patients' },
-        (payload) => {
-          console.log('Patient real-time INSERT received:', payload);
-          const today = new Date().toISOString().split('T')[0];
-          const createdToday = payload.new.created_at?.startsWith(today);
-          
-          setStats(prev => {
-            console.log('Updating stats - before:', prev);
-            const newStats = {
-              ...prev,
-              totalPatients: prev.totalPatients + 1,
-              newPatientsToday: createdToday ? prev.newPatientsToday + 1 : prev.newPatientsToday
-            };
-            console.log('Updating stats - after:', newStats);
-            return newStats;
-          });
+    // Set up real-time subscriptions for automatic updates
+    const channel = supabase
+      .channel('dashboard-stats-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'patients'
+        },
+        () => {
+          console.log('New patient added, refreshing stats...');
+          fetchStats();
         }
       )
-      .subscribe();
-
-    const appointmentsChannel = supabase
-      .channel('appointments-changes-nurse')
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'appointments' },
-        (payload) => {
-          const today = new Date().toISOString().split('T')[0];
-          const scheduledToday = payload.new.scheduled_date === today;
-          
-          if (scheduledToday) {
-            setStats(prev => ({ ...prev, todaysAppointments: prev.todaysAppointments + 1 }));
-          }
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'appointments'
+        },
+        () => {
+          console.log('New appointment added, refreshing stats...');
+          fetchStats();
         }
       )
-      .on('postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'appointments' },
-        (payload) => {
-          const today = new Date().toISOString().split('T')[0];
-          const oldScheduledToday = payload.old.scheduled_date === today;
-          const newScheduledToday = payload.new.scheduled_date === today;
-          
-          if (oldScheduledToday && !newScheduledToday) {
-            setStats(prev => ({ ...prev, todaysAppointments: prev.todaysAppointments - 1 }));
-          } else if (!oldScheduledToday && newScheduledToday) {
-            setStats(prev => ({ ...prev, todaysAppointments: prev.todaysAppointments + 1 }));
-          }
-        }
-      )
-      .subscribe();
-
-    const billsChannel = supabase
-      .channel('bills-changes-nurse')
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'bills' },
-        (payload) => {
-          if (!payload.new.is_paid) {
-            setStats(prev => ({ ...prev, totalPendingBills: prev.totalPendingBills + 1 }));
-          }
-        }
-      )
-      .on('postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'bills' },
-        (payload) => {
-          const oldRecord = payload.old;
-          const newRecord = payload.new;
-          
-          setStats(prev => {
-            let newStats = { ...prev };
-            // If bill status changed from unpaid to paid
-            if (!oldRecord.is_paid && newRecord.is_paid) {
-              newStats.totalPendingBills = prev.totalPendingBills - 1;
-            }
-            // If bill status changed from paid to unpaid
-            else if (oldRecord.is_paid && !newRecord.is_paid) {
-              newStats.totalPendingBills = prev.totalPendingBills + 1;
-            }
-            return newStats;
-          });
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'bills'
+        },
+        () => {
+          console.log('Bill updated, refreshing stats...');
+          fetchStats();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(patientsChannel);
-      supabase.removeChannel(appointmentsChannel);
-      supabase.removeChannel(billsChannel);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [profile?.hospital_id, registerStatsRefresh]);
 
-  return stats;
+  return { stats, loading, refetch: fetchStats };
 };
