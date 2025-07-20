@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, AlertTriangle, Activity, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useDashboard } from '@/contexts/DashboardContext';
 
 interface PatientWithVitals {
   id: string;
@@ -83,13 +84,92 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { registerTriageQueueRefresh } = useDashboard();
 
   // Expose refresh function via refreshTrigger ref
   useEffect(() => {
+    // Register refresh function with both local ref and dashboard context
     if (refreshTrigger) {
       refreshTrigger.current = fetchQueuePatients;
     }
-  }, [refreshTrigger]);
+    registerTriageQueueRefresh(fetchQueuePatients); // Add this line
+  }, [refreshTrigger, registerTriageQueueRefresh]);
+
+  useEffect(() => {
+    fetchQueuePatients();
+
+    // Enhanced real-time subscriptions
+    const channel = supabase
+      .channel('triage-queue-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'vital_signs'
+        },
+        (payload) => {
+          console.log('New vital signs recorded:', payload);
+          fetchQueuePatients();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'vital_signs'
+        },
+        (payload) => {
+          console.log('Vital signs updated:', payload);
+          fetchQueuePatients();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'patients'
+        },
+        (payload) => {
+          console.log('New patient registered:', payload);
+          // Don't need to refresh immediately since patients need vitals to appear in queue
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'appointments'
+        },
+        (payload) => {
+          console.log('New appointment scheduled:', payload);
+          fetchQueuePatients(); // Refresh to show appointment times
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'appointments'
+        },
+        (payload) => {
+          console.log('Appointment updated:', payload);
+          fetchQueuePatients();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // ... rest of your component remains the same
+};
 
   const fetchQueuePatients = async () => {
     try {
