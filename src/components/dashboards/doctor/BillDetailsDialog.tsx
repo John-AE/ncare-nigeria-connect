@@ -56,17 +56,71 @@ const BillDetailsDialog = ({
     try {
       const doc = new jsPDF();
       
-      // Header
-      doc.setFontSize(20);
-      doc.text("Medical Bill", 20, 30);
+      // Define colors
+      const primaryColor = [37, 99, 235]; // Blue
+      const secondaryColor = [71, 85, 105]; // Gray
+      const lightGray = [248, 250, 252]; // Light background
       
-      // Patient Info
+      // Page margins
+      const margin = 20;
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      
+      // Header Background
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(0, 0, pageWidth, 50, 'F');
+      
+      // Company Name/Logo
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont("helvetica", "bold");
+      doc.text("Medical Center", margin, 25);
+      
+      // Header subtitle
       doc.setFontSize(12);
-      doc.text(`Patient: ${patientName}`, 20, 50);
-      doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 60);
-      doc.text(`Time: ${appointmentTime}`, 20, 70);
+      doc.setFont("helvetica", "normal");
+      doc.text("Professional Healthcare Services", margin, 35);
       
-      // Bill Items Table
+      // Invoice title
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.setFontSize(28);
+      doc.setFont("helvetica", "bold");
+      doc.text("MEDICAL BILL", pageWidth - margin, 25, { align: 'right' });
+      
+      // Reset text color for content
+      doc.setTextColor(0, 0, 0);
+      
+      // Patient Information Section
+      let yPosition = 70;
+      
+      // Patient info background
+      doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 35, 'F');
+      
+      // Patient info border
+      doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.setLineWidth(0.5);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 35);
+      
+      // Patient details
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text("PATIENT INFORMATION", margin + 5, yPosition + 5);
+      
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+      doc.text(`Patient: ${patientName}`, margin + 5, yPosition + 15);
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, margin + 5, yPosition + 25);
+      
+      // Bill info on the right
+      doc.text(`Bill ID: ${billId || 'N/A'}`, pageWidth - margin - 5, yPosition + 15, { align: 'right' });
+      doc.text(`Time: ${appointmentTime}`, pageWidth - margin - 5, yPosition + 25, { align: 'right' });
+      
+      yPosition += 50;
+      
+      // Services table
       const tableData = billItems.map(item => [
         item.service_name,
         item.quantity.toString(),
@@ -75,29 +129,106 @@ const BillDetailsDialog = ({
       ]);
       
       autoTable(doc, {
-        head: [['Service', 'Quantity', 'Unit Price', 'Total']],
+        head: [['Service Description', 'Qty', 'Unit Price', 'Total']],
         body: tableData,
-        startY: 90,
-        theme: 'striped',
-        headStyles: { fillColor: [0, 100, 200] },
+        startY: yPosition,
+        theme: 'grid',
+        headStyles: { 
+          fillColor: primaryColor,
+          textColor: [255, 255, 255],
+          fontSize: 12,
+          fontStyle: 'bold',
+          halign: 'center',
+          cellPadding: 8
+        },
+        bodyStyles: {
+          fontSize: 10,
+          cellPadding: 6,
+          textColor: [51, 65, 85]
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252]
+        },
+        columnStyles: {
+          0: { cellWidth: 70, halign: 'left' },   // Service name
+          1: { cellWidth: 20, halign: 'center' }, // Quantity
+          2: { cellWidth: 35, halign: 'right' },  // Unit price
+          3: { cellWidth: 35, halign: 'right' }   // Total
+        },
+        tableLineColor: [226, 232, 240],
+        tableLineWidth: 0.5,
+        margin: { left: margin, right: margin }
       });
       
-      // Total
+      // Get position after table
       const finalY = (doc as any).lastAutoTable.finalY + 20;
-      doc.setFontSize(14);
-      doc.text(`Total Amount: ₦${totalAmount.toLocaleString()}`, 20, finalY);
-      doc.text(`Status: ${isPaid ? 'Paid' : 'Pending'}`, 20, finalY + 10);
       
-      if (paymentMethod) {
-        doc.text(`Payment Method: ${paymentMethod}`, 20, finalY + 20);
-      }
+      // Total section background
+      const totalSectionHeight = 60;
+      doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+      doc.rect(pageWidth - 120, finalY - 5, 100, totalSectionHeight, 'F');
+      
+      // Total section border
+      doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.setLineWidth(1);
+      doc.rect(pageWidth - 120, finalY - 5, 100, totalSectionHeight);
+      
+      // Subtotal
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+      doc.text("Subtotal:", pageWidth - 115, finalY + 8);
+      doc.text(`₦${totalAmount.toLocaleString()}`, pageWidth - 25, finalY + 8, { align: 'right' });
+      
+      // Tax
+      doc.text("Tax:", pageWidth - 115, finalY + 18);
+      doc.text("₦0.00", pageWidth - 25, finalY + 18, { align: 'right' });
+      
+      // Line separator
+      doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.line(pageWidth - 115, finalY + 25, pageWidth - 25, finalY + 25);
+      
+      // Grand Total
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text("TOTAL:", pageWidth - 115, finalY + 38);
+      doc.text(`₦${totalAmount.toLocaleString()}`, pageWidth - 25, finalY + 38, { align: 'right' });
+      
+      // Payment status section
+      const statusY = finalY + totalSectionHeight + 20;
+      
+      // Status background
+      const statusColor = isPaid ? [34, 197, 94] : [249, 115, 22]; // Green for paid, orange for pending
+      doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+      doc.rect(margin, statusY, pageWidth - (margin * 2), 25, 'F');
+      
+      // Status text
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(255, 255, 255);
+      const statusText = isPaid ? `PAID - ${paymentMethod || 'Cash'}` : 'PAYMENT PENDING';
+      doc.text(statusText, pageWidth / 2, statusY + 16, { align: 'center' });
+      
+      // Footer
+      const footerY = pageHeight - 40;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 116, 139);
+      doc.text("Thank you for choosing our medical services.", pageWidth / 2, footerY, { align: 'center' });
+      doc.text("For inquiries, contact: info@medicalcenter.com | +234-XXX-XXXX", pageWidth / 2, footerY + 10, { align: 'center' });
+      
+      // Footer line
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.5);
+      doc.line(margin, footerY - 10, pageWidth - margin, footerY - 10);
       
       // Save PDF
-      doc.save(`bill-${patientName.replace(/\s+/g, '-')}-${new Date().getTime()}.pdf`);
+      doc.save(`medical-bill-${patientName.replace(/\s+/g, '-')}-${new Date().getTime()}.pdf`);
       
       toast({
         title: "PDF Generated",
-        description: "Bill PDF has been downloaded successfully.",
+        description: "Styled medical bill PDF has been downloaded successfully.",
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
