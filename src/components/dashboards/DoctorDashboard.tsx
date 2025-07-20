@@ -47,7 +47,9 @@ const DoctorDashboard = () => {
       <QuickStatsCards stats={stats} />
 
       {/* Appointments by Date - Full Width */}
-      <DateAppointments refreshTrigger={dateAppointmentsRefreshRef} />
+      <DateAppointments 
+        refreshTrigger={dateAppointmentsRefreshRef}
+      />
 
       {/* Today's Schedule - Full Width */}
       <TodaysSchedule />

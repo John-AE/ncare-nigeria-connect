@@ -29,19 +29,40 @@ export const DateAppointments = ({ onPatientArrived, refreshTrigger }: DateAppoi
   const [newStartTime, setNewStartTime] = useState('');
   const [newEndTime, setNewEndTime] = useState('');
 
+  const fetchSelectedDateAppointments = async () => {
+    try {
+      const dateString = format(selectedDate, 'yyyy-MM-dd');
+      
+      const { data: appointmentsData, count } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          patients(first_name, last_name, date_of_birth, gender)
+        `, { count: 'exact' })
+        .eq('scheduled_date', dateString)
+        .in('status', ['scheduled', 'arrived'])
+        .order('start_time');
+
+      setSelectedDateAppointments(appointmentsData || []);
+      setSelectedDateCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching selected date appointments:', error);
+    }
+  };
+
   // Expose refresh function via refreshTrigger ref
   useEffect(() => {
     if (refreshTrigger) {
       refreshTrigger.current = fetchSelectedDateAppointments;
     }
-  }, [refreshTrigger, selectedDate]);
+  }, [refreshTrigger, fetchSelectedDateAppointments]);
 
   // Fetch appointments for selected date
   useEffect(() => {
     if (selectedDate) {
       fetchSelectedDateAppointments();
     }
-  }, [selectedDate]);
+  }, [selectedDate, fetchSelectedDateAppointments]);
 
   // Set up real-time listener for appointment updates
   useEffect(() => {
@@ -63,28 +84,7 @@ export const DateAppointments = ({ onPatientArrived, refreshTrigger }: DateAppoi
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedDate]);
-
-  const fetchSelectedDateAppointments = async () => {
-    try {
-      const dateString = format(selectedDate, 'yyyy-MM-dd');
-      
-      const { data: appointmentsData, count } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          patients(first_name, last_name, date_of_birth, gender)
-        `, { count: 'exact' })
-        .eq('scheduled_date', dateString)
-        .in('status', ['scheduled', 'arrived'])
-        .order('start_time');
-
-      setSelectedDateAppointments(appointmentsData || []);
-      setSelectedDateCount(count || 0);
-    } catch (error) {
-      console.error('Error fetching selected date appointments:', error);
-    }
-  };
+  }, [selectedDate, fetchSelectedDateAppointments]);
 
   const markAsArrived = async (appointmentId: string) => {
     try {
