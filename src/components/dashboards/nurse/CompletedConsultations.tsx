@@ -118,7 +118,7 @@ export const CompletedConsultations = () => {
               No completed consultations today
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
               {completedVisits.map((visit) => (
                 <div
                   key={visit.id}
