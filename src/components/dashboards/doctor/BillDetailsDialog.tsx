@@ -57,9 +57,9 @@ const BillDetailsDialog = ({
       const doc = new jsPDF();
       
       // Define colors
-      const primaryColor = [37, 99, 235]; // Blue
-      const secondaryColor = [71, 85, 105]; // Gray
-      const lightGray = [248, 250, 252]; // Light background
+      const primaryColor: [number, number, number] = [37, 99, 235]; // Blue
+      const secondaryColor: [number, number, number] = [71, 85, 105]; // Gray
+      const lightGray: [number, number, number] = [248, 250, 252]; // Light background
       
       // Page margins
       const margin = 20;
