@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, AlertTriangle, Activity, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useDashboard } from '@/contexts/DashboardContext';
+
 
 interface PatientWithVitals {
   id: string;
@@ -84,7 +84,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { registerTriageQueueRefresh } = useDashboard();
+  
 
   const fetchQueuePatients = async () => {
     try {
@@ -231,12 +231,11 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
 
   // Expose refresh function via refreshTrigger ref
   useEffect(() => {
-    // Register refresh function with both local ref and dashboard context
+    // Register refresh function with local ref
     if (refreshTrigger) {
       refreshTrigger.current = fetchQueuePatients;
     }
-    registerTriageQueueRefresh(fetchQueuePatients);
-  }, [refreshTrigger, registerTriageQueueRefresh]);
+  }, [refreshTrigger]);
 
   useEffect(() => {
     fetchQueuePatients();
