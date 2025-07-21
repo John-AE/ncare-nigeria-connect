@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { Resend } from "npm:resend@2.0.0"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,26 +31,16 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
     const { billId, patientEmail, billDetails }: BillData = await req.json();
 
     console.log('Sending bill email for bill:', billId, 'to:', patientEmail);
-
-    // In a real implementation, you would integrate with an email service like:
-    // - SendGrid
-    // - Mailgun
-    // - Amazon SES
-    // - Resend
     
-    // For now, we'll simulate the email sending
     const emailContent = `
       Dear ${billDetails.patient_name},
       
-      Please find attached your medical bill:
+      Please find your medical bill details:
       
       Bill ID: ${billId}
       Amount: ₦${billDetails.amount.toLocaleString()}
@@ -69,27 +60,32 @@ serve(async (req) => {
       Hospital Management System
     `;
 
-    // Log the email content (in production, this would be sent via email service)
-    console.log('Email content to send:', emailContent);
+    console.log('Sending email via Resend to:', patientEmail);
 
-    // Simulate successful email sending
-    // In production, replace this with actual email sending logic
-    const emailSent = true;
+    const emailResponse = await resend.emails.send({
+      from: 'Hospital Management <onboarding@resend.dev>',
+      to: [patientEmail],
+      subject: `Medical Bill - ${billId}`,
+      html: emailContent.replace(/\n/g, '<br>'),
+    });
 
-    if (emailSent) {
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Bill email sent successfully',
-          billId 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    } else {
-      throw new Error('Failed to send email');
+    console.log('Resend response:', emailResponse);
+
+    if (emailResponse.error) {
+      throw new Error(`Resend error: ${emailResponse.error.message}`);
     }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Bill email sent successfully',
+        billId,
+        emailId: emailResponse.data?.id
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
 
   } catch (error) {
     console.error('Error in send-bill-email function:', error);
