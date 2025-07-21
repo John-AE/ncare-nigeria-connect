@@ -262,7 +262,7 @@ const BillDetailsDialog = ({
         bill_amount: totalAmount,
         bill_items: billItems,
         appointment_time: appointmentTime,
-        is_paid: isPaid,
+        is_paid: isPaid
       }
     });
 
