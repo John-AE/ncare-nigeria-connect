@@ -122,7 +122,7 @@ const LoginPage = () => {
           <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary flex items-center justify-center">
             <HeartPulse className="h-6 w-6 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl font-bold" style={{ color: '#a3ff00' }}>NCare Nigeria</CardTitle>
+          <CardTitle className="text-3xl font-bold" style={{ color: '#a3ff00' }}>NCare Nigeria</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
             Enhancing Service Delivery In Nigerian Hospitals
           </p>
