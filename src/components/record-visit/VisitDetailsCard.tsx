@@ -23,6 +23,8 @@ export const VisitDetailsCard = ({ visitData, setVisitData }: VisitDetailsCardPr
             placeholder="Enter patient complaints..."
             value={visitData.complaints}
             onChange={(e) => setVisitData({...visitData, complaints: e.target.value})}
+            rows={1}
+            className="resize-none"
           />
         </div>
         <div>
@@ -32,15 +34,30 @@ export const VisitDetailsCard = ({ visitData, setVisitData }: VisitDetailsCardPr
             placeholder="Enter diagnosis..."
             value={visitData.diagnosis}
             onChange={(e) => setVisitData({...visitData, diagnosis: e.target.value})}
+            rows={1}
+            className="resize-none"
           />
         </div>
         <div>
-          <Label htmlFor="treatment-plan">Instructions to Nurse/Treatment Plan</Label>
+          <Label htmlFor="lab-work">Lab work Requisition</Label>
           <Textarea
-            id="treatment-plan"
-            placeholder="Enter treatment plan..."
+            id="lab-work"
+            placeholder="Enter lab work requisition..."
             value={visitData.treatment_plan}
             onChange={(e) => setVisitData({...visitData, treatment_plan: e.target.value})}
+            rows={1}
+            className="resize-none"
+          />
+        </div>
+        <div>
+          <Label htmlFor="prescriptions">Prescriptions (Pharmacy)</Label>
+          <Textarea
+            id="prescriptions"
+            placeholder="Enter prescriptions..."
+            value={visitData.prescriptions || ''}
+            onChange={(e) => setVisitData({...visitData, prescriptions: e.target.value})}
+            rows={1}
+            className="resize-none"
           />
         </div>
       </CardContent>
