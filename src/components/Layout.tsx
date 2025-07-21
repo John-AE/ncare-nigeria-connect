@@ -57,9 +57,17 @@ const Layout = ({ children }: LayoutProps) => {
               <div>
                 <h1 className="text-lg font-semibold" style={{ color: "#a3ff00", fontFamily: "Sansita, sans-serif" }}>NCare Nigeria</h1>
 
-                <p className="text-sm text-muted-foreground">
+                <p
+                  className="text-sm"
+                  style={{
+                    fontFamily: "Sansita, sans-serif",
+                    color: "#6c757d", // or change this to another color you like
+                    letterSpacing: "0.5px"
+                  }}
+                >
                   {getRoleDisplayName(profile?.role || "")} Portal
                 </p>
+
               </div>
             </div>
             
