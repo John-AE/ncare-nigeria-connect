@@ -14,7 +14,6 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showDemoAccounts, setShowDemoAccounts] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, profile } = useAuth();
@@ -40,31 +39,37 @@ const LoginPage = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email || !password) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
+
     setIsLoading(true);
+
     try {
       const { error } = await signIn(email, password);
       if (error) {
         toast({
           title: "Login Failed",
           description: error.message || "Invalid credentials. Please try again.",
-          variant: "destructive"
+          variant: "destructive",
         });
       } else {
-        toast({ title: "Login Successful", description: "Welcome back!" });
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!",
+        });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Login Failed",
         description: "An unexpected error occurred.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -81,14 +86,14 @@ const LoginPage = () => {
         toast({
           title: "Demo Login Failed",
           description: error.message,
-          variant: "destructive"
+          variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Demo Login Failed",
         description: "An unexpected error occurred.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -118,43 +123,95 @@ const LoginPage = () => {
             <HeartPulse className="h-6 w-6 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl font-bold text-foreground">NCare Nigeria</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Secure access for medical professionals
-          </CardDescription>
-          <p className="text-sm text-muted-foreground mt-1">Enhancing Service Delivery In Nigerian Hospitals</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Enhancing Service Delivery In Nigerian Hospitals
+          </p>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="Enter your email" className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  className="pl-10"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type="password" placeholder="Enter your password" className="pl-10" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  className="pl-10"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
             </div>
+
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
+
           <div className="mt-4 space-y-2">
-            <Button variant="ghost" className="w-full border border-border" onClick={() => setShowDemoAccounts(!showDemoAccounts)}>
+            <Button
+              variant="ghost"
+              className="w-full border border-border"
+              onClick={() => setShowDemoAccounts(!showDemoAccounts)}
+            >
               {showDemoAccounts ? "Hide" : "Show"} Demo Accounts
             </Button>
+
             {showDemoAccounts && (
               <div className="space-y-2 p-3 bg-muted rounded-md">
                 <p className="text-sm font-medium">Demo Accounts:</p>
                 <div className="space-y-1">
-                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => loginWithDemo("nurse@demo.com", "password123")}>Nurse: nurse@demo.com / password123</Button>
-                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => loginWithDemo("doctor@demo.com", "password123")}>Doctor: doctor@demo.com / password123</Button>
-                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => loginWithDemo("finance@demo.com", "password123")}>Finance: finance@demo.com / password123</Button>
-                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => loginWithDemo("johnnybgsu@gmail.com", "Woda185")}>Admin: johnnybgsu@gmail.com / Woda185</Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => loginWithDemo("nurse@demo.com", "password123")}
+                  >
+                    Nurse: nurse@demo.com / password123
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => loginWithDemo("doctor@demo.com", "password123")}
+                  >
+                    Doctor: doctor@demo.com / password123
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => loginWithDemo("finance@demo.com", "password123")}
+                  >
+                    Finance: finance@demo.com / password123
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => loginWithDemo("johnnybgsu@gmail.com", "Woda185")}
+                  >
+                    Admin: johnnybgsu@gmail.com / Woda185
+                  </Button>
                 </div>
               </div>
             )}
