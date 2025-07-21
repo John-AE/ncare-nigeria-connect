@@ -8,20 +8,19 @@ const corsHeaders = {
 }
 
 interface BillData {
-  billId: string;
-  patientEmail: string;
-  billDetails: {
-    patient_name: string;
-    amount: number;
-    description: string;
-    created_at: string;
-    items: Array<{
-      service_name: string;
-      quantity: number;
-      unit_price: number;
-      total_price: number;
-    }>;
-  };
+  email: string;
+  patient_name: string;
+  bill_id: string;
+  bill_amount: number;
+  bill_items: Array<{
+    id?: string;
+    service_name: string;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+  }>;
+  appointment_time: string;
+  is_paid: boolean;
 }
 
 serve(async (req) => {
@@ -33,26 +32,26 @@ serve(async (req) => {
   try {
     const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
-    const { billId, patientEmail, billDetails }: BillData = await req.json();
+    const { email, patient_name, bill_id, bill_amount, bill_items, appointment_time, is_paid }: BillData = await req.json();
 
-    console.log('Sending bill email for bill:', billId, 'to:', patientEmail);
+    console.log('Sending bill email for bill:', bill_id, 'to:', email);
     
     const emailContent = `
-      Dear ${billDetails.patient_name},
+      Dear ${patient_name},
       
       Please find your medical bill details:
       
-      Bill ID: ${billId}
-      Amount: ₦${billDetails.amount.toLocaleString()}
-      Description: ${billDetails.description}
-      Date: ${new Date(billDetails.created_at).toLocaleDateString()}
+      Bill ID: ${bill_id}
+      Amount: ₦${bill_amount?.toLocaleString() || 'N/A'}
+      Appointment Time: ${appointment_time}
+      Status: ${is_paid ? 'Paid' : 'Pending'}
       
       Services:
-      ${billDetails.items.map(item => 
+      ${bill_items.map(item => 
         `- ${item.service_name} x${item.quantity}: ₦${item.total_price.toLocaleString()}`
       ).join('\n')}
       
-      Total: ₦${billDetails.amount.toLocaleString()}
+      Total: ₦${bill_amount?.toLocaleString() || 'N/A'}
       
       Thank you for choosing our healthcare services.
       
@@ -60,12 +59,12 @@ serve(async (req) => {
       Hospital Management System
     `;
 
-    console.log('Sending email via Resend to:', patientEmail);
+    console.log('Sending email via Resend to:', email);
 
     const emailResponse = await resend.emails.send({
       from: 'Hospital Management <onboarding@resend.dev>',
-      to: [patientEmail],
-      subject: `Medical Bill - ${billId}`,
+      to: [email],
+      subject: `Medical Bill - ${bill_id}`,
       html: emailContent.replace(/\n/g, '<br>'),
     });
 
@@ -79,7 +78,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         message: 'Bill email sent successfully',
-        billId,
+        billId: bill_id,
         emailId: emailResponse.data?.id
       }),
       { 
