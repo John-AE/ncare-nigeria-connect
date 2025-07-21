@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, HeartPulse } from "lucide-react";
+import { Mail, Lock, Stethoscope } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -120,7 +120,7 @@ const LoginPage = () => {
       <Card className="w-full max-w-md shadow-xl rounded-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary flex items-center justify-center">
-            <HeartPulse className="h-6 w-6 text-primary-foreground" />
+            <Stethoscope className="h-8 w-8 text-primary-foreground" />
           </div>
           <CardTitle className="text-3xl font-bold" style={{ color: '#a3ff00' }}>NCare Nigeria</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
