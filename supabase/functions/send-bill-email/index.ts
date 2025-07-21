@@ -62,9 +62,9 @@ serve(async (req) => {
     console.log('Sending email via Resend to:', email);
 
     const emailResponse = await resend.emails.send({
-      from: 'Hospital Management <onboarding@resend.dev>',
+      from: 'NCare Nigeria <billing@123185.xyz>',
       to: [email],
-      subject: `Medical Bill - ${bill_id}`,
+      subject: `Medical Bill - ${patient_name}`,
       html: emailContent.replace(/\n/g, '<br>'),
     });
 
