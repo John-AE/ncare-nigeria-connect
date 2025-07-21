@@ -55,7 +55,8 @@ const Layout = ({ children }: LayoutProps) => {
                 </svg>
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-foreground">Hospital Management System</h1>
+                <h1 className="text-lg font-semibold" style={{ color: "#a3ff00", fontFamily: "Sansita, sans-serif" }}>NCare Nigeria</h1>
+
                 <p className="text-sm text-muted-foreground">
                   {getRoleDisplayName(profile?.role || "")} Portal
                 </p>
@@ -85,7 +86,8 @@ const Layout = ({ children }: LayoutProps) => {
       <footer className="bg-card border-t border-border mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 Hospital Management System. Designed for Nigerian Healthcare.</p>
+            <p style={{ fontFamily: "Sansita, sans-serif" }}>&copy; 2025 NCare Nigeria. Designed for Nigerian Healthcare.</p>
+
           </div>
         </div>
       </footer>
