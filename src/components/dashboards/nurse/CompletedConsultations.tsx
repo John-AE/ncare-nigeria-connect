@@ -13,6 +13,7 @@ interface CompletedVisit {
   complaints: string;
   diagnosis: string;
   treatment_plan: string;
+  prescriptions: string;
   visit_date: string;
   visit_time: string;
 }
@@ -34,6 +35,7 @@ export const CompletedConsultations = () => {
             complaints,
             diagnosis,
             treatment_plan,
+            prescriptions,
             visit_date,
             visit_time,
             patients!inner(first_name, last_name)
@@ -49,6 +51,7 @@ export const CompletedConsultations = () => {
           complaints: visit.complaints || '',
           diagnosis: visit.diagnosis || '',
           treatment_plan: visit.treatment_plan || '',
+          prescriptions: visit.prescriptions || '',
           visit_date: visit.visit_date,
           visit_time: visit.visit_time,
         }));
@@ -160,7 +163,8 @@ export const CompletedConsultations = () => {
                 <Textarea
                   value={selectedVisit.complaints}
                   readOnly
-                  className="mt-1 bg-muted"
+                  rows={1}
+                  className="mt-1 bg-muted resize-none"
                   placeholder="No complaints recorded"
                 />
               </div>
@@ -170,18 +174,31 @@ export const CompletedConsultations = () => {
                 <Textarea
                   value={selectedVisit.diagnosis}
                   readOnly
-                  className="mt-1 bg-muted"
+                  rows={1}
+                  className="mt-1 bg-muted resize-none"
                   placeholder="No diagnosis recorded"
                 />
               </div>
               
               <div>
-                <Label>Instructions to Nurse/Treatment Plan</Label>
+                <Label>Lab work Requisition</Label>
                 <Textarea
                   value={selectedVisit.treatment_plan}
                   readOnly
-                  className="mt-1 bg-muted"
-                  placeholder="No treatment plan recorded"
+                  rows={1}
+                  className="mt-1 bg-muted resize-none"
+                  placeholder="No lab work requisition recorded"
+                />
+              </div>
+
+              <div>
+                <Label>Prescriptions (Pharmacy)</Label>
+                <Textarea
+                  value={selectedVisit.prescriptions}
+                  readOnly
+                  rows={1}
+                  className="mt-1 bg-muted resize-none"
+                  placeholder="No prescriptions recorded"
                 />
               </div>
             </div>
