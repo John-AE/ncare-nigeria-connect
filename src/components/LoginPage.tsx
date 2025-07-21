@@ -209,14 +209,6 @@ const LoginPage = () => {
                   >
                     Finance: finance@demo.com / password123
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={() => loginWithDemo("johnnybgsu@gmail.com", "Woda185")}
-                  >
-                    Admin: johnnybgsu@gmail.com / Woda185
-                  </Button>
                 </div>
               </div>
             )}
