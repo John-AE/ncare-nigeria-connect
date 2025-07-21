@@ -54,14 +54,18 @@ export const PatientManagement = ({
     };
   }, []);
 
-  // Filter patients based on search query
+  // Filter patients based on search query (name or phone)
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setFilteredPatients([]);
     } else {
-      const filtered = patients.filter(patient =>
-        `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const filtered = patients.filter(patient => {
+        const fullName = `${patient.first_name} ${patient.last_name}`.toLowerCase();
+        const phone = patient.phone?.toLowerCase() || '';
+        const query = searchQuery.toLowerCase();
+        
+        return fullName.includes(query) || phone.includes(query);
+      });
       setFilteredPatients(filtered);
     }
   }, [searchQuery, patients]);
@@ -89,7 +93,7 @@ export const PatientManagement = ({
         <div className="space-y-3">
           <div>
             <Input
-              placeholder="Search patients by name..."
+              placeholder="Search patients by name or phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full"
@@ -106,7 +110,7 @@ export const PatientManagement = ({
                 >
                   <p className="font-medium">{patient.first_name} {patient.last_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    DOB: {new Date(patient.date_of_birth).toLocaleDateString()}
+                    Phone: {patient.phone || 'N/A'} • DOB: {new Date(patient.date_of_birth).toLocaleDateString()}
                   </p>
                 </div>
               ))}
