@@ -417,6 +417,7 @@ export type Database = {
           hospital_id: string | null
           id: string
           patient_id: string
+          prescriptions: string | null
           treatment_plan: string | null
           updated_at: string
           visit_date: string
@@ -431,6 +432,7 @@ export type Database = {
           hospital_id?: string | null
           id?: string
           patient_id: string
+          prescriptions?: string | null
           treatment_plan?: string | null
           updated_at?: string
           visit_date: string
@@ -445,6 +447,7 @@ export type Database = {
           hospital_id?: string | null
           id?: string
           patient_id?: string
+          prescriptions?: string | null
           treatment_plan?: string | null
           updated_at?: string
           visit_date?: string
