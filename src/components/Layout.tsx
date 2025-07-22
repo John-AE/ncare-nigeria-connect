@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthProvider";
 import { AppBreadcrumb } from "./AppBreadcrumb";
+import { Stethoscope } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -38,6 +39,7 @@ const Layout = ({ children }: LayoutProps) => {
       case "doctor": return "Doctor";
       case "nurse": return "Nurse";
       case "finance": return "Finance Staff";
+      case "pharmacy": return "Pharmacy Staff";
       default: return role;
     }
   };
@@ -50,9 +52,7 @@ const Layout = ({ children }: LayoutProps) => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                <svg className="h-4 w-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 2C5.58 2 2 5.58 2 10s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zM8 12H6v-2h2v2zm0-3H6V7h2v2zm4 3h-2v-2h2v2zm0-3h-2V7h2v2z" clipRule="evenodd" />
-                </svg>
+                <Stethoscope className="h-4 w-4 text-primary-foreground" />
               </div>
               <div>
                 <h1 className="text-lg font-semibold" style={{ color: "#a3ff00", fontFamily: "Sansita, sans-serif" }}>NCare Nigeria</h1>

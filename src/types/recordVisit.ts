@@ -37,6 +37,7 @@ export interface VisitData {
   complaints: string;
   diagnosis: string;
   treatment_plan: string;
+  prescriptions?: string;
 }
 
 export interface NewService {

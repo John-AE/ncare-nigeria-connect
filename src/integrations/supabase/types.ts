@@ -215,6 +215,203 @@ export type Database = {
         }
         Relationships: []
       }
+      medication_dispensing: {
+        Row: {
+          created_at: string
+          dispensed_at: string
+          dispensed_by: string
+          hospital_id: string | null
+          id: string
+          inventory_id: string
+          medication_id: string
+          notes: string | null
+          patient_id: string
+          quantity_dispensed: number
+          visit_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dispensed_at?: string
+          dispensed_by: string
+          hospital_id?: string | null
+          id?: string
+          inventory_id: string
+          medication_id: string
+          notes?: string | null
+          patient_id: string
+          quantity_dispensed: number
+          visit_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dispensed_at?: string
+          dispensed_by?: string
+          hospital_id?: string | null
+          id?: string
+          inventory_id?: string
+          medication_id?: string
+          notes?: string | null
+          patient_id?: string
+          quantity_dispensed?: number
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_dispensing_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_dispensing_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "medication_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_dispensing_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_dispensing_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_dispensing_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medication_inventory: {
+        Row: {
+          batch_number: string
+          created_at: string
+          expiry_date: string
+          hospital_id: string | null
+          id: string
+          medication_id: string
+          quantity_on_hand: number
+          quantity_received: number
+          received_date: string
+          reorder_point: number
+          supplier: string | null
+          total_cost: number
+          unit_cost: number
+          updated_at: string
+        }
+        Insert: {
+          batch_number: string
+          created_at?: string
+          expiry_date: string
+          hospital_id?: string | null
+          id?: string
+          medication_id: string
+          quantity_on_hand?: number
+          quantity_received?: number
+          received_date?: string
+          reorder_point?: number
+          supplier?: string | null
+          total_cost?: number
+          unit_cost?: number
+          updated_at?: string
+        }
+        Update: {
+          batch_number?: string
+          created_at?: string
+          expiry_date?: string
+          hospital_id?: string | null
+          id?: string
+          medication_id?: string
+          quantity_on_hand?: number
+          quantity_received?: number
+          received_date?: string
+          reorder_point?: number
+          supplier?: string | null
+          total_cost?: number
+          unit_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_inventory_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_inventory_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          dosage: string
+          form: string
+          generic_name: string | null
+          hospital_id: string | null
+          id: string
+          is_active: boolean
+          manufacturer: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          dosage: string
+          form: string
+          generic_name?: string | null
+          hospital_id?: string | null
+          id?: string
+          is_active?: boolean
+          manufacturer: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          dosage?: string
+          form?: string
+          generic_name?: string | null
+          hospital_id?: string | null
+          id?: string
+          is_active?: boolean
+          manufacturer?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medications_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           address: string | null
@@ -544,6 +741,14 @@ export type Database = {
       get_current_user_hospital_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_low_stock_medications: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          medication_name: string
+          total_quantity: number
+          reorder_point: number
+        }[]
       }
       get_payment_status: {
         Args: { bill_amount: number; amount_paid: number }

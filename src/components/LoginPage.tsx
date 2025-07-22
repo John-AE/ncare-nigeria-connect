@@ -33,6 +33,9 @@ const LoginPage = () => {
         case "admin":
           navigate("/admin-dashboard");
           break;
+        case "pharmacy":
+          navigate("/pharmacy-dashboard");
+          break;
       }
     }
   }, [profile, navigate]);
@@ -208,6 +211,14 @@ const LoginPage = () => {
                     onClick={() => loginWithDemo("finance@demo.com", "password123")}
                   >
                     Finance: finance@demo.com / password123
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => loginWithDemo("pharmacy@demo.com", "password123")}
+                  >
+                    Pharmacy: pharmacy@demo.com / password123
                   </Button>
                 </div>
               </div>

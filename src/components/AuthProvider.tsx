@@ -6,7 +6,7 @@ interface Profile {
   id: string;
   user_id: string;
   username: string;
-  role: 'doctor' | 'nurse' | 'finance' | 'admin';
+  role: 'doctor' | 'nurse' | 'finance' | 'admin' | 'pharmacy';
   hospital_id: string | null;
 }
 
