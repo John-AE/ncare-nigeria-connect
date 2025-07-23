@@ -29,6 +29,7 @@ interface User {
   hospital_id: string;
   hospital?: { name: string };
   created_at: string;
+  is_active: boolean;
 }
 
 interface AdminStats {
@@ -209,7 +210,32 @@ export const AdminDashboard = () => {
     }
   };
 
-  const filteredUsers = selectedHospital === 'all' 
+  const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_active: !currentStatus })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "User status updated successfully"
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const filteredUsers = selectedHospital === 'all'
     ? users 
     : users.filter(user => user.hospital_id === selectedHospital);
 
@@ -333,6 +359,7 @@ export const AdminDashboard = () => {
                       <SelectItem value="nurse">Nurse</SelectItem>
                       <SelectItem value="doctor">Doctor</SelectItem>
                       <SelectItem value="finance">Finance</SelectItem>
+                      <SelectItem value="pharmacy">Pharmacy</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -468,6 +495,13 @@ export const AdminDashboard = () => {
                   <Badge variant="outline">
                     {user.role}
                   </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toggleUserStatus(user.id, user.is_active)}
+                  >
+                    {user.is_active ? "Deactivate" : "Activate"}
+                  </Button>
                 </div>
               </div>
             ))}

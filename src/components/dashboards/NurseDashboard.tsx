@@ -15,10 +15,13 @@ import { CompletedConsultations } from "./nurse/CompletedConsultations";
 import PatientRegistrationForm from "../PatientRegistrationForm";
 import AppointmentSchedulingForm from "../AppointmentSchedulingForm";
 import RecurringAppointmentForm from "../RecurringAppointmentForm";
+import { DashboardToggle } from "../DashboardToggle";
+import { PatientTimelineView } from "../PatientTimelineView";
 
 const NurseDashboard = () => {
   const { profile } = useAuth();
   const { stats, loading, refetch } = useNurseDashboardStats();
+  const [viewMode, setViewMode] = useState<'dashboard' | 'timeline'>('dashboard');
 
   
   const [showPatientForm, setShowPatientForm] = useState(false);
@@ -68,6 +71,10 @@ const NurseDashboard = () => {
     // Stats are automatically updated via real-time listeners in useNurseDashboardStats
   };
 
+  if (viewMode === 'timeline') {
+    return <PatientTimelineView onBack={() => setViewMode('dashboard')} />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -91,6 +98,9 @@ const NurseDashboard = () => {
 
       {/* Quick Stats */}
       <NurseStatsCards stats={stats} />
+
+      {/* Dashboard Toggle */}
+      <DashboardToggle viewMode={viewMode} onToggle={setViewMode} />
 
       {/* Main Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

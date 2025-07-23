@@ -8,11 +8,14 @@ import { DateAppointments } from "./doctor/DateAppointments";
 import { TodaysSchedule } from "./doctor/TodaysSchedule";
 import { TriageQueue } from "./nurse/TriageQueue";
 import CompletedAppointmentsBills from "./doctor/CompletedAppointmentsBills";
+import { DashboardToggle } from "../DashboardToggle";
+import { PatientTimelineView } from "../PatientTimelineView";
 
 
 const DoctorDashboard = () => {
   const { profile } = useAuth();
   const stats = useDoctorDashboardStats();
+  const [viewMode, setViewMode] = useState<'dashboard' | 'timeline'>('dashboard');
   
   // Refs to trigger refreshes without re-mounting components
   const triageQueueRefreshRef = useRef<() => void>(null);
@@ -21,6 +24,10 @@ const DoctorDashboard = () => {
   const handleRefresh = () => {
     window.location.reload();
   };
+
+  if (viewMode === 'timeline') {
+    return <PatientTimelineView onBack={() => setViewMode('dashboard')} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -45,6 +52,9 @@ const DoctorDashboard = () => {
 
       {/* Quick Stats */}
       <QuickStatsCards stats={stats} />
+
+      {/* Dashboard Toggle */}
+      <DashboardToggle viewMode={viewMode} onToggle={setViewMode} />
 
       {/* Appointments by Date - Full Width */}
       <DateAppointments 
