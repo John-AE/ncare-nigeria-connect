@@ -74,6 +74,57 @@ export type Database = {
           },
         ]
       }
+      bill_adjustments: {
+        Row: {
+          adjusted_at: string
+          adjusted_by: string
+          adjustment_reason: string
+          adjustment_type: string
+          bill_id: string
+          hospital_id: string | null
+          id: string
+          new_amount: number
+          original_amount: number
+        }
+        Insert: {
+          adjusted_at?: string
+          adjusted_by: string
+          adjustment_reason: string
+          adjustment_type: string
+          bill_id: string
+          hospital_id?: string | null
+          id?: string
+          new_amount: number
+          original_amount: number
+        }
+        Update: {
+          adjusted_at?: string
+          adjusted_by?: string
+          adjustment_reason?: string
+          adjustment_type?: string
+          bill_id?: string
+          hospital_id?: string | null
+          id?: string
+          new_amount?: number
+          original_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_adjustments_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_adjustments_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_items: {
         Row: {
           bill_id: string
@@ -126,6 +177,8 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          discount_amount: number | null
+          discount_reason: string | null
           hospital_id: string | null
           id: string
           is_paid: boolean
@@ -141,6 +194,8 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
+          discount_amount?: number | null
+          discount_reason?: string | null
           hospital_id?: string | null
           id?: string
           is_paid?: boolean
@@ -156,6 +211,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          discount_amount?: number | null
+          discount_reason?: string | null
           hospital_id?: string | null
           id?: string
           is_paid?: boolean
@@ -480,6 +537,54 @@ export type Database = {
           },
         ]
       }
+      payment_history: {
+        Row: {
+          bill_id: string
+          hospital_id: string | null
+          id: string
+          notes: string | null
+          paid_by: string
+          payment_amount: number
+          payment_date: string
+          payment_method: string
+        }
+        Insert: {
+          bill_id: string
+          hospital_id?: string | null
+          id?: string
+          notes?: string | null
+          paid_by: string
+          payment_amount: number
+          payment_date?: string
+          payment_method: string
+        }
+        Update: {
+          bill_id?: string
+          hospital_id?: string | null
+          id?: string
+          notes?: string | null
+          paid_by?: string
+          payment_amount?: number
+          payment_date?: string
+          payment_method?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_history_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_history_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prescriptions: {
         Row: {
           created_at: string
@@ -527,6 +632,7 @@ export type Database = {
           created_at: string
           hospital_id: string | null
           id: string
+          is_active: boolean
           role: string
           updated_at: string
           user_id: string
@@ -536,6 +642,7 @@ export type Database = {
           created_at?: string
           hospital_id?: string | null
           id?: string
+          is_active?: boolean
           role: string
           updated_at?: string
           user_id: string
@@ -545,6 +652,7 @@ export type Database = {
           created_at?: string
           hospital_id?: string | null
           id?: string
+          is_active?: boolean
           role?: string
           updated_at?: string
           user_id?: string
