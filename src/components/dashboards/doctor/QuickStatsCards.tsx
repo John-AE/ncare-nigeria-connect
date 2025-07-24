@@ -52,9 +52,9 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
     { 
       label: "Total Revenue", 
       value: `₦${stats.totalRevenue.toFixed(2)}`, 
-      borderColor: "border-l-zinc-400",
-      bgColor: "bg-zinc-400/5",
-      textColor: "text-zinc-400"
+      borderColor: "border-l-red-600",
+      bgColor: "bg-red-600/5",
+      textColor: "text-red-600"
     }
   ];
 
