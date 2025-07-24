@@ -35,6 +35,7 @@ export const CompletedConsultations = () => {
             complaints,
             diagnosis,
             treatment_plan,
+            prescriptions,
             visit_date,
             visit_time,
             patients!inner(first_name, last_name)
@@ -50,7 +51,7 @@ export const CompletedConsultations = () => {
           complaints: visit.complaints || '',
           diagnosis: visit.diagnosis || '',
           treatment_plan: visit.treatment_plan || '',
-          prescriptions: '', // Remove reference to non-existent field
+          prescriptions: visit.prescriptions || '', // Remove reference to non-existent field
           visit_date: visit.visit_date,
           visit_time: visit.visit_time,
         }));
