@@ -178,6 +178,7 @@ export const useRecordVisit = (appointmentId: string | undefined) => {
           complaints: visitData.complaints,
           diagnosis: visitData.diagnosis,
           treatment_plan: visitData.treatment_plan,
+          prescriptions: visitData.prescriptions,
           hospital_id: profile.hospital_id
         })
         .select()
