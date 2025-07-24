@@ -25,6 +25,15 @@ const DoctorDashboard = () => {
     window.location.reload();
   };
 
+  // Handle vitals recording to refresh triage queue after 2 seconds
+  const handleVitalsRecorded = () => {
+    setTimeout(() => {
+      if (triageQueueRefreshRef.current) {
+        triageQueueRefreshRef.current();
+      }
+    }, 2000);
+  };
+
   if (viewMode === 'timeline') {
     return <PatientTimelineView onBack={() => setViewMode('dashboard')} />;
   }

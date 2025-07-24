@@ -100,13 +100,15 @@ export const DateAppointments = ({ onPatientArrived, refreshTrigger }: DateAppoi
         description: "Patient marked as arrived",
       });
 
-      // Refresh the appointments list
+      // Refresh the appointments list immediately
       fetchSelectedDateAppointments();
       
-      // Trigger callback to refresh other components
-      if (onPatientArrived) {
-        onPatientArrived();
-      }
+      // Wait 2 seconds then trigger callback to refresh other components (Scheduled Patients Queue)
+      setTimeout(() => {
+        if (onPatientArrived) {
+          onPatientArrived();
+        }
+      }, 2000);
     } catch (error) {
       console.error('Error marking patient as arrived:', error);
       toast({

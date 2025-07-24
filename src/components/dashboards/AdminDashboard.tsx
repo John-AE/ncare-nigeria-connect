@@ -63,6 +63,10 @@ export const AdminDashboard = () => {
     hospital_id: ''
   });
 
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -235,6 +239,57 @@ export const AdminDashboard = () => {
     }
   };
 
+  const changeUserPassword = async () => {
+    if (!selectedUser || !newPassword.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a valid password",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Since we can't directly change auth passwords from the client,
+      // we'll create an edge function to handle this admin operation
+      const { error } = await supabase.functions.invoke('admin-change-password', {
+        body: { 
+          userId: selectedUser.id, 
+          newPassword: newPassword.trim()
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Password changed successfully"
+      });
+      
+      setShowChangePassword(false);
+      setSelectedUser(null);
+      setNewPassword('');
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to change password. This feature requires admin privileges.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getHospitalStats = (hospitalId: string) => {
+    const hospitalUsers = users.filter(user => user.hospital_id === hospitalId);
+    const roleCounts = {
+      doctor: hospitalUsers.filter(u => u.role === 'doctor').length,
+      nurse: hospitalUsers.filter(u => u.role === 'nurse').length,
+      finance: hospitalUsers.filter(u => u.role === 'finance').length,
+      pharmacy: hospitalUsers.filter(u => u.role === 'pharmacy').length,
+    };
+    return { total: hospitalUsers.length, ...roleCounts };
+  };
+
   const filteredUsers = selectedHospital === 'all'
     ? users 
     : users.filter(user => user.hospital_id === selectedHospital);
@@ -387,6 +442,37 @@ export const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* Change Password Dialog */}
+      <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>User</Label>
+              <Input
+                value={selectedUser?.username || ''}
+                disabled
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+            </div>
+            <Button onClick={changeUserPassword} className="w-full">
+              Change Password
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
@@ -429,34 +515,63 @@ export const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Hospitals Management */}
+      {/* Hospitals Management with Stats */}
       <Card>
         <CardHeader>
-          <CardTitle>Hospitals</CardTitle>
+          <CardTitle>Hospitals & User Statistics</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {hospitals.map((hospital) => (
-              <div key={hospital.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-semibold">{hospital.name}</h3>
-                  <p className="text-sm text-muted-foreground">{hospital.address}</p>
-                  <p className="text-sm text-muted-foreground">{hospital.phone} • {hospital.email}</p>
+            {hospitals.map((hospital) => {
+              const stats = getHospitalStats(hospital.id);
+              return (
+                <div key={hospital.id} className="p-4 border rounded-lg">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{hospital.name}</h3>
+                      <p className="text-sm text-muted-foreground">{hospital.address}</p>
+                      <p className="text-sm text-muted-foreground">{hospital.phone} • {hospital.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={hospital.is_active ? "default" : "secondary"}>
+                        {hospital.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleHospitalStatus(hospital.id, hospital.is_active)}
+                      >
+                        {hospital.is_active ? "Deactivate" : "Activate"}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* User Statistics */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3 p-3 bg-muted/30 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-primary">{stats.total}</div>
+                      <div className="text-xs text-muted-foreground">Total Users</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-blue-600">{stats.doctor}</div>
+                      <div className="text-xs text-muted-foreground">Doctors</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-green-600">{stats.nurse}</div>
+                      <div className="text-xs text-muted-foreground">Nurses</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-orange-600">{stats.finance}</div>
+                      <div className="text-xs text-muted-foreground">Finance</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-purple-600">{stats.pharmacy}</div>
+                      <div className="text-xs text-muted-foreground">Pharmacy</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={hospital.is_active ? "default" : "secondary"}>
-                    {hospital.is_active ? "Active" : "Inactive"}
-                  </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleHospitalStatus(hospital.id, hospital.is_active)}
-                  >
-                    {hospital.is_active ? "Deactivate" : "Activate"}
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -486,7 +601,11 @@ export const AdminDashboard = () => {
             {filteredUsers.map((user) => (
               <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
-                  <h3 className="font-semibold">{user.username}</h3>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${user.is_active ? 'bg-green-500' : 'bg-gray-400'}`} 
+                         title={user.is_active ? 'Online' : 'Offline'} />
+                    <h3 className="font-semibold">{user.username}</h3>
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {user.hospital?.name || 'No hospital assigned'}
                   </p>
@@ -495,6 +614,16 @@ export const AdminDashboard = () => {
                   <Badge variant="outline">
                     {user.role}
                   </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setShowChangePassword(true);
+                    }}
+                  >
+                    Change Password
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"

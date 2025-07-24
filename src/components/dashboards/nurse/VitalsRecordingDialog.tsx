@@ -96,9 +96,13 @@ export const VitalsRecordingDialog = ({ isOpen, onClose, patient, onSuccess }: V
         complaints: "",
       });
       
-      if (onSuccess) {
-        onSuccess();
-      }
+      // Wait 2 seconds then trigger refresh
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess();
+        }
+      }, 2000);
+      
       onClose();
     } catch (error) {
       console.error('Error recording vital signs:', error);

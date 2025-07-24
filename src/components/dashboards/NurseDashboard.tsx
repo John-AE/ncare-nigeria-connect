@@ -48,12 +48,15 @@ const NurseDashboard = () => {
 
   const handleVitalsRecorded = () => {
     // Auto-refresh both Recent Registrations and Triage Queue when vitals are recorded
+    // Add 2-second delay for triage queue refresh as requested
     if (recentRegistrationsRefreshRef.current) {
       recentRegistrationsRefreshRef.current();
     }
-    if (triageQueueRefreshRef.current) {
-      triageQueueRefreshRef.current();
-    }
+    setTimeout(() => {
+      if (triageQueueRefreshRef.current) {
+        triageQueueRefreshRef.current();
+      }
+    }, 2000);
   };
 
   const handlePatientArrived = () => {
