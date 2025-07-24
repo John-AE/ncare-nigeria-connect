@@ -119,7 +119,7 @@ export const MedicationInventory = () => {
 
   if (loading) {
     return (
-      <Card className="border-l-8 border-l-[#65A30D]">
+      <Card className="border-l-8 border-l-[#F2542D]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
