@@ -66,7 +66,7 @@ export const EnhancedServiceSelector = ({
       setServices(data || []);
       
       // Extract unique categories
-      const uniqueCategories = [...new Set(data?.map(service => service.category) || [])];
+      const uniqueCategories = [...new Set(data?.map(service => service.category).filter(category => category && category.trim() !== '') || [])];
       setCategories(uniqueCategories);
     } catch (error) {
       console.error('Error fetching services:', error);
