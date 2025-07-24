@@ -30,9 +30,9 @@ export const PharmacyStatsCards = ({ stats }: PharmacyStatsCardsProps) => {
     { 
       label: "Dispensed Today", 
       value: stats.dispensedToday.toString(), 
-      borderColor: "border-l-lime-400",
-      bgColor: "bg-lime-400/5",
-      textColor: "text-lime-400"
+      borderColor: "border-l-teal-600",
+      bgColor: "bg-teal-600/5",
+      textColor: "text-teal-600"
     }
   ];
 
