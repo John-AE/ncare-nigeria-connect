@@ -56,7 +56,7 @@ export const VisitDetailsCard = ({ visitData, setVisitData }: VisitDetailsCardPr
             placeholder="Enter prescriptions..."
             value={visitData.prescriptions || ''}
             onChange={(e) => setVisitData({...visitData, prescriptions: e.target.value})}
-            rows={1}
+            rows={2}
             className="resize-none"
           />
         </div>
