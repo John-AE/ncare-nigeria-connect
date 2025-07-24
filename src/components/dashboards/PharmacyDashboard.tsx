@@ -29,18 +29,14 @@ export const PharmacyDashboard = () => {
     <div className="space-y-8">
       {/* Stats Cards */}
       <PharmacyStatsCards stats={stats} />
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      {/* Main Content - Full Width Cards */}
+      <div className="space-y-8">
         {/* Completed Consultations */}
-        <div className="space-y-6">
-          <CompletedConsultations />
-        </div>
-
+        <CompletedConsultations />
+        
         {/* Medication Inventory */}
-        <div className="space-y-6">
-          <MedicationInventory />
-        </div>
+        <MedicationInventory />
       </div>
     </div>
   );
