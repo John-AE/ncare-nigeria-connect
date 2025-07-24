@@ -127,7 +127,7 @@ const LoginPage = () => {
           </div>
           <CardTitle
   className="text-3xl font-bold"
-  style={{ color: '#A31621', fontFamily: '"Inter", sans-serif' }}
+  style={{ color: '#C6F91F', fontFamily: '"Inter", sans-serif' }}
 >
   NCare Nigeria
 </CardTitle>
