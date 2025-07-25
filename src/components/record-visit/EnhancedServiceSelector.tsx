@@ -61,7 +61,7 @@ export const EnhancedServiceSelector = ({
       const { data, error } = await supabase
         .from('services')
         .select('*')
-        .eq('is_active', true)
+        // Temporarily removed .eq('is_active', true) to see all services
         .order('category', { ascending: true })
         .order('name', { ascending: true });
 
