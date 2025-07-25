@@ -42,7 +42,6 @@ export const EnhancedServiceSelector = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { profile } = useAuth();
 
   useEffect(() => {
@@ -55,9 +54,6 @@ export const EnhancedServiceSelector = ({
 
   const fetchServices = async () => {
     try {
-      console.log('🔍 Starting to fetch services...');
-      console.log('👤 Current profile:', profile);
-      
       const { data, error } = await supabase
         .from('services')
         .select('*')
@@ -65,48 +61,26 @@ export const EnhancedServiceSelector = ({
         .order('category', { ascending: true })
         .order('name', { ascending: true });
 
-      console.log('📊 Raw services data:', data);
-      console.log('❌ Services error:', error);
-      console.log('📈 Services count:', data?.length || 0);
-
-      if (error) {
-        console.error('💥 Supabase error:', error);
-        setError(error.message);
-        throw error;
-      }
-
-      // Debug individual service structure
-      if (data && data.length > 0) {
-        console.log('🔬 First service structure:', data[0]);
-        console.log('🔬 Service keys:', Object.keys(data[0]));
-      }
+      if (error) throw error;
 
       setServices(data || []);
       
       // Extract unique categories
       const uniqueCategories = [...new Set(data?.map(service => service.category).filter(category => category && category.trim() !== '') || [])];
-      console.log('🏷️ Unique categories:', uniqueCategories);
       setCategories(uniqueCategories);
     } catch (error) {
-      console.error('💥 Error fetching services:', error);
-      setError(error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error fetching services:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const filterServices = () => {
-    console.log('🔍 Filtering services...');
-    console.log('📊 Total services:', services.length);
-    console.log('🏷️ Selected category:', selectedCategory);
-    console.log('🔎 Search term:', searchTerm);
-    
     let filtered = services;
 
     // Filter by category
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(service => service.category === selectedCategory);
-      console.log('🏷️ After category filter:', filtered.length);
     }
 
     // Filter by search term
@@ -115,10 +89,8 @@ export const EnhancedServiceSelector = ({
         service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      console.log('🔎 After search filter:', filtered.length);
     }
 
-    console.log('✅ Final filtered services:', filtered.length);
     setFilteredServices(filtered);
   };
 
@@ -186,23 +158,12 @@ export const EnhancedServiceSelector = ({
     return acc;
   }, {} as Record<string, Service[]>);
 
-  console.log('🏗️ Grouped services:', groupedServices);
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Service Selection */}
       <Card>
         <CardHeader>
           <CardTitle>Available Services</CardTitle>
-          {/* DEBUG INFO - Remove this after debugging */}
-          <div className="text-xs bg-yellow-50 p-2 rounded border">
-            <strong>🐛 Debug:</strong> Loading: {loading ? 'Yes' : 'No'} | 
-            Services: {services.length} | 
-            Filtered: {filteredServices.length} | 
-            Categories: {categories.length} |
-            Error: {error || 'None'}
-          </div>
-          
           <div className="space-y-2">
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -233,25 +194,13 @@ export const EnhancedServiceSelector = ({
         <CardContent>
           {loading ? (
             <div className="text-center py-4">Loading services...</div>
-          ) : error ? (
-            <div className="text-red-600 p-4 bg-red-50 rounded">
-              Error: {error}
-            </div>
-          ) : services.length === 0 ? (
-            <div className="text-center py-4 text-yellow-600 bg-yellow-50 rounded">
-              No services found in database
-            </div>
-          ) : filteredServices.length === 0 ? (
-            <div className="text-center py-4 text-blue-600 bg-blue-50 rounded">
-              No services match your current filters
-            </div>
           ) : (
             <ScrollArea className="h-96">
               <div className="space-y-4">
                 {Object.entries(groupedServices).map(([category, categoryServices]) => (
                   <div key={category}>
                     <h3 className="font-semibold text-sm text-muted-foreground mb-2">
-                      {category} ({categoryServices.length})
+                      {category}
                     </h3>
                     <div className="space-y-2">
                       {categoryServices.map(service => (
