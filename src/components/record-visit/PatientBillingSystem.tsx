@@ -5,6 +5,7 @@ import { Receipt, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EnhancedServiceSelector } from "./EnhancedServiceSelector";
+import { DebugEnhancedServiceSelector } from "./DebugEnhancedServiceSelector";
 import { MedicationSelector } from "./MedicationSelector";
 import { SimpleBillPreviewDialog } from "./SimpleBillPreviewDialog";
 
@@ -152,14 +153,7 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Enhanced Service Selector */}
-          <EnhancedServiceSelector
-            serviceItems={serviceItems}
-            setServiceItems={setServiceItems}
-            discount={discount}
-            setDiscount={setDiscount}
-            discountReason={discountReason}
-            setDiscountReason={setDiscountReason}
-          />
+          <DebugEnhancedServiceSelector />
 
           {/* Medication Selector */}
           <MedicationSelector
