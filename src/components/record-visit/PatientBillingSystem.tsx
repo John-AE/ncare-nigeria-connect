@@ -54,35 +54,6 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
     return calculateSubtotal() - calculateDiscountAmount();
   };
 
-  const validateBillData = () => {
-    // Check if required appointment data exists
-    if (!appointment?.patient_id) {
-      throw new Error("Patient ID is missing from appointment data");
-    }
-
-    if (!profile?.user_id) {
-      throw new Error("User ID is missing from profile data");
-    }
-
-    if (!profile?.hospital_id) {
-      throw new Error("Hospital ID is missing from profile data");
-    }
-
-    // Validate service items
-    for (const item of serviceItems) {
-      if (!item.id || !item.service_name || item.quantity <= 0 || item.unit_price <= 0) {
-        throw new Error(`Invalid service item: ${item.service_name || 'Unknown service'}`);
-      }
-    }
-
-    // Validate medication items
-    for (const item of medicationItems) {
-      if (!item.id || !item.medication_name || item.quantity <= 0 || item.unit_price <= 0) {
-        throw new Error(`Invalid medication item: ${item.medication_name || 'Unknown medication'}`);
-      }
-    }
-  };
-
   const finalizeBill = async () => {
     if (serviceItems.length === 0 && medicationItems.length === 0) {
       toast({
@@ -96,29 +67,15 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
     setIsFinalizingBill(true);
 
     try {
-      // Validate data before proceeding
-      validateBillData();
-
       const totalAmount = calculateTotal();
-      const discountAmount = calculateDiscountAmount();
       
-      console.log('Creating bill with data:', {
-        patient_id: appointment.patient_id,
-        amount: totalAmount,
-        discount_amount: discountAmount,
-        discount_reason: discountReason || null,
-        description: `Consultation visit on ${appointment.scheduled_date}`,
-        created_by: profile.user_id,
-        hospital_id: profile.hospital_id
-      });
-
       // Create bill record
       const { data: billData, error: billError } = await supabase
         .from('bills')
         .insert({
           patient_id: appointment.patient_id,
           amount: totalAmount,
-          discount_amount: discountAmount,
+          discount_amount: calculateDiscountAmount(),
           discount_reason: discountReason || null,
           description: `Consultation visit on ${appointment.scheduled_date}`,
           created_by: profile.user_id,
@@ -127,16 +84,7 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
         .select()
         .single();
 
-      if (billError) {
-        console.error('Bill creation error:', billError);
-        throw new Error(`Failed to create bill: ${billError.message}`);
-      }
-
-      if (!billData?.id) {
-        throw new Error('Bill was created but no ID was returned');
-      }
-
-      console.log('Bill created successfully:', billData);
+      if (billError) throw billError;
 
       // Create bill items for services
       if (serviceItems.length > 0) {
@@ -145,43 +93,31 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
           service_id: item.id,
           quantity: item.quantity,
           unit_price: item.unit_price,
-          total_price: item.total_price,
-          item_type: 'service' // Add item type for clarity
+          total_price: item.total_price
         }));
-
-        console.log('Creating service bill items:', serviceBillItems);
 
         const { error: serviceItemsError } = await supabase
           .from('bill_items')
           .insert(serviceBillItems);
 
-        if (serviceItemsError) {
-          console.error('Service items creation error:', serviceItemsError);
-          throw new Error(`Failed to create service items: ${serviceItemsError.message}`);
-        }
+        if (serviceItemsError) throw serviceItemsError;
       }
 
-      // Create bill items for medications
+      // Create bill items for medications (using medication_id as service_id)
       if (medicationItems.length > 0) {
         const medicationBillItems = medicationItems.map(item => ({
           bill_id: billData.id,
-          medication_id: item.id, // Use medication_id instead of service_id for medications
+          service_id: item.id, // medication ID
           quantity: item.quantity,
           unit_price: item.unit_price,
-          total_price: item.total_price,
-          item_type: 'medication' // Add item type for clarity
+          total_price: item.total_price
         }));
-
-        console.log('Creating medication bill items:', medicationBillItems);
 
         const { error: medicationItemsError } = await supabase
           .from('bill_items')
           .insert(medicationBillItems);
 
-        if (medicationItemsError) {
-          console.error('Medication items creation error:', medicationItemsError);
-          throw new Error(`Failed to create medication items: ${medicationItemsError.message}`);
-        }
+        if (medicationItemsError) throw medicationItemsError;
       }
 
       toast({
@@ -189,21 +125,12 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
         description: `Bill finalized successfully! Bill ID: ${billData.id}`,
       });
 
-      // Clear the form
-      setServiceItems([]);
-      setMedicationItems([]);
-      setDiscount(0);
-      setDiscountReason('');
-
       onBillFinalized();
     } catch (error) {
       console.error('Error finalizing bill:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      
       toast({
         title: "Error",
-        description: `Failed to finalize bill: ${errorMessage}`,
+        description: "Failed to finalize bill",
         variant: "destructive"
       });
     } finally {
