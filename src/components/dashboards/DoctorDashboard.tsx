@@ -8,6 +8,7 @@ import { DateAppointments } from "./doctor/DateAppointments";
 import { TodaysSchedule } from "./doctor/TodaysSchedule";
 import { TriageQueue } from "./nurse/TriageQueue";
 import CompletedAppointmentsBills from "./doctor/CompletedAppointmentsBills";
+import { StandaloneBillingCard } from "./doctor/StandaloneBillingCard";
 import { DashboardToggle } from "../DashboardToggle";
 import { PatientTimelineView } from "../PatientTimelineView";
 
@@ -79,6 +80,9 @@ const DoctorDashboard = () => {
         showVitalSigns={true} 
         refreshTrigger={triageQueueRefreshRef}
       />
+
+      {/* Standalone Billing Card */}
+      <StandaloneBillingCard />
 
       {/* Completed Appointments and Bills */}
       <CompletedAppointmentsBills />

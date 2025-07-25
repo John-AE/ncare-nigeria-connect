@@ -24,6 +24,7 @@ interface Hospital {
 
 interface User {
   id: string;
+  user_id: string;
   username: string;
   role: string;
   hospital_id: string;
@@ -250,11 +251,10 @@ export const AdminDashboard = () => {
     }
 
     try {
-      // Since we can't directly change auth passwords from the client,
-      // we'll create an edge function to handle this admin operation
+      // Use the edge function to change password with user_id from profiles
       const { error } = await supabase.functions.invoke('admin-change-password', {
         body: { 
-          userId: selectedUser.id, 
+          userId: selectedUser.user_id, // Use user_id from profiles table
           newPassword: newPassword.trim()
         }
       });

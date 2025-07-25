@@ -1,6 +1,7 @@
 import { PharmacyStatsCards } from "./pharmacy/PharmacyStatsCards";
 import { CompletedConsultations } from "./nurse/CompletedConsultations";
 import { MedicationInventory } from "./pharmacy/MedicationInventory";
+import { DispensedMedicationLog } from "./pharmacy/DispensedMedicationLog";
 import { usePharmacyDashboard } from "@/hooks/usePharmacyDashboard";
 
 export const PharmacyDashboard = () => {
@@ -37,6 +38,9 @@ export const PharmacyDashboard = () => {
         
         {/* Medication Inventory */}
         <MedicationInventory />
+        
+        {/* Dispensed Medication Log */}
+        <DispensedMedicationLog />
       </div>
     </div>
   );

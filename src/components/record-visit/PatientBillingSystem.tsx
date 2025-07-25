@@ -5,11 +5,20 @@ import { Receipt, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EnhancedServiceSelector } from "./EnhancedServiceSelector";
+import { MedicationSelector } from "./MedicationSelector";
 import { SimpleBillPreviewDialog } from "./SimpleBillPreviewDialog";
 
 interface ServiceItem {
   id: string;
   service_name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
+interface MedicationItem {
+  id: string;
+  medication_name: string;
   quantity: number;
   unit_price: number;
   total_price: number;
@@ -23,6 +32,7 @@ interface PatientBillingSystemProps {
 
 export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: PatientBillingSystemProps) => {
   const [serviceItems, setServiceItems] = useState<ServiceItem[]>([]);
+  const [medicationItems, setMedicationItems] = useState<MedicationItem[]>([]);
   const [discount, setDiscount] = useState<number>(0);
   const [discountReason, setDiscountReason] = useState<string>('');
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
@@ -31,7 +41,9 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
   const { toast } = useToast();
 
   const calculateSubtotal = () => {
-    return serviceItems.reduce((total, item) => total + item.total_price, 0);
+    const servicesTotal = serviceItems.reduce((total, item) => total + item.total_price, 0);
+    const medicationsTotal = medicationItems.reduce((total, item) => total + item.total_price, 0);
+    return servicesTotal + medicationsTotal;
   };
 
   const calculateDiscountAmount = () => {
@@ -43,10 +55,10 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
   };
 
   const finalizeBill = async () => {
-    if (serviceItems.length === 0) {
+    if (serviceItems.length === 0 && medicationItems.length === 0) {
       toast({
         title: "Error",
-        description: "Please add at least one item to the bill",
+        description: "Please add at least one service or medication to the bill",
         variant: "destructive"
       });
       return;
@@ -74,20 +86,39 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
 
       if (billError) throw billError;
 
-      // Create bill items
-      const billItemsToInsert = serviceItems.map(item => ({
-        bill_id: billData.id,
-        service_id: item.id,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price
-      }));
+      // Create bill items for services
+      if (serviceItems.length > 0) {
+        const serviceBillItems = serviceItems.map(item => ({
+          bill_id: billData.id,
+          service_id: item.id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price
+        }));
 
-      const { error: itemsError } = await supabase
-        .from('bill_items')
-        .insert(billItemsToInsert);
+        const { error: serviceItemsError } = await supabase
+          .from('bill_items')
+          .insert(serviceBillItems);
 
-      if (itemsError) throw itemsError;
+        if (serviceItemsError) throw serviceItemsError;
+      }
+
+      // Create bill items for medications (using medication_id as service_id)
+      if (medicationItems.length > 0) {
+        const medicationBillItems = medicationItems.map(item => ({
+          bill_id: billData.id,
+          service_id: item.id, // medication ID
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price
+        }));
+
+        const { error: medicationItemsError } = await supabase
+          .from('bill_items')
+          .insert(medicationBillItems);
+
+        if (medicationItemsError) throw medicationItemsError;
+      }
 
       toast({
         title: "Success",
@@ -130,13 +161,19 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
             setDiscountReason={setDiscountReason}
           />
 
+          {/* Medication Selector */}
+          <MedicationSelector
+            medicationItems={medicationItems}
+            setMedicationItems={setMedicationItems}
+          />
+
           {/* Actions */}
           <div className="flex gap-3 pt-4">
             <Button 
               onClick={() => setShowPreviewDialog(true)} 
               variant="outline" 
               className="flex-1"
-              disabled={serviceItems.length === 0}
+              disabled={serviceItems.length === 0 && medicationItems.length === 0}
             >
               <Eye className="h-4 w-4 mr-2" />
               Preview Bill
@@ -144,7 +181,7 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
             <Button 
               onClick={finalizeBill} 
               className="flex-1"
-              disabled={serviceItems.length === 0 || isFinalizingBill}
+              disabled={(serviceItems.length === 0 && medicationItems.length === 0) || isFinalizingBill}
             >
               {isFinalizingBill ? "Finalizing..." : "Finalize Bill"}
             </Button>
@@ -158,6 +195,7 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
           open={showPreviewDialog}
           onOpenChange={setShowPreviewDialog}
           serviceItems={serviceItems}
+          medicationItems={medicationItems}
           subtotal={calculateSubtotal()}
           discount={discount}
           discountAmount={calculateDiscountAmount()}

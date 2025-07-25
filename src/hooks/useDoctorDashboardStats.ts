@@ -8,7 +8,7 @@ export interface DashboardStats {
   completedAppointments: number;
   totalPatients: number;
   pendingBills: number;
-  totalRevenue: number;
+  todaysRevenue: number;
 }
 
 export const useDoctorDashboardStats = () => {
@@ -19,7 +19,7 @@ export const useDoctorDashboardStats = () => {
     completedAppointments: 0,
     totalPatients: 0,
     pendingBills: 0,
-    totalRevenue: 0,
+    todaysRevenue: 0,
   });
 
   useEffect(() => {
@@ -63,12 +63,14 @@ export const useDoctorDashboardStats = () => {
           .eq('is_paid', false)
           .eq('hospital_id', hospitalId);
         
-        // Get total revenue (sum of paid bills, filtered by hospital)
+        // Get today's revenue (sum of paid bills created today, filtered by hospital)
         const { data: revenueData } = await supabase
           .from('bills')
           .select('amount_paid')
           .eq('is_paid', true)
-          .eq('hospital_id', hospitalId);
+          .eq('hospital_id', hospitalId)
+          .gte('created_at', `${today}T00:00:00`)
+          .lt('created_at', `${today}T23:59:59`);
 
         setStats({
           totalAppointmentsToday: appointmentCounts.total,
@@ -77,7 +79,7 @@ export const useDoctorDashboardStats = () => {
           completedAppointments: appointmentCounts.completed,
           totalPatients: patientsCount || 0,
           pendingBills: billsCount || 0,
-          totalRevenue: revenueData?.reduce((sum, bill) => sum + Number(bill.amount_paid), 0) || 0,
+          todaysRevenue: revenueData?.reduce((sum, bill) => sum + Number(bill.amount_paid), 0) || 0,
         });
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
@@ -114,15 +116,23 @@ export const useDoctorDashboardStats = () => {
           setStats(prev => {
             let newStats = { ...prev };
             
+            const today = new Date().toISOString().split('T')[0];
+            const billDate = new Date(newRecord.created_at).toISOString().split('T')[0];
+            const isTodaysBill = billDate === today;
+            
             // If bill status changed from unpaid to paid
             if (!oldRecord.is_paid && newRecord.is_paid) {
               newStats.pendingBills = prev.pendingBills - 1;
-              newStats.totalRevenue = prev.totalRevenue + Number(newRecord.amount_paid);
+              if (isTodaysBill) {
+                newStats.todaysRevenue = prev.todaysRevenue + Number(newRecord.amount_paid);
+              }
             }
             // If bill status changed from paid to unpaid
             else if (oldRecord.is_paid && !newRecord.is_paid) {
               newStats.pendingBills = prev.pendingBills + 1;
-              newStats.totalRevenue = prev.totalRevenue - Number(oldRecord.amount_paid);
+              if (isTodaysBill) {
+                newStats.todaysRevenue = prev.todaysRevenue - Number(oldRecord.amount_paid);
+              }
             }
             
             return newStats;

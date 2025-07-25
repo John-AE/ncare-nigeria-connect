@@ -11,10 +11,19 @@ interface ServiceItem {
   total_price: number;
 }
 
+interface MedicationItem {
+  id: string;
+  medication_name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
 interface SimpleBillPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   serviceItems: ServiceItem[];
+  medicationItems?: MedicationItem[];
   subtotal: number;
   discount: number;
   discountAmount: number;
@@ -26,6 +35,7 @@ export const SimpleBillPreviewDialog = ({
   open,
   onOpenChange,
   serviceItems,
+  medicationItems = [],
   subtotal,
   discount,
   discountAmount,
@@ -49,6 +59,12 @@ export const SimpleBillPreviewDialog = ({
               {serviceItems.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <span>{item.service_name} ({item.quantity}x)</span>
+                  <span>₦{item.total_price.toLocaleString()}</span>
+                </div>
+              ))}
+              {medicationItems?.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm">
+                  <span>{item.medication_name} ({item.quantity}x)</span>
                   <span>₦{item.total_price.toLocaleString()}</span>
                 </div>
               ))}

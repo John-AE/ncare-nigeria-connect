@@ -50,8 +50,8 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
       textColor: "text-rose-900"
     },
     { 
-      label: "Total Revenue", 
-      value: `₦${stats.totalRevenue.toFixed(2)}`, 
+      label: "Today's Revenue", 
+      value: `₦${stats.todaysRevenue.toFixed(2)}`, 
       borderColor: "border-l-red-600",
       bgColor: "bg-red-600/5",
       textColor: "text-red-600"

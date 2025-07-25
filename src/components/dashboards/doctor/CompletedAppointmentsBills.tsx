@@ -232,8 +232,8 @@ const CompletedAppointmentsBills = () => {
                           onClick={(e) => handleAdjustBill(apt, e)}
                           className="h-6 px-2"
                         >
-                          <Edit3 className="h-3 w-3 mr-1" />
-                          Adjust
+                          <Ban className="h-3 w-3 mr-1" />
+                          Void
                         </Button>
                       )}
                       <Eye className="h-4 w-4 text-muted-foreground" />
