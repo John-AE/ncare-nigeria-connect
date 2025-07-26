@@ -140,14 +140,15 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
       }
 
       // Update appointment status to completed
-      const { error: appointmentError } = await supabase
-        .from('appointments')
-        .update({ status: 'completed' })
-        .eq('id', appointment.id);
+        const { error: appointmentError } = await supabase
+          .from('appointments')
+          .update({ status: 'completed' })
+          .eq('id', appointment.id);
 
-      if (appointmentError) {
-        console.error('Error updating appointment status:', appointmentError);
-      }
+        if (appointmentError) {
+          console.error('Error updating appointment status:', appointmentError);
+          // Don't throw error, just log it for now
+        }
 
       toast({
         title: "Success",
