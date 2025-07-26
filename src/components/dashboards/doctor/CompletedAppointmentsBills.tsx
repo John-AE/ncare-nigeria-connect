@@ -54,7 +54,8 @@ const CompletedAppointmentsBills = () => {
               quantity,
               unit_price,
               total_price,
-              services(name)
+              services(name),
+              medications(medication_name)
             )
           `)
           .gte('created_at', `${today}T00:00:00`)
@@ -68,7 +69,7 @@ const CompletedAppointmentsBills = () => {
           // Calculate total from bill items
           const billItems: BillItem[] = bill.bill_items?.map(item => ({
             id: item.id,
-            service_name: item.services?.name || 'Unknown Service',
+            service_name: item.services?.name || item.medications?.medication_name || 'Unknown Service',
             quantity: item.quantity,
             unit_price: item.unit_price,
             total_price: item.total_price,
@@ -124,7 +125,8 @@ const CompletedAppointmentsBills = () => {
               quantity,
               unit_price,
               total_price,
-              services(name)
+              services(name),
+              medications(medication_name)
             )
           `)
           .gte('created_at', `${today}T00:00:00`)
@@ -136,7 +138,7 @@ const CompletedAppointmentsBills = () => {
         const formattedData: CompletedAppointmentBill[] = bills?.map(bill => {
           const billItems: BillItem[] = bill.bill_items?.map(item => ({
             id: item.id,
-            service_name: item.services?.name || 'Unknown Service',
+            service_name: item.services?.name || item.medications?.medication_name || 'Unknown Service',
             quantity: item.quantity,
             unit_price: item.unit_price,
             total_price: item.total_price,
