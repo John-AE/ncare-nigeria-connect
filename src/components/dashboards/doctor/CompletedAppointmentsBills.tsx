@@ -54,8 +54,7 @@ const CompletedAppointmentsBills = () => {
               quantity,
               unit_price,
               total_price,
-              service_id,
-              medication_id
+              services(name)
             )
           `)
           .gte('created_at', `${today}T00:00:00`)
@@ -67,13 +66,34 @@ const CompletedAppointmentsBills = () => {
         // Format the data to show all bills
         const formattedData: CompletedAppointmentBill[] = bills?.map(bill => {
           // Calculate total from bill items
-          const billItems: BillItem[] = bill.bill_items?.map(item => ({
-            id: item.id,
-            service_name: 'Service/Medication', // Temporary fix
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            total_price: item.total_price,
-          })) || [];
+          const billItems: BillItem[] = [];
+          for (const item of bill.bill_items || []) {
+            let itemName = 'Unknown Item';
+            
+            if (item.service_id) {
+              const { data: service } = await supabase
+                .from('services')
+                .select('service_name')
+                .eq('id', item.service_id)
+                .single();
+              itemName = service?.service_name || 'Unknown Service';
+            } else if (item.medication_id) {
+              const { data: medication } = await supabase
+                .from('medications')
+                .select('medication_name')
+                .eq('id', item.medication_id)
+                .single();
+              itemName = medication?.medication_name || 'Unknown Medication';
+            }
+            
+            billItems.push({
+              id: item.id,
+              service_name: itemName,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              total_price: item.total_price,
+            });
+          }
           
           const calculatedTotal = billItems.reduce((sum, item) => sum + item.total_price, 0);
           
@@ -125,8 +145,7 @@ const CompletedAppointmentsBills = () => {
               quantity,
               unit_price,
               total_price,
-              service_id,
-              medication_id
+              services(name)
             )
           `)
           .gte('created_at', `${today}T00:00:00`)
@@ -136,13 +155,34 @@ const CompletedAppointmentsBills = () => {
         if (error) throw error;
 
         const formattedData: CompletedAppointmentBill[] = bills?.map(bill => {
-          const billItems: BillItem[] = bill.bill_items?.map(item => ({
-            id: item.id,
-            service_name: 'Service/Medication', // Temporary fix
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            total_price: item.total_price,
-          })) || [];
+          const billItems: BillItem[] = [];
+          for (const item of bill.bill_items || []) {
+            let itemName = 'Unknown Item';
+            
+            if (item.service_id) {
+              const { data: service } = await supabase
+                .from('services')
+                .select('service_name')
+                .eq('id', item.service_id)
+                .single();
+              itemName = service?.service_name || 'Unknown Service';
+            } else if (item.medication_id) {
+              const { data: medication } = await supabase
+                .from('medications')
+                .select('medication_name')
+                .eq('id', item.medication_id)
+                .single();
+              itemName = medication?.medication_name || 'Unknown Medication';
+            }
+            
+            billItems.push({
+              id: item.id,
+              service_name: itemName,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              total_price: item.total_price,
+            });
+          }
           
           const calculatedTotal = billItems.reduce((sum, item) => sum + item.total_price, 0);
           
