@@ -74,57 +74,6 @@ export type Database = {
           },
         ]
       }
-      bill_adjustments: {
-        Row: {
-          adjusted_at: string
-          adjusted_by: string
-          adjustment_reason: string
-          adjustment_type: string
-          bill_id: string
-          hospital_id: string | null
-          id: string
-          new_amount: number
-          original_amount: number
-        }
-        Insert: {
-          adjusted_at?: string
-          adjusted_by: string
-          adjustment_reason: string
-          adjustment_type: string
-          bill_id: string
-          hospital_id?: string | null
-          id?: string
-          new_amount: number
-          original_amount: number
-        }
-        Update: {
-          adjusted_at?: string
-          adjusted_by?: string
-          adjustment_reason?: string
-          adjustment_type?: string
-          bill_id?: string
-          hospital_id?: string | null
-          id?: string
-          new_amount?: number
-          original_amount?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bill_adjustments_bill_id_fkey"
-            columns: ["bill_id"]
-            isOneToOne: false
-            referencedRelation: "bills"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bill_adjustments_hospital_id_fkey"
-            columns: ["hospital_id"]
-            isOneToOne: false
-            referencedRelation: "hospitals"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       bill_items: {
         Row: {
           bill_id: string

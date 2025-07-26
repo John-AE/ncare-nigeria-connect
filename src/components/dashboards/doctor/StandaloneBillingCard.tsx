@@ -101,6 +101,8 @@ export const StandaloneBillingCard = () => {
       return;
     }
 
+    if (isFinalizingBill) return; // Prevent double-clicking
+
     setIsFinalizingBill(true);
 
     try {

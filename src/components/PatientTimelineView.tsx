@@ -10,6 +10,8 @@ import { Search, Calendar, FileText, Download, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthProvider";
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
 
 interface Patient {
   id: string;
@@ -267,12 +269,82 @@ export const PatientTimelineView = ({ onBack }: PatientTimelineViewProps) => {
     });
   };
 
-  const viewPatientBills = (patientId: string) => {
-    // Navigate to bill history - this would be implemented based on your routing
-    toast({
-      title: "Info",
-      description: "Bill history feature would open here",
-    });
+  const viewPatientBills = async (patientId: string) => {
+    try {
+      const { data: bills, error } = await supabase
+        .from('bills')
+        .select(`
+          id,
+          amount,
+          amount_paid,
+          is_paid,
+          description,
+          created_at,
+          payment_method,
+          bill_items(
+            id,
+            quantity,
+            unit_price,
+            total_price,
+            services(name)
+          )
+        `)
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (bills && bills.length > 0) {
+        // Generate a PDF report of all bills for this patient
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Patient Bill History', 20, 20);
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Patient: ${selectedPatient?.first_name} ${selectedPatient?.last_name}`, 20, 35);
+        doc.text(`Generated on: ${format(new Date(), 'MMMM dd, yyyy HH:mm')}`, 20, 45);
+
+        // Bills table
+        const tableData = bills.map(bill => [
+          format(new Date(bill.created_at), 'MMM dd, yyyy'),
+          bill.description || 'N/A',
+          `₦${Number(bill.amount).toLocaleString()}`,
+          `₦${Number(bill.amount_paid).toLocaleString()}`,
+          bill.is_paid ? 'Paid' : 'Pending',
+          bill.payment_method || 'N/A'
+        ]);
+
+        autoTable(doc, {
+          head: [['Date', 'Description', 'Amount', 'Paid', 'Status', 'Method']],
+          body: tableData,
+          startY: 65,
+          styles: { fontSize: 10 },
+          headStyles: { fillColor: [41, 128, 185] }
+        });
+
+        doc.save(`${selectedPatient?.first_name}_${selectedPatient?.last_name}_bills_history.pdf`);
+        
+        toast({
+          title: "Success",
+          description: `Found ${bills.length} bills. PDF downloaded successfully.`,
+        });
+      } else {
+        toast({
+          title: "Info",
+          description: "No bills found for this patient",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching patient bills:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch patient bills",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

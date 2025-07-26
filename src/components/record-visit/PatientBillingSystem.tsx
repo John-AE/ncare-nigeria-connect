@@ -64,9 +64,28 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
       return;
     }
 
+    if (isFinalizingBill) return; // Prevent double-clicking
+
     setIsFinalizingBill(true);
 
     try {
+      // Check if a bill already exists for this appointment to prevent duplicates
+      const { data: existingBills } = await supabase
+        .from('bills')
+        .select('id')
+        .eq('patient_id', appointment.patient_id)
+        .eq('description', `Consultation visit on ${appointment.scheduled_date}`)
+        .limit(1);
+
+      if (existingBills && existingBills.length > 0) {
+        toast({
+          title: "Error",
+          description: "A bill already exists for this consultation",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const totalAmount = calculateTotal();
       
       // Create bill record
@@ -118,6 +137,16 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
           .insert(medicationBillItems);
 
         if (medicationItemsError) throw medicationItemsError;
+      }
+
+      // Update appointment status to completed
+      const { error: appointmentError } = await supabase
+        .from('appointments')
+        .update({ status: 'completed' })
+        .eq('id', appointment.id);
+
+      if (appointmentError) {
+        console.error('Error updating appointment status:', appointmentError);
       }
 
       toast({

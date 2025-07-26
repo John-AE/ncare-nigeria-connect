@@ -1,8 +1,8 @@
 import { useFinanceDashboard } from "@/hooks/useFinanceDashboard";
 import { FinanceStatsCards } from "./finance/FinanceStatsCards";
 import { PaymentManagement } from "./finance/PaymentManagement";
-import { FinancialReports } from "./finance/FinancialReports";
-import { PendingBills } from "./finance/PendingBills";
+import { EnhancedFinancialReports } from "./finance/EnhancedFinancialReports";
+import { EnhancedPendingBills } from "./finance/EnhancedPendingBills";
 import { PaymentTracking } from "./finance/PaymentTracking";
 import { PaymentDialog } from "./finance/PaymentDialog";
 import { RevenueTrends } from "./finance/RevenueTrends";
@@ -74,10 +74,10 @@ const FinanceDashboard = () => {
         />
 
         {/* Financial Reports */}
-        <FinancialReports />
+        <EnhancedFinancialReports />
 
         {/* Pending Bills */}
-        <PendingBills
+        <EnhancedPendingBills
           pendingBills={pendingBills}
           loading={loading}
           onBillSelect={handleBillSelect}

@@ -3,9 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Eye, Edit3, Ban } from "lucide-react";
+import { Calendar, Eye } from "lucide-react";
 import BillDetailsDialog from "./BillDetailsDialog";
-import { BillAdjustmentDialog } from "@/components/record-visit/BillAdjustmentDialog";
+
 
 interface BillItem {
   id: string;
@@ -32,8 +32,6 @@ const CompletedAppointmentsBills = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBill, setSelectedBill] = useState<CompletedAppointmentBill | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [adjustmentDialogOpen, setAdjustmentDialogOpen] = useState(false);
-  const [adjustingBill, setAdjustingBill] = useState<CompletedAppointmentBill | null>(null);
 
   useEffect(() => {
     const fetchCompletedAppointments = async () => {
@@ -180,11 +178,6 @@ const CompletedAppointmentsBills = () => {
     setDialogOpen(true);
   };
 
-  const handleAdjustBill = (appointment: CompletedAppointmentBill, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setAdjustingBill(appointment);
-    setAdjustmentDialogOpen(true);
-  };
 
   return (
     <>
@@ -225,17 +218,6 @@ const CompletedAppointmentsBills = () => {
                       <Badge variant={apt.is_paid ? "default" : "secondary"} className="text-xs">
                         {apt.is_paid ? "Paid" : "Pending"}
                       </Badge>
-                      {!apt.is_paid && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => handleAdjustBill(apt, e)}
-                          className="h-6 px-2"
-                        >
-                          <Ban className="h-3 w-3 mr-1" />
-                          Void
-                        </Button>
-                      )}
                       <Eye className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
@@ -268,19 +250,6 @@ const CompletedAppointmentsBills = () => {
         />
       )}
 
-      {adjustingBill && (
-        <BillAdjustmentDialog
-          open={adjustmentDialogOpen}
-          onOpenChange={setAdjustmentDialogOpen}
-          billId={adjustingBill.bill_id}
-          originalAmount={adjustingBill.bill_amount}
-          isPaid={adjustingBill.is_paid}
-          onAdjustmentComplete={() => {
-            refetchData();
-            setAdjustingBill(null);
-          }}
-        />
-      )}
     </>
   );
 };
