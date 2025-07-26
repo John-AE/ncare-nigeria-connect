@@ -63,6 +63,14 @@ const CompletedAppointmentsBills = () => {
 
         if (error) throw error;
 
+        // Add this error handling - REMOVE LATER
+        console.log('Bills data:', bills);
+        if (bills) {
+          bills.forEach((bill, index) => {
+            console.log(`Bill ${index} bill_items:`, bill.bill_items);
+          });
+        }
+
         // Format the data to show all bills
         const formattedData: CompletedAppointmentBill[] = bills?.map(bill => {
           // Calculate total from bill items
