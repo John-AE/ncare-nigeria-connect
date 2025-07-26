@@ -126,7 +126,8 @@ export const PatientBillingSystem = ({ appointment, profile, onBillFinalized }: 
       if (medicationItems.length > 0) {
         const medicationBillItems = medicationItems.map(item => ({
           bill_id: billData.id,
-          medication_id: item.id, // <- Use medication_id instead
+          medication_id: item.id,
+          service_id: null, // Add this line
           quantity: item.quantity,
           unit_price: item.unit_price,
           total_price: item.total_price
