@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,56 +115,10 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
       refreshTrigger.current = fetchQueuePatients;
     }
     
-    // Simple real-time listener
-    const channel = supabase
-      .channel('triage-queue-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'vital_signs'
-        },
-        () => {
-          console.log('New vital signs recorded');
-          setTimeout(() => {
-            fetchQueuePatients();
-          }, 500);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'vital_signs'
-        },
-        () => {
-          console.log('Vital signs updated');
-          setTimeout(() => {
-            fetchQueuePatients();
-          }, 500);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'visits'
-        },
-        () => {
-          console.log('New visit recorded');
-          setTimeout(() => {
-            fetchQueuePatients();
-          }, 500);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Poll every 2 seconds instead of real-time listener
+    const interval = setInterval(fetchQueuePatients, 2000);
+    
+    return () => clearInterval(interval);
   }, [refreshTrigger]);
 
   const fetchQueuePatients = async () => {
