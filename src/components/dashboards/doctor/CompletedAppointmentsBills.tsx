@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -85,7 +86,8 @@ export const CompletedAppointmentsBills = () => {
           )
         `)
         .eq('hospital_id', profile?.hospital_id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10);
 
       if (error) {
         console.error('Error fetching bills:', error);
@@ -250,7 +252,7 @@ export const CompletedAppointmentsBills = () => {
   }
 
   return (
-    <Card>
+    <Card className="border-l-4 border-l-green-500">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Receipt className="h-5 w-5" />
@@ -263,46 +265,48 @@ export const CompletedAppointmentsBills = () => {
             No completed appointments with bills found.
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Patient</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {bills.map(bill => (
-                <TableRow key={bill.id}>
-                  <TableCell className="font-medium">
-                    {bill.patients.first_name} {bill.patients.last_name}
-                  </TableCell>
-                  <TableCell>{bill.description}</TableCell>
-                  <TableCell>{format(new Date(bill.created_at), 'PPP')}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      ₦{bill.amount.toLocaleString()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <BillDetailsDialog bill={bill} />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => generateBillPDF(bill)}
-                      >
-                        <FileText className="h-4 w-4 mr-2" />
-                        PDF
-                      </Button>
-                    </div>
-                  </TableCell>
+          <ScrollArea className="h-[400px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Patient</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {bills.map(bill => (
+                  <TableRow key={bill.id}>
+                    <TableCell className="font-medium">
+                      {bill.patients.first_name} {bill.patients.last_name}
+                    </TableCell>
+                    <TableCell>{bill.description}</TableCell>
+                    <TableCell>{format(new Date(bill.created_at), 'PPP')}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        ₦{bill.amount.toLocaleString()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <BillDetailsDialog bill={bill} />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => generateBillPDF(bill)}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          PDF
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
         )}
       </CardContent>
     </Card>
