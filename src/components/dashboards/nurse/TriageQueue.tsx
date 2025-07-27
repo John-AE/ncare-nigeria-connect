@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,34 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, AlertTriangle, Activity, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useDashboard } from "@/contexts/DashboardContext";
+
+interface Patient {
+  id: string;
+  first_name: string;
+  last_name: string;
+  gender: string;
+  date_of_birth: string;
+}
+
+interface VitalSigns {
+  id: string;
+  patient_id: string;
+  body_temperature: number | null;
+  heart_rate: number | null;
+  blood_pressure_systolic: number | null;
+  blood_pressure_diastolic: number | null;
+  oxygen_saturation: number | null;
+  recorded_at: string;
+  complaints: string | null;
+  patients: Patient;
+}
+
+interface Appointment {
+  id: string;
+  start_time: string;
+  scheduled_date: string;
+}
 
 interface PatientWithVitals {
   id: string;
@@ -23,18 +52,13 @@ interface PatientWithVitals {
     recorded_at: string;
     complaints: string | null;
   };
-  appointments: {
-    id: string;
-    start_time: string;
-    scheduled_date: string;
-  } | null;
+  appointments: Appointment | null;
   priority_score: number;
 }
 
 interface TriageQueueProps {
   showRecordVisitButton?: boolean;
   showVitalSigns?: boolean;
-  refreshTrigger?: React.MutableRefObject<(() => void) | null>;
 }
 
 // Priority scoring function based on vital signs
@@ -78,16 +102,20 @@ const getPriorityBadge = (score: number) => {
   return <Badge variant="default" className="flex items-center gap-1"><Clock className="h-3 w-3" />Low</Badge>;
 };
 
-export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = false, refreshTrigger }: TriageQueueProps) => {
+export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = false }: TriageQueueProps) => {
   const [queuePatients, setQueuePatients] = useState<PatientWithVitals[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { triggers } = useDashboard();
 
   useEffect(() => {
     fetchQueuePatients();
     
-    // Simple real-time listener like your Scheduled Patients Queue
+    // Register refresh function
+    triggers.current.refreshTriageQueue = fetchQueuePatients;
+    
+    // Simple real-time listener
     const channel = supabase
       .channel('triage-queue-updates')
       .on(
@@ -139,13 +167,6 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
     };
   }, []);
 
-  // Expose refresh function via refreshTrigger ref
-  useEffect(() => {
-    if (refreshTrigger) {
-      refreshTrigger.current = fetchQueuePatients;
-    }
-  }, [refreshTrigger]);
-
   const fetchQueuePatients = async () => {
     try {
       setLoading(true);
@@ -165,14 +186,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
           blood_pressure_diastolic,
           oxygen_saturation,
           recorded_at,
-          complaints,
-          patients (
-            id,
-            first_name,
-            last_name,
-            gender,
-            date_of_birth
-          )
+          complaints
         `)
         .gte('recorded_at', startOfDay)
         .lt('recorded_at', endOfDay)
@@ -188,9 +202,19 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
         return;
       }
 
+      // Get patient details for the vital signs
+      const patientIds = vitalSignsData.map(vs => vs.patient_id);
+      const { data: patientsData, error: patientsError } = await supabase
+        .from('patients')
+        .select('id, first_name, last_name, gender, date_of_birth')
+        .in('id', patientIds);
+
+      if (patientsError) {
+        console.error('Patients error:', patientsError);
+        throw patientsError;
+      }
+
       // Get patient IDs who already have completed visits today
-      const patientIds = vitalSignsData.map(vs => vs.patient_id).filter(Boolean);
-      
       const { data: visitsData, error: visitsError } = await supabase
         .from('visits')
         .select('patient_id')
@@ -222,8 +246,10 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
 
       // Process and sort patients
       const processedPatients: PatientWithVitals[] = patientsWithoutVisits
-        .filter(vitalRecord => vitalRecord.patients) // Only include records with patient data
         .map(vitalRecord => {
+          const patient = patientsData?.find(p => p.id === vitalRecord.patient_id);
+          if (!patient) return null;
+
           const appointment = appointmentsData?.find(apt => apt.patient_id === vitalRecord.patient_id) || null;
           
           const vitals = {
@@ -237,16 +263,17 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
           };
           
           return {
-            id: vitalRecord.patients.id,
-            first_name: vitalRecord.patients.first_name,
-            last_name: vitalRecord.patients.last_name,
-            gender: vitalRecord.patients.gender,
-            date_of_birth: vitalRecord.patients.date_of_birth,
+            id: patient.id,
+            first_name: patient.first_name,
+            last_name: patient.last_name,
+            gender: patient.gender,
+            date_of_birth: patient.date_of_birth,
             vital_signs: vitals,
             appointments: appointment,
             priority_score: calculatePriorityScore(vitals)
           };
-        });
+        })
+        .filter(Boolean) as PatientWithVitals[];
 
       // Sort by: 1) Priority score (desc), 2) Vitals recorded time (asc), 3) Appointment time (asc)
       processedPatients.sort((a, b) => {

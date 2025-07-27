@@ -1,263 +1,304 @@
+
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Eye } from "lucide-react";
-import BillDetailsDialog from "./BillDetailsDialog";
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
+import { useToast } from "@/hooks/use-toast";
+import { Receipt, FileText, Eye } from "lucide-react";
+import { format } from "date-fns";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface BillItem {
   id: string;
-  service_name: string;
+  services?: {
+    name: string;
+    price: number;
+  };
   quantity: number;
   unit_price: number;
   total_price: number;
 }
 
-interface CompletedAppointmentBill {
-  appointment_id: string;
-  patient_name: string;
-  appointment_time: string;
-  bill_amount: number;
-  is_paid: boolean;
-  bill_id: string;
-  payment_method?: string;
+interface Bill {
+  id: string;
+  patient_id: string;
+  amount: number;
+  discount_amount: number;
+  discount_reason: string;
+  description: string;
+  created_at: string;
+  patients: {
+    first_name: string;
+    last_name: string;
+  };
   bill_items: BillItem[];
-  patient_email?: string;
 }
 
-const CompletedAppointmentsBills = () => {
-  const [completedAppointments, setCompletedAppointments] = useState<CompletedAppointmentBill[]>([]);
+export const CompletedAppointmentsBills = () => {
+  const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBill, setSelectedBill] = useState<CompletedAppointmentBill | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const { profile } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchCompletedAppointments = async () => {
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Get all bills created today with patient information
-        const { data: bills, error } = await supabase
-          .from('bills')
-          .select(`
+    fetchBills();
+  }, [profile]);
+
+  const fetchBills = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('bills')
+        .select(`
+          id,
+          patient_id,
+          amount,
+          discount_amount,
+          discount_reason,
+          description,
+          created_at,
+          patients (
+            first_name,
+            last_name
+          ),
+          bill_items (
             id,
-            amount,
-            is_paid,
-            payment_method,
-            patient_id,
-            created_at,
-            patients!inner(first_name, last_name, email),
-            bill_items(
-              id,
-              quantity,
-              unit_price,
-              total_price,
-              service_id,
-              medication_id,
-              services(name),
-              medications(name)
-            )
-          `)
-          .gte('created_at', `${today}T00:00:00`)
-          .lt('created_at', `${today}T23:59:59`)
-          .order('created_at', { ascending: false });
+            services (
+              name,
+              price
+            ),
+            quantity,
+            unit_price,
+            total_price
+          )
+        `)
+        .eq('hospital_id', profile?.hospital_id)
+        .order('created_at', { ascending: false });
 
-        if (error) throw error;
-
-        // Format the data to show all bills
-        const formattedData: CompletedAppointmentBill[] = bills?.map(bill => {
-          // Calculate total from bill items
-          const billItems: BillItem[] = bill.bill_items?.map(item => ({
-            id: item.id,
-            service_name: item.services?.name || item.medications?.name || 'Unknown Item',
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            total_price: item.total_price,
-          })) || [];
-          
-          const calculatedTotal = billItems.reduce((sum, item) => sum + item.total_price, 0);
-          
-          return {
-            appointment_id: bill.id, // Using bill ID as appointment ID
-            patient_name: `${bill.patients.first_name} ${bill.patients.last_name}`,
-            appointment_time: new Date(bill.created_at).toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            }),
-            bill_amount: calculatedTotal || bill.amount || 0,
-            is_paid: bill.is_paid || false,
-            bill_id: bill.id,
-            payment_method: bill.payment_method,
-            bill_items: billItems,
-            patient_email: bill.patients.email,
-          };
-        }) || [];
-
-        setCompletedAppointments(formattedData);
-      } catch (error) {
-        console.error('Error fetching completed appointments:', error);
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error('Error fetching bills:', error);
+        throw error;
       }
-    };
 
-    fetchCompletedAppointments();
-  }, []);
-
-  const refetchData = () => {
-    setLoading(true);
-    const fetchCompletedAppointments = async () => {
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        
-        const { data: bills, error } = await supabase
-          .from('bills')
-          .select(`
-            id,
-            amount,
-            is_paid,
-            payment_method,
-            patient_id,
-            created_at,
-            patients!inner(first_name, last_name, email),
-            bill_items(
-              id,
-              quantity,
-              unit_price,
-              total_price,
-              service_id,
-              medication_id,
-              services(name),
-              medications(name)
-            )
-          `)
-          .gte('created_at', `${today}T00:00:00`)
-          .lt('created_at', `${today}T23:59:59`)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        const formattedData: CompletedAppointmentBill[] = bills?.map(bill => {
-          const billItems: BillItem[] = bill.bill_items?.map(item => ({
-            id: item.id,
-            service_name: item.services?.name || item.medications?.name || 'Unknown Item',
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            total_price: item.total_price,
-          })) || [];
-          
-          const calculatedTotal = billItems.reduce((sum, item) => sum + item.total_price, 0);
-          
-          return {
-            appointment_id: bill.id,
-            patient_name: `${bill.patients.first_name} ${bill.patients.last_name}`,
-            appointment_time: new Date(bill.created_at).toLocaleTimeString('en-US', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            }),
-            bill_amount: calculatedTotal || bill.amount || 0,
-            is_paid: bill.is_paid || false,
-            bill_id: bill.id,
-            payment_method: bill.payment_method,
-            bill_items: billItems,
-            patient_email: bill.patients.email,
-          };
-        }) || [];
-
-        setCompletedAppointments(formattedData);
-      } catch (error) {
-        console.error('Error fetching completed appointments:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCompletedAppointments();
+      setBills(data || []);
+    } catch (error) {
+      console.error('Error fetching bills:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load bills. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const totalBillAmount = completedAppointments.reduce((sum, apt) => sum + apt.bill_amount, 0);
+  const generateBillPDF = (bill: Bill) => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text('Medical Bill', 20, 30);
+    
+    // Patient and bill info
+    doc.setFontSize(12);
+    doc.text(`Patient: ${bill.patients.first_name} ${bill.patients.last_name}`, 20, 50);
+    doc.text(`Bill ID: ${bill.id}`, 20, 60);
+    doc.text(`Date: ${format(new Date(bill.created_at), 'PPP')}`, 20, 70);
+    doc.text(`Description: ${bill.description}`, 20, 80);
+    
+    // Bill items table
+    const tableData = bill.bill_items.map(item => [
+      item.services?.name || 'N/A',
+      item.quantity.toString(),
+      `₦${item.unit_price.toLocaleString()}`,
+      `₦${item.total_price.toLocaleString()}`
+    ]);
 
-  const handleBillClick = (appointment: CompletedAppointmentBill) => {
-    setSelectedBill(appointment);
-    setDialogOpen(true);
+    autoTable(doc, {
+      head: [['Service', 'Quantity', 'Unit Price', 'Total']],
+      body: tableData,
+      startY: 90,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [41, 128, 185] }
+    });
+
+    // Totals
+    const finalY = (doc as any).lastAutoTable.finalY || 90;
+    
+    if (bill.discount_amount > 0) {
+      doc.text(`Subtotal: ₦${(bill.amount + bill.discount_amount).toLocaleString()}`, 20, finalY + 15);
+      doc.text(`Discount: -₦${bill.discount_amount.toLocaleString()}`, 20, finalY + 25);
+      if (bill.discount_reason) {
+        doc.text(`Discount Reason: ${bill.discount_reason}`, 20, finalY + 35);
+      }
+    }
+    
+    doc.setFontSize(14);
+    doc.text(`Total: ₦${bill.amount.toLocaleString()}`, 20, finalY + (bill.discount_amount > 0 ? 50 : 20));
+
+    // Save PDF
+    doc.save(`bill-${bill.id}.pdf`);
   };
 
-
-  return (
-    <>
-      <Card className="h-fit border-l-8 border-l-[#65A30D]">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base font-medium">
-            Today's Completed Appointments & Bills Generated
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {completedAppointments.length} completed
-            </span>
+  const BillDetailsDialog = ({ bill }: { bill: Bill }) => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Eye className="h-4 w-4 mr-2" />
+          View Details
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Bill Details</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <p><strong>Patient:</strong> {bill.patients.first_name} {bill.patients.last_name}</p>
+            <p><strong>Bill ID:</strong> {bill.id}</p>
+            <p><strong>Date:</strong> {format(new Date(bill.created_at), 'PPP')}</p>
+            <p><strong>Description:</strong> {bill.description}</p>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {loading ? (
-            <div className="text-sm text-muted-foreground">Loading...</div>
-          ) : completedAppointments.length === 0 ? (
-            <div className="text-sm text-muted-foreground">No completed appointments today</div>
-          ) : (
-            <>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {completedAppointments.map((apt) => (
-                  <div 
-                    key={apt.appointment_id} 
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => handleBillClick(apt)}
-                  >
-                    <div className="space-y-1">
-                      <p className="font-medium text-sm">{apt.patient_name}</p>
-                      <p className="text-xs text-muted-foreground">{apt.appointment_time}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-medium">₦{apt.bill_amount.toLocaleString()}</span>
-                      </div>
-                      <Badge variant={apt.is_paid ? "default" : "secondary"} className="text-xs">
-                        {apt.is_paid ? "Paid" : "Pending"}
-                      </Badge>
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
+          
+          <div>
+            <h4 className="font-semibold mb-2">Bill Items</h4>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Service</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Unit Price</TableHead>
+                  <TableHead>Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bill.bill_items.map(item => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.services?.name || 'N/A'}</TableCell>
+                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell>₦{item.unit_price.toLocaleString()}</TableCell>
+                    <TableCell>₦{item.total_price.toLocaleString()}</TableCell>
+                  </TableRow>
                 ))}
-              </div>
-              
-              <div className="border-t pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Total Bills Generated:</span>
-                  <span className="text-sm font-bold">₦{totalBillAmount.toLocaleString()}</span>
+              </TableBody>
+            </Table>
+          </div>
+          
+          <div className="border-t pt-4">
+            {bill.discount_amount > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span>₦{(bill.amount + bill.discount_amount).toLocaleString()}</span>
                 </div>
-              </div>
-            </>
-          )}
+                <div className="flex justify-between">
+                  <span>Discount:</span>
+                  <span>-₦{bill.discount_amount.toLocaleString()}</span>
+                </div>
+                {bill.discount_reason && (
+                  <div className="flex justify-between">
+                    <span>Discount Reason:</span>
+                    <span>{bill.discount_reason}</span>
+                  </div>
+                )}
+              </>
+            )}
+            <div className="flex justify-between font-semibold text-lg border-t pt-2">
+              <span>Total:</span>
+              <span>₦{bill.amount.toLocaleString()}</span>
+            </div>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button onClick={() => generateBillPDF(bill)}>
+              <FileText className="h-4 w-4 mr-2" />
+              Download PDF
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Receipt className="h-5 w-5" />
+            Completed Appointments & Bills
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">Loading bills...</div>
         </CardContent>
       </Card>
+    );
+  }
 
-      {selectedBill && (
-        <BillDetailsDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          patientName={selectedBill.patient_name}
-          appointmentTime={selectedBill.appointment_time}
-          billItems={selectedBill.bill_items}
-          totalAmount={selectedBill.bill_amount}
-          isPaid={selectedBill.is_paid}
-          paymentMethod={selectedBill.payment_method}
-          billId={selectedBill.bill_id}
-          patientEmail={selectedBill.patient_email}
-        />
-      )}
-
-    </>
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Receipt className="h-5 w-5" />
+          Completed Appointments & Bills
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {bills.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No completed appointments with bills found.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Patient</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bills.map(bill => (
+                <TableRow key={bill.id}>
+                  <TableCell className="font-medium">
+                    {bill.patients.first_name} {bill.patients.last_name}
+                  </TableCell>
+                  <TableCell>{bill.description}</TableCell>
+                  <TableCell>{format(new Date(bill.created_at), 'PPP')}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      ₦{bill.amount.toLocaleString()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <BillDetailsDialog bill={bill} />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => generateBillPDF(bill)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        PDF
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
   );
 };
-
-export default CompletedAppointmentsBills;

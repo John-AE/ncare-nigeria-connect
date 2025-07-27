@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Plus, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { Service } from "@/types/recordVisit";
+import { ServiceManagementDialog } from "./ServiceManagementDialog";
 
 interface ServiceItem {
   id: string;
@@ -58,6 +60,7 @@ export const EnhancedServiceSelector = ({
         .from('services')
         .select('*')
         .eq('is_active', true)
+        .eq('hospital_id', profile?.hospital_id)
         .order('category', { ascending: true })
         .order('name', { ascending: true });
 
@@ -163,7 +166,10 @@ export const EnhancedServiceSelector = ({
       {/* Service Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Available Services</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            Available Services
+            <ServiceManagementDialog onServiceUpdated={fetchServices} />
+          </CardTitle>
           <div className="space-y-2">
             <div className="flex gap-2">
               <div className="relative flex-1">
