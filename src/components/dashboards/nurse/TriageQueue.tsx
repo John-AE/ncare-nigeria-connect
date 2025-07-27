@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, AlertTriangle, Activity, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useDashboard } from "@/contexts/DashboardContext";
 
 interface Patient {
   id: string;
@@ -108,13 +107,14 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { triggers } = useDashboard();
 
   useEffect(() => {
     fetchQueuePatients();
     
-    // Register refresh function
-    triggers.current.refreshTriageQueue = fetchQueuePatients;
+    // Set up refresh trigger if provided
+    if (refreshTrigger) {
+      refreshTrigger.current = fetchQueuePatients;
+    }
     
     // Simple real-time listener
     const channel = supabase
@@ -166,7 +166,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [refreshTrigger]);
 
   const fetchQueuePatients = async () => {
     try {
