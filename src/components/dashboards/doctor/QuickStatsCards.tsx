@@ -15,21 +15,21 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
       textColor: "text-primary"
     },
     { 
-      label: "Scheduled", 
+      label: "Scheduled Today", 
       value: stats.scheduledAppointments.toString(), 
       borderColor: "border-l-amber-500",
       bgColor: "bg-amber-50",
       textColor: "text-amber-900"
     },
     { 
-      label: "Arrived", 
+      label: "Arrived Today", 
       value: stats.arrivedPatients.toString(), 
       borderColor: "border-l-orange-500",
       bgColor: "bg-orange-50",
       textColor: "text-orange-900"
     },
     { 
-      label: "Completed", 
+      label: "Completed Today", 
       value: stats.completedAppointments.toString(), 
       borderColor: "border-l-emerald-500",
       bgColor: "bg-emerald-50",
