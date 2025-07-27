@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,30 +80,100 @@ const getPriorityBadge = (score: number) => {
 
 export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = false, refreshTrigger }: TriageQueueProps) => {
   const [queuePatients, setQueuePatients] = useState<PatientWithVitals[]>([]);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
-  
-  // Debouncing refs
-  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastRefreshRef = useRef<number>(0);
-  const DEBOUNCE_DELAY = 1000; // 1 second debounce
 
-  const fetchQueuePatients = useCallback(async (showLoading = false) => {
+  useEffect(() => {
+    fetchQueuePatients();
+    
+    // Simple real-time listener like your Scheduled Patients Queue
+    const channel = supabase
+      .channel('triage-queue-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'vital_signs'
+        },
+        () => {
+          console.log('New vital signs recorded');
+          setTimeout(() => {
+            fetchQueuePatients();
+          }, 500);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'vital_signs'
+        },
+        () => {
+          console.log('Vital signs updated');
+          setTimeout(() => {
+            fetchQueuePatients();
+          }, 500);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'visits'
+        },
+        () => {
+          console.log('New visit recorded');
+          setTimeout(() => {
+            fetchQueuePatients();
+          }, 500);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Expose refresh function via refreshTrigger ref
+  useEffect(() => {
+    if (refreshTrigger) {
+      refreshTrigger.current = fetchQueuePatients;
+    }
+  }, [refreshTrigger]);
+
+  const fetchQueuePatients = async () => {
     try {
-      if (showLoading) {
-        setIsRefreshing(true);
-      }
-      
+      setLoading(true);
       const today = new Date();
       const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
       const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
       
-      // First, get vital signs recorded today with explicit type assertion
+      // Get vital signs recorded today with patient data
       const { data: vitalSignsData, error: vitalSignsError } = await supabase
         .from('vital_signs')
-        .select('id, patient_id, body_temperature, heart_rate, blood_pressure_systolic, blood_pressure_diastolic, oxygen_saturation, recorded_at, complaints')
+        .select(`
+          id,
+          patient_id,
+          body_temperature,
+          heart_rate,
+          blood_pressure_systolic,
+          blood_pressure_diastolic,
+          oxygen_saturation,
+          recorded_at,
+          complaints,
+          patients (
+            id,
+            first_name,
+            last_name,
+            gender,
+            date_of_birth
+          )
+        `)
         .gte('recorded_at', startOfDay)
         .lt('recorded_at', endOfDay)
         .order('recorded_at', { ascending: true });
@@ -118,92 +188,65 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
         return;
       }
 
-      // Get patient data for these vital signs with explicit select
+      // Get patient IDs who already have completed visits today
       const patientIds = vitalSignsData.map(vs => vs.patient_id).filter(Boolean);
       
-      const { data: patientsData, error: patientsError } = await supabase
-        .from('patients')
-        .select('id, first_name, last_name, gender, date_of_birth')
-        .in('id', patientIds);
-
-      if (patientsError) {
-        console.error('Patients error:', patientsError);
-        throw patientsError;
-      }
-
-      // Get appointment data for these patients with explicit select
-      let appointmentsData: any[] = [];
-      if (patientIds.length > 0) {
-        const { data: apptData, error: apptError } = await supabase
-          .from('appointments')
-          .select('id, patient_id, start_time, scheduled_date')
-          .in('patient_id', patientIds)
-          .eq('scheduled_date', today.toISOString().split('T')[0])
-          .neq('status', 'completed');
-        
-        if (apptError) {
-          console.warn('Error fetching appointments:', apptError);
-        }
-        appointmentsData = apptData || [];
-      }
-
-      // Get visit records for today to exclude patients who already have completed visits
-      let completedVisitPatientIds: string[] = [];
-      if (patientIds.length > 0) {
-        const { data: visitsData, error: visitsError } = await supabase
-          .from('visits')
-          .select('patient_id')
-          .in('patient_id', patientIds)
-          .gte('created_at', startOfDay)
-          .lt('created_at', endOfDay);
-        
-        if (visitsError) {
-          console.warn('Error fetching visits:', visitsError);
-        } else if (visitsData) {
-          completedVisitPatientIds = visitsData.map(v => v.patient_id);
-        }
-      }
-
-      // Process and sort patients with better error handling
-      const processedPatients: PatientWithVitals[] = [];
+      const { data: visitsData, error: visitsError } = await supabase
+        .from('visits')
+        .select('patient_id')
+        .in('patient_id', patientIds)
+        .gte('created_at', startOfDay)
+        .lt('created_at', endOfDay);
       
-      for (const vitalRecord of vitalSignsData) {
-        // Skip patients who already have completed visits today
-        if (completedVisitPatientIds.includes(vitalRecord.patient_id)) {
-          continue;
-        }
-
-        const patient = patientsData?.find(p => p.id === vitalRecord.patient_id);
-        if (!patient) {
-          console.warn(`Patient not found for vital record: ${vitalRecord.id}`);
-          continue;
-        }
-        
-        const appointment = appointmentsData.find(apt => apt.patient_id === vitalRecord.patient_id) || null;
-        
-        const vitals = {
-          body_temperature: vitalRecord.body_temperature,
-          heart_rate: vitalRecord.heart_rate,
-          blood_pressure_systolic: vitalRecord.blood_pressure_systolic,
-          blood_pressure_diastolic: vitalRecord.blood_pressure_diastolic,
-          oxygen_saturation: vitalRecord.oxygen_saturation,
-          recorded_at: vitalRecord.recorded_at,
-          complaints: vitalRecord.complaints
-        };
-        
-        const patientWithVitals: PatientWithVitals = {
-          id: patient.id,
-          first_name: patient.first_name,
-          last_name: patient.last_name,
-          gender: patient.gender,
-          date_of_birth: patient.date_of_birth,
-          vital_signs: vitals,
-          appointments: appointment,
-          priority_score: calculatePriorityScore(vitals)
-        };
-        
-        processedPatients.push(patientWithVitals);
+      if (visitsError) {
+        console.error('Error fetching visits:', visitsError);
       }
+
+      // Get appointments for today
+      const { data: appointmentsData, error: appointmentsError } = await supabase
+        .from('appointments')
+        .select('id, patient_id, start_time, scheduled_date')
+        .in('patient_id', patientIds)
+        .eq('scheduled_date', today.toISOString().split('T')[0])
+        .neq('status', 'completed');
+      
+      if (appointmentsError) {
+        console.error('Error fetching appointments:', appointmentsError);
+      }
+
+      // Filter out patients who already have completed visits today
+      const completedVisitPatientIds = new Set(visitsData?.map(v => v.patient_id) || []);
+      const patientsWithoutVisits = vitalSignsData.filter(
+        vs => !completedVisitPatientIds.has(vs.patient_id)
+      );
+
+      // Process and sort patients
+      const processedPatients: PatientWithVitals[] = patientsWithoutVisits
+        .filter(vitalRecord => vitalRecord.patients) // Only include records with patient data
+        .map(vitalRecord => {
+          const appointment = appointmentsData?.find(apt => apt.patient_id === vitalRecord.patient_id) || null;
+          
+          const vitals = {
+            body_temperature: vitalRecord.body_temperature,
+            heart_rate: vitalRecord.heart_rate,
+            blood_pressure_systolic: vitalRecord.blood_pressure_systolic,
+            blood_pressure_diastolic: vitalRecord.blood_pressure_diastolic,
+            oxygen_saturation: vitalRecord.oxygen_saturation,
+            recorded_at: vitalRecord.recorded_at,
+            complaints: vitalRecord.complaints
+          };
+          
+          return {
+            id: vitalRecord.patients.id,
+            first_name: vitalRecord.patients.first_name,
+            last_name: vitalRecord.patients.last_name,
+            gender: vitalRecord.patients.gender,
+            date_of_birth: vitalRecord.patients.date_of_birth,
+            vital_signs: vitals,
+            appointments: appointment,
+            priority_score: calculatePriorityScore(vitals)
+          };
+        });
 
       // Sort by: 1) Priority score (desc), 2) Vitals recorded time (asc), 3) Appointment time (asc)
       processedPatients.sort((a, b) => {
@@ -225,128 +268,16 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
       setQueuePatients(processedPatients);
     } catch (error) {
       console.error('Error fetching queue patients:', error);
-      // Only show toast for initial load errors, not refresh errors
-      if (initialLoading) {
-        toast({
-          title: "Error",
-          description: "Failed to load triage queue. Please try again.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: "Failed to load triage queue. Please try again.",
+        variant: "destructive",
+      });
       setQueuePatients([]);
     } finally {
-      setInitialLoading(false);
-      setIsRefreshing(false);
+      setLoading(false);
     }
-  }, [initialLoading, toast]);
-
-  // Immediate refresh function for vital signs (no debounce for new vitals)
-  const immediateRefresh = useCallback(() => {
-    console.log('Immediate refresh triggered for new vital signs');
-    fetchQueuePatients(false);
-  }, [fetchQueuePatients]);
-
-  // Debounced refresh function for other updates
-  const debouncedRefresh = useCallback(() => {
-    const now = Date.now();
-    
-    // Clear any existing timeout
-    if (refreshTimeoutRef.current) {
-      clearTimeout(refreshTimeoutRef.current);
-    }
-    
-    // If last refresh was recent, debounce it
-    if (now - lastRefreshRef.current < DEBOUNCE_DELAY) {
-      refreshTimeoutRef.current = setTimeout(() => {
-        lastRefreshRef.current = Date.now();
-        fetchQueuePatients(false);
-      }, DEBOUNCE_DELAY);
-    } else {
-      // Execute immediately if enough time has passed
-      lastRefreshRef.current = now;
-      fetchQueuePatients(false);
-    }
-  }, [fetchQueuePatients]);
-
-  // Expose refresh function via refreshTrigger ref
-  useEffect(() => {
-    if (refreshTrigger) {
-      refreshTrigger.current = () => fetchQueuePatients(true);
-    }
-  }, [fetchQueuePatients, refreshTrigger]);
-
-  useEffect(() => {
-    // Initial load
-    fetchQueuePatients(true);
-
-    // Create multiple channels for better reliability
-    const vitalSignsChannel = supabase
-      .channel('vital-signs-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'vital_signs'
-        },
-        (payload) => {
-          console.log('Vital signs change detected:', payload);
-          // Use immediate refresh for vital signs changes
-          immediateRefresh();
-        }
-      )
-      .subscribe();
-
-    const visitsChannel = supabase
-      .channel('visits-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'visits'
-        },
-        (payload) => {
-          console.log('New visit recorded:', payload);
-          // Immediate refresh to remove patients from queue when visits are created
-          immediateRefresh();
-        }
-      )
-      .subscribe();
-
-    const appointmentsChannel = supabase
-      .channel('appointments-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'appointments'
-        },
-        (payload) => {
-          console.log('Appointment change:', payload);
-          debouncedRefresh();
-        }
-      )
-      .subscribe();
-
-    // Fallback polling every 30 seconds to ensure we don't miss updates
-    const fallbackInterval = setInterval(() => {
-      console.log('Fallback refresh triggered');
-      fetchQueuePatients(false);
-    }, 30000);
-
-    return () => {
-      // Clean up timeout, channels, and interval
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-      clearInterval(fallbackInterval);
-      supabase.removeChannel(vitalSignsChannel);
-      supabase.removeChannel(visitsChannel);
-      supabase.removeChannel(appointmentsChannel);
-    };
-  }, [fetchQueuePatients, debouncedRefresh, immediateRefresh]);
+  };
 
   const calculateAge = (dateOfBirth: string) => {
     const today = new Date();
@@ -361,8 +292,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
     return age;
   };
 
-  // Only show loading spinner on initial load
-  if (initialLoading) {
+  if (loading) {
     return (
       <Card className="border-l-8 border-l-[#EF4444]">
         <CardHeader>
@@ -388,7 +318,6 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
           Triage Assessment / Queue
           <Badge variant="outline" className="ml-auto">
             {queuePatients.length} patients
-            {isRefreshing && <span className="ml-1 text-xs opacity-60">•</span>}
           </Badge>
         </CardTitle>
       </CardHeader>
