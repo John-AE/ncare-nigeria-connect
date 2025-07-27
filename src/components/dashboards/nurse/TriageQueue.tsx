@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, AlertTriangle, Activity, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
 
 interface PatientWithVitals {
   id: string;
@@ -81,14 +80,22 @@ const getPriorityBadge = (score: number) => {
 
 export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = false, refreshTrigger }: TriageQueueProps) => {
   const [queuePatients, setQueuePatients] = useState<PatientWithVitals[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   
+  // Debouncing refs
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastRefreshRef = useRef<number>(0);
+  const DEBOUNCE_DELAY = 1000; // 1 second debounce
 
-  const fetchQueuePatients = async () => {
+  const fetchQueuePatients = useCallback(async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setIsRefreshing(true);
+      }
+      
       const today = new Date();
       const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
       const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
@@ -218,33 +225,127 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
       setQueuePatients(processedPatients);
     } catch (error) {
       console.error('Error fetching queue patients:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load triage queue. Please try again.",
-        variant: "destructive",
-      });
+      // Only show toast for initial load errors, not refresh errors
+      if (initialLoading) {
+        toast({
+          title: "Error",
+          description: "Failed to load triage queue. Please try again.",
+          variant: "destructive",
+        });
+      }
       setQueuePatients([]);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, [initialLoading, toast]);
+
+  // Debounced refresh function
+  const debouncedRefresh = useCallback(() => {
+    const now = Date.now();
+    
+    // Clear any existing timeout
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    
+    // If last refresh was recent, debounce it
+    if (now - lastRefreshRef.current < DEBOUNCE_DELAY) {
+      refreshTimeoutRef.current = setTimeout(() => {
+        lastRefreshRef.current = Date.now();
+        fetchQueuePatients(false);
+      }, DEBOUNCE_DELAY);
+    } else {
+      // Execute immediately if enough time has passed
+      lastRefreshRef.current = now;
+      fetchQueuePatients(false);
+    }
+  }, [fetchQueuePatients]);
 
   // Expose refresh function via refreshTrigger ref
   useEffect(() => {
-    // Register refresh function with local ref
     if (refreshTrigger) {
-      refreshTrigger.current = fetchQueuePatients;
+      refreshTrigger.current = () => fetchQueuePatients(true);
     }
-  }, [refreshTrigger]);
+  }, [fetchQueuePatients, refreshTrigger]);
 
   useEffect(() => {
-    fetchQueuePatients();
+    // Initial load
+    fetchQueuePatients(true);
 
-    // Poll every 1 second for more responsive updates
-    const interval = setInterval(fetchQueuePatients, 1000);
+    // Enhanced real-time subscriptions with debouncing
+    const channel = supabase
+      .channel('triage-queue-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'vital_signs'
+        },
+        (payload) => {
+          console.log('New vital signs recorded:', payload);
+          debouncedRefresh();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'vital_signs'
+        },
+        (payload) => {
+          console.log('Vital signs updated:', payload);
+          debouncedRefresh();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'visits'
+        },
+        (payload) => {
+          console.log('New visit recorded:', payload);
+          debouncedRefresh();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'appointments'
+        },
+        (payload) => {
+          console.log('New appointment scheduled:', payload);
+          debouncedRefresh();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'appointments'
+        },
+        (payload) => {
+          console.log('Appointment updated:', payload);
+          debouncedRefresh();
+        }
+      )
+      .subscribe();
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      // Clean up timeout and channel
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+      supabase.removeChannel(channel);
+    };
+  }, [fetchQueuePatients, debouncedRefresh]);
 
   const calculateAge = (dateOfBirth: string) => {
     const today = new Date();
@@ -259,7 +360,8 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
     return age;
   };
 
-  if (loading) {
+  // Only show loading spinner on initial load
+  if (initialLoading) {
     return (
       <Card className="border-l-8 border-l-[#EF4444]">
         <CardHeader>
@@ -285,6 +387,7 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
           Triage Assessment / Queue
           <Badge variant="outline" className="ml-auto">
             {queuePatients.length} patients
+            {isRefreshing && <span className="ml-1 text-xs opacity-60">•</span>}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -374,8 +477,6 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
                           if (patient.appointments?.id) {
                             navigate(`/record-visit/${patient.appointments.id}`);
                           } else {
-                            // For walk-in patients, we'll need to create a temporary appointment or handle differently
-                            // For now, we'll use the patient ID to navigate to a walk-in visit recording
                             navigate(`/record-visit/walk-in/${patient.id}`);
                           }
                         }}
