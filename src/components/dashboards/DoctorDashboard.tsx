@@ -7,7 +7,7 @@ import { QuickStatsCards } from "./doctor/QuickStatsCards";
 import { DateAppointments } from "./doctor/DateAppointments";
 import { TodaysSchedule } from "./doctor/TodaysSchedule";
 import { TriageQueue } from "./nurse/TriageQueue";
-import CompletedAppointmentsBills from "./doctor/CompletedAppointmentsBills";
+import { CompletedAppointmentsBills } from "./doctor/CompletedAppointmentsBills";
 import { StandaloneBillingCard } from "./doctor/StandaloneBillingCard";
 import { DashboardToggle } from "../DashboardToggle";
 import { PatientTimelineView } from "../PatientTimelineView";

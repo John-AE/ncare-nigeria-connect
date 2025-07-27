@@ -59,6 +59,7 @@ interface PatientWithVitals {
 interface TriageQueueProps {
   showRecordVisitButton?: boolean;
   showVitalSigns?: boolean;
+  refreshTrigger?: React.MutableRefObject<(() => void) | null>;
 }
 
 // Priority scoring function based on vital signs
@@ -102,7 +103,7 @@ const getPriorityBadge = (score: number) => {
   return <Badge variant="default" className="flex items-center gap-1"><Clock className="h-3 w-3" />Low</Badge>;
 };
 
-export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = false }: TriageQueueProps) => {
+export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = false, refreshTrigger }: TriageQueueProps) => {
   const [queuePatients, setQueuePatients] = useState<PatientWithVitals[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();

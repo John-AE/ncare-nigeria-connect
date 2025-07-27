@@ -56,14 +56,7 @@ export const ServicesManagementCard = ({
           </div>
           <div className="flex gap-2">
             <ServiceManagementDialog
-              showServiceDialog={showServiceDialog}
-              setShowServiceDialog={setShowServiceDialog}
-              newService={newService}
-              setNewService={setNewService}
-              editingService={editingService}
-              setEditingService={setEditingService}
-              services={services}
-              saveService={saveService}
+              onServiceUpdated={refetch}
             />
             <Button
               onClick={() => setShowPrescriptionDialog(true)}

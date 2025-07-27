@@ -19,6 +19,9 @@ interface BillItem {
     name: string;
     price: number;
   };
+  medications?: {
+    name: string;
+  };
   quantity: number;
   unit_price: number;
   total_price: number;
@@ -73,6 +76,9 @@ export const CompletedAppointmentsBills = () => {
               name,
               price
             ),
+            medications (
+              name
+            ),
             quantity,
             unit_price,
             total_price
@@ -115,7 +121,7 @@ export const CompletedAppointmentsBills = () => {
     
     // Bill items table
     const tableData = bill.bill_items.map(item => [
-      item.services?.name || 'N/A',
+      item.services?.name || item.medications?.name || 'N/A',
       item.quantity.toString(),
       `₦${item.unit_price.toLocaleString()}`,
       `₦${item.total_price.toLocaleString()}`
@@ -181,7 +187,7 @@ export const CompletedAppointmentsBills = () => {
               <TableBody>
                 {bill.bill_items.map(item => (
                   <TableRow key={item.id}>
-                    <TableCell>{item.services?.name || 'N/A'}</TableCell>
+                    <TableCell>{item.services?.name || item.medications?.name || 'N/A'}</TableCell>
                     <TableCell>{item.quantity}</TableCell>
                     <TableCell>₦{item.unit_price.toLocaleString()}</TableCell>
                     <TableCell>₦{item.total_price.toLocaleString()}</TableCell>
