@@ -31,16 +31,10 @@ export const ScheduledPatientsQueue = () => {
   useEffect(() => {
     fetchArrivedPatients();
     
-     
-      // Poll every 2 seconds instead of real-time listener
+    // Poll every 2 seconds instead of real-time listener
     const interval = setInterval(fetchArrivedPatients, 2000);
     
     return () => clearInterval(interval);
-  }, []);
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const fetchArrivedPatients = async () => {
