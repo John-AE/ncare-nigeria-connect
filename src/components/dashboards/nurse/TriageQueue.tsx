@@ -240,7 +240,13 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
     }
   }, [initialLoading, toast]);
 
-  // Debounced refresh function
+  // Immediate refresh function for vital signs (no debounce for new vitals)
+  const immediateRefresh = useCallback(() => {
+    console.log('Immediate refresh triggered for new vital signs');
+    fetchQueuePatients(false);
+  }, [fetchQueuePatients]);
+
+  // Debounced refresh function for other updates
   const debouncedRefresh = useCallback(() => {
     const now = Date.now();
     
@@ -273,33 +279,26 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
     // Initial load
     fetchQueuePatients(true);
 
-    // Enhanced real-time subscriptions with debouncing
-    const channel = supabase
-      .channel('triage-queue-updates')
+    // Create multiple channels for better reliability
+    const vitalSignsChannel = supabase
+      .channel('vital-signs-changes')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'vital_signs'
         },
         (payload) => {
-          console.log('New vital signs recorded:', payload);
-          debouncedRefresh();
+          console.log('Vital signs change detected:', payload);
+          // Use immediate refresh for vital signs changes
+          immediateRefresh();
         }
       )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'vital_signs'
-        },
-        (payload) => {
-          console.log('Vital signs updated:', payload);
-          debouncedRefresh();
-        }
-      )
+      .subscribe();
+
+    const visitsChannel = supabase
+      .channel('visits-changes')
       .on(
         'postgres_changes',
         {
@@ -309,43 +308,45 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
         },
         (payload) => {
           console.log('New visit recorded:', payload);
-          debouncedRefresh();
+          // Immediate refresh to remove patients from queue when visits are created
+          immediateRefresh();
         }
       )
+      .subscribe();
+
+    const appointmentsChannel = supabase
+      .channel('appointments-changes')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'appointments'
         },
         (payload) => {
-          console.log('New appointment scheduled:', payload);
-          debouncedRefresh();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'appointments'
-        },
-        (payload) => {
-          console.log('Appointment updated:', payload);
+          console.log('Appointment change:', payload);
           debouncedRefresh();
         }
       )
       .subscribe();
 
+    // Fallback polling every 30 seconds to ensure we don't miss updates
+    const fallbackInterval = setInterval(() => {
+      console.log('Fallback refresh triggered');
+      fetchQueuePatients(false);
+    }, 30000);
+
     return () => {
-      // Clean up timeout and channel
+      // Clean up timeout, channels, and interval
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
       }
-      supabase.removeChannel(channel);
+      clearInterval(fallbackInterval);
+      supabase.removeChannel(vitalSignsChannel);
+      supabase.removeChannel(visitsChannel);
+      supabase.removeChannel(appointmentsChannel);
     };
-  }, [fetchQueuePatients, debouncedRefresh]);
+  }, [fetchQueuePatients, debouncedRefresh, immediateRefresh]);
 
   const calculateAge = (dateOfBirth: string) => {
     const today = new Date();
