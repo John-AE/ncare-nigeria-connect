@@ -1,10 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { DashboardStats } from "@/hooks/useDoctorDashboardStats";
-
 interface QuickStatsCardsProps {
   stats: DashboardStats;
 }
-
 export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
   const quickStats = [
     { 
@@ -15,21 +13,21 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
       textColor: "text-primary"
     },
     { 
-      label: "Scheduled Today", 
+      label: "Scheduled", 
       value: stats.scheduledAppointments.toString(), 
       borderColor: "border-l-amber-500",
       bgColor: "bg-amber-50",
       textColor: "text-amber-900"
     },
     { 
-      label: "Arrived Today", 
+      label: "Arrived", 
       value: stats.arrivedPatients.toString(), 
       borderColor: "border-l-orange-500",
       bgColor: "bg-orange-50",
       textColor: "text-orange-900"
     },
     { 
-      label: "Completed Today", 
+      label: "Completed", 
       value: stats.completedAppointments.toString(), 
       borderColor: "border-l-emerald-500",
       bgColor: "bg-emerald-50",
@@ -57,7 +55,6 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
       textColor: "text-red-600"
     }
   ];
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
       {quickStats.map((stat, index) => (
