@@ -31,40 +31,12 @@ export const ScheduledPatientsQueue = () => {
   useEffect(() => {
     fetchArrivedPatients();
     
-    // Set up real-time listener for appointment and vital signs updates
-    // Replace lines 30-50 in your component with this:
-
-        const channel = supabase
-          .channel('arrived-patients-updates')
-          .on(
-            'postgres_changes',
-            {
-              event: 'UPDATE',
-              schema: 'public',
-              table: 'appointments'
-            },
-            () => {
-              // Add small delay to ensure database transaction is committed
-              console.log('Appointment updated:', payload); 
-              setTimeout(() => {
-                fetchArrivedPatients();
-              }, 500);
-            }
-          )
-          .on(
-            'postgres_changes',
-            {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'vital_signs'
-            },
-            () => {
-              setTimeout(() => {
-                fetchArrivedPatients();
-              }, 500);
-            }
-          )
-          .subscribe();
+     
+      // Poll every 2 seconds instead of real-time listener
+    const interval = setInterval(fetchArrivedPatients, 2000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
     return () => {
       supabase.removeChannel(channel);
