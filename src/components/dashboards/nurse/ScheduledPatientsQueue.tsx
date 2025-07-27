@@ -32,31 +32,38 @@ export const ScheduledPatientsQueue = () => {
     fetchArrivedPatients();
     
     // Set up real-time listener for appointment and vital signs updates
-    const channel = supabase
-      .channel('arrived-patients-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'appointments'
-        },
-        () => {
-          fetchArrivedPatients();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'vital_signs'
-        },
-        () => {
-          fetchArrivedPatients();
-        }
-      )
-      .subscribe();
+    // Replace lines 30-50 in your component with this:
+
+        const channel = supabase
+          .channel('arrived-patients-updates')
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'appointments'
+            },
+            () => {
+              // Add small delay to ensure database transaction is committed
+              setTimeout(() => {
+                fetchArrivedPatients();
+              }, 500);
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'vital_signs'
+            },
+            () => {
+              setTimeout(() => {
+                fetchArrivedPatients();
+              }, 500);
+            }
+          )
+          .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
