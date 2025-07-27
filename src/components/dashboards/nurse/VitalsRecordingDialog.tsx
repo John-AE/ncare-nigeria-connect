@@ -96,12 +96,10 @@ export const VitalsRecordingDialog = ({ isOpen, onClose, patient, onSuccess }: V
         complaints: "",
       });
       
-      // Wait 2 seconds then trigger refresh
-      setTimeout(() => {
+      // Trigger refresh immediately
         if (onSuccess) {
           onSuccess();
         }
-      }, 2000);
       
       onClose();
     } catch (error) {
