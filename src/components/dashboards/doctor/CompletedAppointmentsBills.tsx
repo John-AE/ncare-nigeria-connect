@@ -9,10 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
-import { Receipt, FileText, Eye } from "lucide-react";
+import { Receipt, FileText, Eye, Mail } from "lucide-react";
 import { format } from "date-fns";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import BillDetailsDialog from "./BillDetailsDialog";
 
 interface BillItem {
   id: string;
@@ -39,6 +40,7 @@ interface Bill {
   patients: {
     first_name: string;
     last_name: string;
+    email?: string;
   };
   bill_items: BillItem[];
 }
@@ -46,6 +48,8 @@ interface Bill {
 export const CompletedAppointmentsBills = () => {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [showBillDetails, setShowBillDetails] = useState(false);
   const { profile } = useAuth();
   const { toast } = useToast();
 
@@ -69,7 +73,8 @@ export const CompletedAppointmentsBills = () => {
           created_at,
           patients (
             first_name,
-            last_name
+            last_name,
+            email
           ),
           bill_items (
             id,
@@ -155,85 +160,23 @@ export const CompletedAppointmentsBills = () => {
     doc.save(`bill-${bill.id}.pdf`);
   };
 
-  const BillDetailsDialog = ({ bill }: { bill: Bill }) => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Eye className="h-4 w-4 mr-2" />
-          View Details
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Bill Details</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <p><strong>Patient:</strong> {bill.patients.first_name} {bill.patients.last_name}</p>
-            <p><strong>Bill ID:</strong> {bill.id}</p>
-            <p><strong>Date:</strong> {format(new Date(bill.created_at), 'PPP')}</p>
-            <p><strong>Description:</strong> {bill.description}</p>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-2">Bill Items</h4>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Service</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Unit Price</TableHead>
-                  <TableHead>Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bill.bill_items.map(item => (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.services?.name || item.medications?.name || 'N/A'}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>₦{item.unit_price.toLocaleString()}</TableCell>
-                    <TableCell>₦{item.total_price.toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          <div className="border-t pt-4">
-            {bill.discount_amount > 0 && (
-              <>
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>₦{(bill.amount + bill.discount_amount).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Discount:</span>
-                  <span>-₦{bill.discount_amount.toLocaleString()}</span>
-                </div>
-                {bill.discount_reason && (
-                  <div className="flex justify-between">
-                    <span>Discount Reason:</span>
-                    <span>{bill.discount_reason}</span>
-                  </div>
-                )}
-              </>
-            )}
-            <div className="flex justify-between font-semibold text-lg border-t pt-2">
-              <span>Total:</span>
-              <span>₦{bill.amount.toLocaleString()}</span>
-            </div>
-          </div>
-          
-          <div className="flex justify-end">
-            <Button onClick={() => generateBillPDF(bill)}>
-              <FileText className="h-4 w-4 mr-2" />
-              Download PDF
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+  const handleViewBillDetails = (bill: Bill) => {
+    setSelectedBill(bill);
+    setShowBillDetails(true);
+  };
+
+  const formatBillItemsForEmail = (billItems: BillItem[]) => {
+    return billItems.map(item => ({
+      id: item.id,
+      service_name: item.services?.name || item.medications?.name || 'N/A',
+      service_id: item.services ? item.services.name : null,
+      medication_id: item.medications ? item.medications.name : null,
+      medication_name: item.medications?.name || null,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      total_price: item.total_price
+    }));
+  };
 
   if (loading) {
     return (
@@ -291,7 +234,14 @@ export const CompletedAppointmentsBills = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <BillDetailsDialog bill={bill} />
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewBillDetails(bill)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -309,6 +259,20 @@ export const CompletedAppointmentsBills = () => {
           </ScrollArea>
         )}
       </CardContent>
+      
+      {selectedBill && (
+        <BillDetailsDialog
+          open={showBillDetails}
+          onOpenChange={setShowBillDetails}
+          patientName={`${selectedBill.patients.first_name} ${selectedBill.patients.last_name}`}
+          appointmentTime={format(new Date(selectedBill.created_at), 'PPP')}
+          billItems={formatBillItemsForEmail(selectedBill.bill_items)}
+          totalAmount={selectedBill.amount}
+          isPaid={false} // You can determine this based on your payment logic
+          billId={selectedBill.id}
+          patientEmail={selectedBill.patients.email}
+        />
+      )}
     </Card>
   );
 };
