@@ -45,6 +45,7 @@ export const ScheduledPatientsQueue = () => {
             },
             () => {
               // Add small delay to ensure database transaction is committed
+              console.log('Appointment updated:', payload); 
               setTimeout(() => {
                 fetchArrivedPatients();
               }, 500);
