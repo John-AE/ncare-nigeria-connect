@@ -55,7 +55,7 @@ const Layout = ({ children }: LayoutProps) => {
                 <Stethoscope className="h-4 w-4 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold" style={{ color: "#a3ff00", fontFamily: "Sansita, sans-serif" }}>NCare Nigeria</h1>
+                <h1 className="text-lg font-semibold" style={{ color: "#a3ff00", fontFamily: "Inter, sans-serif" }}>NCare Nigeria</h1>
 
                 <p
                   className="text-sm"
