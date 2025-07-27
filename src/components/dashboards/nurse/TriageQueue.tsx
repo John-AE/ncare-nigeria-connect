@@ -135,8 +135,8 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
       const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
       const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
       
-      // Use a single query with joins to get all data at once
-      const { data: vitalSignsWithData, error } = await supabase
+      // Get vital signs recorded today
+      const { data: vitalSignsData, error: vitalSignsError } = await supabase
         .from('vital_signs')
         .select(`
           id,
@@ -147,66 +147,71 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
           blood_pressure_diastolic,
           oxygen_saturation,
           recorded_at,
-          complaints,
-          patients!inner (
-            id,
-            first_name,
-            last_name,
-            gender,
-            date_of_birth
-          )
+          complaints
         `)
         .gte('recorded_at', startOfDay)
         .lt('recorded_at', endOfDay)
         .order('recorded_at', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching vital signs:', error);
-        throw error;
+      if (vitalSignsError) {
+        console.error('Vital signs error:', vitalSignsError);
+        throw vitalSignsError;
       }
 
-      if (!vitalSignsWithData || vitalSignsWithData.length === 0) {
+      if (!vitalSignsData || vitalSignsData.length === 0) {
         setQueuePatients([]);
         return;
       }
 
-      // Get patient IDs who already have completed visits today
-      const patientIds = vitalSignsWithData.map(vs => vs.patient_id);
-      
-      const [visitsResponse, appointmentsResponse] = await Promise.all([
-        supabase
-          .from('visits')
-          .select('patient_id')
-          .in('patient_id', patientIds)
-          .gte('created_at', startOfDay)
-          .lt('created_at', endOfDay),
-        
-        supabase
-          .from('appointments')
-          .select('id, patient_id, start_time, scheduled_date')
-          .in('patient_id', patientIds)
-          .eq('scheduled_date', today.toISOString().split('T')[0])
-          .neq('status', 'completed')
-      ]);
+      // Get patient details for the vital signs
+      const patientIds = vitalSignsData.map(vs => vs.patient_id);
+      const { data: patientsData, error: patientsError } = await supabase
+        .from('patients')
+        .select('id, first_name, last_name, gender, date_of_birth')
+        .in('id', patientIds);
 
-      if (visitsResponse.error) {
-        console.error('Error fetching visits:', visitsResponse.error);
+      if (patientsError) {
+        console.error('Patients error:', patientsError);
+        throw patientsError;
       }
 
-      if (appointmentsResponse.error) {
-        console.error('Error fetching appointments:', appointmentsResponse.error);
+      // Get patient IDs who already have completed visits today
+      const { data: visitsData, error: visitsError } = await supabase
+        .from('visits')
+        .select('patient_id')
+        .in('patient_id', patientIds)
+        .gte('created_at', startOfDay)
+        .lt('created_at', endOfDay);
+      
+      if (visitsError) {
+        console.error('Error fetching visits:', visitsError);
+      }
+
+      // Get appointments for today
+      const { data: appointmentsData, error: appointmentsError } = await supabase
+        .from('appointments')
+        .select('id, patient_id, start_time, scheduled_date')
+        .in('patient_id', patientIds)
+        .eq('scheduled_date', today.toISOString().split('T')[0])
+        .neq('status', 'completed');
+      
+      if (appointmentsError) {
+        console.error('Error fetching appointments:', appointmentsError);
       }
 
       // Filter out patients who already have completed visits today
-      const completedVisitPatientIds = new Set(visitsResponse.data?.map(v => v.patient_id) || []);
-      const patientsWithoutVisits = vitalSignsWithData.filter(
+      const completedVisitPatientIds = new Set(visitsData?.map(v => v.patient_id) || []);
+      const patientsWithoutVisits = vitalSignsData.filter(
         vs => !completedVisitPatientIds.has(vs.patient_id)
       );
 
       // Process and sort patients
       const processedPatients: PatientWithVitals[] = patientsWithoutVisits
         .map(vitalRecord => {
-          const appointment = appointmentsResponse.data?.find(apt => apt.patient_id === vitalRecord.patient_id) || null;
+          const patient = patientsData?.find(p => p.id === vitalRecord.patient_id);
+          if (!patient) return null;
+
+          const appointment = appointmentsData?.find(apt => apt.patient_id === vitalRecord.patient_id) || null;
           
           const vitals = {
             body_temperature: vitalRecord.body_temperature,
@@ -219,16 +224,17 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
           };
           
           return {
-            id: vitalRecord.patients.id,
-            first_name: vitalRecord.patients.first_name,
-            last_name: vitalRecord.patients.last_name,
-            gender: vitalRecord.patients.gender,
-            date_of_birth: vitalRecord.patients.date_of_birth,
+            id: patient.id,
+            first_name: patient.first_name,
+            last_name: patient.last_name,
+            gender: patient.gender,
+            date_of_birth: patient.date_of_birth,
             vital_signs: vitals,
             appointments: appointment,
             priority_score: calculatePriorityScore(vitals)
           };
-        });
+        })
+        .filter(Boolean) as PatientWithVitals[];
 
       // Sort by: 1) Priority score (desc), 2) Vitals recorded time (asc), 3) Appointment time (asc)
       processedPatients.sort((a, b) => {
