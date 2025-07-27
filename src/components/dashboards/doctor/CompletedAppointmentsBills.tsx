@@ -18,10 +18,10 @@ interface BillItem {
   services?: {
     name: string;
     price: number;
-  };
+  } | null;
   medications?: {
     name: string;
-  };
+  } | null;
   quantity: number;
   unit_price: number;
   total_price: number;

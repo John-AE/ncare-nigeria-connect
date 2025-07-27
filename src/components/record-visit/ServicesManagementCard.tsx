@@ -55,9 +55,7 @@ export const ServicesManagementCard = ({
             <CardDescription>Add medications and services for this visit</CardDescription>
           </div>
           <div className="flex gap-2">
-            <ServiceManagementDialog
-              onServiceUpdated={refetch}
-            />
+            <ServiceManagementDialog />
             <Button
               onClick={() => setShowPrescriptionDialog(true)}
               size="sm"

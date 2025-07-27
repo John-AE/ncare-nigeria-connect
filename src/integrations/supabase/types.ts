@@ -79,8 +79,9 @@ export type Database = {
           bill_id: string
           created_at: string
           id: string
+          medication_id: string | null
           quantity: number
-          service_id: string
+          service_id: string | null
           total_price: number
           unit_price: number
         }
@@ -88,8 +89,9 @@ export type Database = {
           bill_id: string
           created_at?: string
           id?: string
+          medication_id?: string | null
           quantity?: number
-          service_id: string
+          service_id?: string | null
           total_price: number
           unit_price: number
         }
@@ -97,8 +99,9 @@ export type Database = {
           bill_id?: string
           created_at?: string
           id?: string
+          medication_id?: string | null
           quantity?: number
-          service_id?: string
+          service_id?: string | null
           total_price?: number
           unit_price?: number
         }
@@ -108,6 +111,13 @@ export type Database = {
             columns: ["bill_id"]
             isOneToOne: false
             referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_items_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
             referencedColumns: ["id"]
           },
           {
