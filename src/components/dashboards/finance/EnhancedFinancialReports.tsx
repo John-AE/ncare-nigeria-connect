@@ -26,28 +26,25 @@ export const EnhancedFinancialReports = () => {
     try {
       const selectedDate = format(revenueDate, 'yyyy-MM-dd');
       
-      // Fetch revenue data for the selected date
-      const { data: payments, error: paymentsError } = await supabase
-        .from('payment_history')
+      // Fetch revenue data for the selected date using bills table
+      const { data: bills, error: billsError } = await supabase
+        .from('bills')
         .select(`
           id,
-          payment_amount,
-          payment_date,
+          amount,
+          amount_paid,
+          description,
+          created_at,
           payment_method,
-          notes,
-          bills!inner(
-            id,
-            amount,
-            description,
-            patients!inner(first_name, last_name)
-          )
+          patients!inner(first_name, last_name)
         `)
         .eq('hospital_id', profile.hospital_id)
-        .gte('payment_date', `${selectedDate}T00:00:00`)
-        .lte('payment_date', `${selectedDate}T23:59:59`)
-        .order('payment_date', { ascending: false });
+        .gte('created_at', `${selectedDate}T00:00:00`)
+        .lte('created_at', `${selectedDate}T23:59:59`)
+        .gt('amount_paid', 0)
+        .order('created_at', { ascending: false });
 
-      if (paymentsError) throw paymentsError;
+      if (billsError) throw billsError;
 
       // Generate PDF
       const doc = new jsPDF();
@@ -63,8 +60,8 @@ export const EnhancedFinancialReports = () => {
       doc.text(`Generated on: ${format(new Date(), 'MMMM dd, yyyy HH:mm')}`, 20, 45);
 
       // Summary
-      const totalRevenue = payments?.reduce((sum, payment) => sum + Number(payment.payment_amount), 0) || 0;
-      const totalTransactions = payments?.length || 0;
+      const totalRevenue = bills?.reduce((sum, bill) => sum + Number(bill.amount_paid), 0) || 0;
+      const totalTransactions = bills?.length || 0;
 
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
@@ -76,13 +73,13 @@ export const EnhancedFinancialReports = () => {
       doc.text(`Total Transactions: ${totalTransactions}`, 20, 90);
 
       // Payment details table
-      if (payments && payments.length > 0) {
-        const tableData = payments.map(payment => [
-          payment.bills.patients.first_name + ' ' + payment.bills.patients.last_name,
-          payment.bills.description || 'N/A',
-          `₦${Number(payment.payment_amount).toLocaleString()}`,
-          payment.payment_method || 'N/A',
-          format(new Date(payment.payment_date), 'HH:mm')
+      if (bills && bills.length > 0) {
+        const tableData = bills.map(bill => [
+          bill.patients.first_name + ' ' + bill.patients.last_name,
+          bill.description || 'N/A',
+          `₦${Number(bill.amount_paid).toLocaleString()}`,
+          bill.payment_method || 'N/A',
+          format(new Date(bill.created_at), 'HH:mm')
         ]);
 
         autoTable(doc, {

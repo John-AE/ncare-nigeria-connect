@@ -600,12 +600,13 @@ export const AdminDashboard = () => {
           <div className="space-y-4">
             {filteredUsers.map((user) => (
               <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${user.is_active ? 'bg-green-500' : 'bg-gray-400'}`} 
-                         title={user.is_active ? 'Online' : 'Offline'} />
-                    <h3 className="font-semibold">{user.username}</h3>
-                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded-full ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {user.is_active ? 'online' : 'offline'}
+                      </span>
+                      <h3 className="font-semibold">{user.username}</h3>
+                    </div>
                   <p className="text-sm text-muted-foreground">
                     {user.hospital?.name || 'No hospital assigned'}
                   </p>

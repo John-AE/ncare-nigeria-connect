@@ -13,8 +13,8 @@ export const QuickStatsCards = ({ stats }: QuickStatsCardsProps) => {
       textColor: "text-primary"
     },
     { 
-      label: "Scheduled", 
-      value: stats.scheduledAppointments.toString(), 
+      label: "Emails Sent This Month", 
+      value: stats.emailsSentThisMonth.toString(), 
       borderColor: "border-l-amber-500",
       bgColor: "bg-amber-50",
       textColor: "text-amber-900"

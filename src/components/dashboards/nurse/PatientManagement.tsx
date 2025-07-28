@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { PatientProfileDialog } from "@/components/PatientProfileDialog";
 
 interface PatientManagementProps {
   onRegisterPatient: () => void;
@@ -19,6 +20,7 @@ export const PatientManagement = ({
   const [patients, setPatients] = useState<any[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [showPatientProfile, setShowPatientProfile] = useState(false);
 
   // Fetch all patients for search
   useEffect(() => {
@@ -73,6 +75,12 @@ export const PatientManagement = ({
   const handlePatientSelect = (patient: any) => {
     setSelectedPatient(patient);
     onPatientSelect(patient);
+  };
+
+  const handleViewProfile = () => {
+    if (selectedPatient) {
+      setShowPatientProfile(true);
+    }
   };
 
   return (
@@ -134,12 +142,24 @@ export const PatientManagement = ({
                 >
                   Schedule Appointment
                 </Button>
-                <Button size="sm" variant="outline">Print History</Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={handleViewProfile}
+                >
+                  View Profile
+                </Button>
               </div>
             </div>
           )}
         </div>
       </CardContent>
+      
+      <PatientProfileDialog
+        patient={selectedPatient}
+        open={showPatientProfile}
+        onOpenChange={setShowPatientProfile}
+      />
     </Card>
   );
 };

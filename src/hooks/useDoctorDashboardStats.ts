@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface DashboardStats {
   totalAppointmentsToday: number;
-  scheduledAppointments: number;
+  emailsSentThisMonth: number;
   arrivedPatients: number;
   completedAppointments: number;
   totalPatients: number;
@@ -14,7 +14,7 @@ export interface DashboardStats {
 export const useDoctorDashboardStats = () => {
   const [stats, setStats] = useState<DashboardStats>({
     totalAppointmentsToday: 0,
-    scheduledAppointments: 0,
+    emailsSentThisMonth: 0,
     arrivedPatients: 0,
     completedAppointments: 0,
     totalPatients: 0,
@@ -45,10 +45,23 @@ export const useDoctorDashboardStats = () => {
 
         const appointmentCounts = {
           total: appointmentsData?.length || 0,
-          scheduled: appointmentsData?.filter(apt => apt.status === 'scheduled').length || 0,
           arrived: appointmentsData?.filter(apt => apt.status === 'arrived').length || 0,
           completed: appointmentsData?.filter(apt => apt.status === 'completed').length || 0,
         };
+
+        // Get emails sent this month (count from bills with email tracking)
+        const currentMonth = new Date();
+        const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+        
+        // For now, we'll use a simple count based on bills that have been created
+        // In the future, we can add an email_logs table to track actual emails
+        const { count: emailsCount } = await supabase
+          .from('bills')
+          .select('*', { count: 'exact', head: true })
+          .eq('hospital_id', hospitalId)
+          .gte('created_at', startOfMonth.toISOString())
+          .lte('created_at', endOfMonth.toISOString());
         
         // Get total patients count (filtered by hospital)
         const { count: patientsCount } = await supabase
@@ -74,7 +87,7 @@ export const useDoctorDashboardStats = () => {
 
         setStats({
           totalAppointmentsToday: appointmentCounts.total,
-          scheduledAppointments: appointmentCounts.scheduled,
+          emailsSentThisMonth: emailsCount || 0,
           arrivedPatients: appointmentCounts.arrived,
           completedAppointments: appointmentCounts.completed,
           totalPatients: patientsCount || 0,

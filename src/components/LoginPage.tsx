@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, Lock, Stethoscope } from "lucide-react";
+import { Mail, Lock, Stethoscope, ChevronDown, FileText, MessageSquare } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -120,6 +121,30 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 animate-fade-in">
+      <div className="absolute top-4 right-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              App Testers, Click Here
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
+            <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+              <FileText className="h-4 w-4" />
+              Docs
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => window.open('https://tally.so/r/3j8AoY', '_blank')}
+            >
+              <MessageSquare className="h-4 w-4" />
+              Feedback Form
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      
       <Card className="w-full max-w-md shadow-xl rounded-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary flex items-center justify-center">

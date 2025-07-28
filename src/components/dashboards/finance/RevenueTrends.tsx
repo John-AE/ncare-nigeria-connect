@@ -34,10 +34,19 @@ export const RevenueTrends = () => {
   const fetchRevenueData = async () => {
     setLoading(true);
     try {
-      const daysAgo = parseInt(timePeriod);
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - daysAgo);
-      const startDateString = startDate.toISOString().split('T')[0];
+      let startDateString: string;
+      let daysAgo: number;
+      
+      if (timePeriod === "max") {
+        // Get all data from the beginning
+        startDateString = "2020-01-01"; // Start from a very early date
+        daysAgo = Math.ceil((new Date().getTime() - new Date("2020-01-01").getTime()) / (1000 * 60 * 60 * 24));
+      } else {
+        daysAgo = parseInt(timePeriod);
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - daysAgo);
+        startDateString = startDate.toISOString().split('T')[0];
+      }
 
       // Fetch daily revenue data
       const { data: billsData, error } = await supabase
@@ -173,6 +182,7 @@ export const RevenueTrends = () => {
                   <SelectItem value="7">7 Days</SelectItem>
                   <SelectItem value="30">30 Days</SelectItem>
                   <SelectItem value="90">90 Days</SelectItem>
+                  <SelectItem value="max">Max</SelectItem>
                 </SelectContent>
               </Select>
             </div>
