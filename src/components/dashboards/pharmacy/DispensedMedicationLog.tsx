@@ -20,23 +20,47 @@ interface DispensedMedication {
   notes?: string;
 }
 
-export const DispensedMedicationLog = () => {
+interface DispensedMedicationLogProps {
+  refreshTrigger?: React.MutableRefObject<(() => void) | null>;
+}
+
+export const DispensedMedicationLog = ({ refreshTrigger }: DispensedMedicationLogProps) => {
   const [dispensedMedications, setDispensedMedications] = useState<DispensedMedication[]>([]);
   const [filteredMedications, setFilteredMedications] = useState<DispensedMedication[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const { profile } = useAuth();
 
   useEffect(() => {
-    fetchDispensedMedications();
-  }, [profile]);
+    if (profile?.hospital_id) {
+      fetchDispensedMedications();
+      
+      // Set up refresh trigger if provided
+      if (refreshTrigger) {
+        refreshTrigger.current = fetchDispensedMedications;
+      }
+      
+      // Poll every 3 seconds for new dispensed medications
+      const interval = setInterval(() => {
+        // Don't show loading state on subsequent fetches
+        fetchDispensedMedications(false);
+      }, 3000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [profile?.hospital_id, refreshTrigger]);
 
   useEffect(() => {
     filterMedications();
   }, [dispensedMedications, searchTerm]);
 
-  const fetchDispensedMedications = async () => {
+  const fetchDispensedMedications = async (showLoading = true) => {
     try {
+      // Only show loading state on initial load
+      if (showLoading && initialLoading) {
+        setInitialLoading(true);
+      }
+
       const { data, error } = await supabase
         .from('medication_dispensing')
         .select(`
@@ -70,7 +94,10 @@ export const DispensedMedicationLog = () => {
     } catch (error) {
       console.error('Error fetching dispensed medications:', error);
     } finally {
-      setLoading(false);
+      // Only set initial loading to false once
+      if (initialLoading) {
+        setInitialLoading(false);
+      }
     }
   };
 
@@ -99,12 +126,32 @@ export const DispensedMedicationLog = () => {
     });
   };
 
+  // Only show loading state on initial load
+  if (initialLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Dispensed Medication Log
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4">Loading dispensed medications...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="h-5 w-5" />
           Dispensed Medication Log
+          <Badge variant="outline" className="ml-auto">
+            {dispensedMedications.length} recent
+          </Badge>
         </CardTitle>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -117,9 +164,7 @@ export const DispensedMedicationLog = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <div className="text-center py-4">Loading dispensed medications...</div>
-        ) : filteredMedications.length === 0 ? (
+        {filteredMedications.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             {searchTerm ? 'No medications found for this search' : 'No medications dispensed recently'}
           </div>
@@ -129,7 +174,7 @@ export const DispensedMedicationLog = () => {
               {filteredMedications.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50"
+                  className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-all duration-200 hover:scale-[1.01] hover:shadow-sm"
                 >
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2">
