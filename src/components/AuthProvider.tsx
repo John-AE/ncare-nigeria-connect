@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [presenceChannel, setPresenceChannel] = useState<any>(null);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -51,6 +52,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(null);
     }
   };
+
+  // Setup presence tracking for logged in users
+  useEffect(() => {
+    if (user && profile) {
+      const channel = supabase.channel('user_presence', {
+        config: {
+          presence: {
+            key: user.id,
+          },
+        },
+      });
+
+      channel.on('presence', { event: 'sync' }, () => {
+        // Presence synced
+      });
+
+      channel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            user_id: user.id,
+            username: profile.username,
+            role: profile.role,
+            hospital_id: profile.hospital_id,
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+
+      setPresenceChannel(channel);
+
+      return () => {
+        channel.untrack();
+        channel.unsubscribe();
+      };
+    } else {
+      // User logged out, clean up presence
+      if (presenceChannel) {
+        presenceChannel.untrack();
+        presenceChannel.unsubscribe();
+        setPresenceChannel(null);
+      }
+    }
+  }, [user, profile]);
 
   useEffect(() => {
     // Set up auth state listener

@@ -67,9 +67,37 @@ export const AdminDashboard = () => {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [newPassword, setNewPassword] = useState('');
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
   useEffect(() => {
     fetchData();
+    
+    // Setup presence channel to track online users
+    const presenceChannel = supabase.channel('user_presence');
+    
+    presenceChannel.on('presence', { event: 'sync' }, () => {
+      const state = presenceChannel.presenceState();
+      const onlineUserIds = Object.values(state).flat().map((presence: any) => 
+        presence.user_id
+      ).filter(Boolean);
+      setOnlineUsers(onlineUserIds);
+    });
+
+    presenceChannel.on('presence', { event: 'join' }, ({ newPresences }) => {
+      const newUserIds = newPresences.map((presence: any) => presence.user_id);
+      setOnlineUsers(prev => [...new Set([...prev, ...newUserIds])]);
+    });
+
+    presenceChannel.on('presence', { event: 'leave' }, ({ leftPresences }) => {
+      const leftUserIds = leftPresences.map((presence: any) => presence.user_id);
+      setOnlineUsers(prev => prev.filter(id => !leftUserIds.includes(id)));
+    });
+
+    presenceChannel.subscribe();
+
+    return () => {
+      presenceChannel.unsubscribe();
+    };
   }, []);
 
   const fetchData = async () => {
@@ -601,12 +629,12 @@ export const AdminDashboard = () => {
             {filteredUsers.map((user) => (
               <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {user.is_active ? 'online' : 'offline'}
-                      </span>
-                      <h3 className="font-semibold">{user.username}</h3>
-                    </div>
+                     <div className="flex items-center gap-2">
+                       <span className={`text-xs px-2 py-1 rounded-full ${onlineUsers.includes(user.user_id) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                         {onlineUsers.includes(user.user_id) ? 'online' : 'offline'}
+                       </span>
+                       <h3 className="font-semibold">{user.username}</h3>
+                     </div>
                   <p className="text-sm text-muted-foreground">
                     {user.hospital?.name || 'No hospital assigned'}
                   </p>
