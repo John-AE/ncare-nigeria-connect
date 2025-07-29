@@ -58,7 +58,7 @@ export const useDoctorDashboardStats = () => {
         // In the future, we can add an email_logs table to track actual emails
         // The future is now here, I John have added an email_clicks table
         const { count: emailsCount } = await supabase
-          .from('email_clicks')
+          .from('email_clicks' as any)
           .select('*', { count: 'exact', head: true })
           .eq('hospital_id', hospitalId)
           .gte('clicked_at', startOfMonth.toISOString())
