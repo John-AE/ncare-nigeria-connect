@@ -65,6 +65,7 @@ const BillDetailsDialog = ({
     
     if (open) getHospitalId();
   }, [open]);
+  
   const { toast } = useToast();
 
   const generatePDF = () => {
@@ -259,65 +260,68 @@ const BillDetailsDialog = ({
   };
 
   const sendEmailWithBill = async () => {
-  if (!patientEmail) {
-    toast({
-      title: "No Email Address",
-      description: "Patient email address is not available.",
-      variant: "destructive",
-    });
-    return;
-  }
-
-  setIsSendingEmail(true);
-  if (!hospitalId) return;
-  
-  console.log('About to insert:', { hospital_id: hospitalId, bill_id: billId });
-  
-  const { data, error: insertError } = await supabase
-    .from('email_clicks')
-    .insert({
-      hospital_id: hospitalId,
-      bill_id: billId
-    });
-  
-  console.log('Insert result:', { data, error: insertError });
-  try {
-    const { error } = await supabase.functions.invoke('send-bill-email', {
-      body: {
-        email: patientEmail,
-        patient_name: patientName,
-        bill_id: billId,
-        bill_amount: totalAmount,
-        bill_items: billItems,
-        appointment_time: appointmentTime,
-        is_paid: isPaid
-      }
-    });
-
-    if (error) {
-      console.error('Error sending email:', error);
+    if (!patientEmail) {
       toast({
-        title: "Error",
-        description: "Failed to send email. Please try again.",
+        title: "No Email Address",
+        description: "Patient email address is not available.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Email Sent",
-        description: `Bill sent to ${patientEmail}`,
-      });
+      return;
     }
-  } catch (error) {
-    console.error('Error invoking function:', error);
-    toast({
-      title: "Error",
-      description: "An error occurred while sending the email.",
-      variant: "destructive",
-    });
-  } finally {
-    setIsSendingEmail(false);
-  }
-};
+
+    setIsSendingEmail(true);
+    
+    // Track email click
+    if (!hospitalId) return;
+    
+    console.log('About to insert:', { hospital_id: hospitalId, bill_id: billId });
+    
+    const { data, error: insertError } = await supabase
+      .from('email_clicks' as any)
+      .insert({
+        hospital_id: hospitalId,
+        bill_id: billId
+      });
+    
+    console.log('Insert result:', { data, error: insertError });
+
+    try {
+      const { error } = await supabase.functions.invoke('send-bill-email', {
+        body: {
+          email: patientEmail,
+          patient_name: patientName,
+          bill_id: billId,
+          bill_amount: totalAmount,
+          bill_items: billItems,
+          appointment_time: appointmentTime,
+          is_paid: isPaid
+        }
+      });
+
+      if (error) {
+        console.error('Error sending email:', error);
+        toast({
+          title: "Error",
+          description: "Failed to send email. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email Sent",
+          description: `Bill sent to ${patientEmail}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error invoking function:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while sending the email.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
