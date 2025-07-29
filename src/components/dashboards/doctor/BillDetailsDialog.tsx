@@ -269,6 +269,18 @@ const BillDetailsDialog = ({
   }
 
   setIsSendingEmail(true);
+  if (!hospitalId) return;
+  
+  console.log('About to insert:', { hospital_id: hospitalId, bill_id: billId });
+  
+  const { data, error: insertError } = await supabase
+    .from('email_clicks')
+    .insert({
+      hospital_id: hospitalId,
+      bill_id: billId
+    });
+  
+  console.log('Insert result:', { data, error: insertError });
   try {
     const { error } = await supabase.functions.invoke('send-bill-email', {
       body: {
