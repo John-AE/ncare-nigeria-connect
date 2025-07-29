@@ -49,6 +49,21 @@ const BillDetailsDialog = ({
 }: BillDetailsDialogProps) => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [hospitalId, setHospitalId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getHospitalId = async () => {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('hospital_id')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+      
+      setHospitalId(profileData?.hospital_id);
+    };
+    
+    if (open) getHospitalId();
+  }, [open]);
   const { toast } = useToast();
 
   const generatePDF = () => {
