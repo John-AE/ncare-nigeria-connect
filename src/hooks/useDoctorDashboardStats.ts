@@ -56,12 +56,13 @@ export const useDoctorDashboardStats = () => {
         
         // For now, we'll use a simple count based on bills that have been created
         // In the future, we can add an email_logs table to track actual emails
+        // The future is now here, I John have added an email_clicks table
         const { count: emailsCount } = await supabase
-          .from('bills')
+          .from('email_clicks')
           .select('*', { count: 'exact', head: true })
           .eq('hospital_id', hospitalId)
-          .gte('created_at', startOfMonth.toISOString())
-          .lte('created_at', endOfMonth.toISOString());
+          .gte('clicked_at', startOfMonth.toISOString())
+          .lte('clicked_at', endOfMonth.toISOString());
         
         // Get total patients count (filtered by hospital)
         const { count: patientsCount } = await supabase
