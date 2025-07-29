@@ -34,7 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Processing access request for:", email);
 
     const emailResponse = await resend.emails.send({
-      from: "NCare Nigeria <onboarding@resend.dev>",
+      from: "johnnybgsu@gmail.com",
       to: ["john@123185.xyz"],
       subject: "NCare Nigeria - New Access Request",
       html: `
