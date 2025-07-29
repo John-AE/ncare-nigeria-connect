@@ -130,7 +130,10 @@ const LoginPage = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
-            <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+            <DropdownMenuItem 
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => window.open('https://drive.google.com/file/d/1ruIOufRf8nvxLS_FytqN76aqkc-H0MxW/view?usp=sharing', '_blank')}
+            >
               <FileText className="h-4 w-4" />
               Docs
             </DropdownMenuItem>
