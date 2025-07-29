@@ -14,7 +14,8 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showDemoAccounts, setShowDemoAccounts] = useState(false);
+  const [accessRequestEmail, setAccessRequestEmail] = useState("");
+  const [isRequestingAccess, setIsRequestingAccess] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, profile } = useAuth();
@@ -80,27 +81,46 @@ const LoginPage = () => {
     }
   };
 
-  const loginWithDemo = async (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setIsLoading(true);
+  const handleAccessRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!accessRequestEmail) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRequestingAccess(true);
+
     try {
-      const { error } = await signIn(demoEmail, demoPassword);
+      const { error } = await supabase.functions.invoke('send-access-request', {
+        body: { email: accessRequestEmail }
+      });
+
       if (error) {
         toast({
-          title: "Demo Login Failed",
-          description: error.message,
+          title: "Request Failed",
+          description: "Failed to send access request. Please try again.",
           variant: "destructive",
         });
+      } else {
+        toast({
+          title: "Request Submitted",
+          description: "Your access request has been sent successfully. We'll get back to you soon!",
+        });
+        setAccessRequestEmail("");
       }
     } catch {
       toast({
-        title: "Demo Login Failed",
-        description: "An unexpected error occurred.",
+        title: "Request Failed",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsRequestingAccess(false);
     }
   };
 
@@ -203,54 +223,31 @@ const LoginPage = () => {
             </Button>
           </form>
 
-          <div className="mt-4 space-y-2">
-            <Button
-              variant="ghost"
-              className="w-full border border-border"
-              onClick={() => setShowDemoAccounts(!showDemoAccounts)}
-            >
-              {showDemoAccounts ? "Hide" : "Show"} Demo Accounts
-            </Button>
-
-            {showDemoAccounts && (
-              <div className="space-y-2 p-3 bg-muted rounded-md">
-                <p className="text-sm font-medium">Demo Accounts:</p>
-                <div className="space-y-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={() => loginWithDemo("nurse@demo.com", "password123")}
-                  >
-                    Nurse: nurse@demo.com / password123
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={() => loginWithDemo("doctor@demo.com", "password123")}
-                  >
-                    Doctor: doctor@demo.com / password123
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={() => loginWithDemo("finance@demo.com", "password123")}
-                  >
-                    Finance: finance@demo.com / password123
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={() => loginWithDemo("pharmacy@demo.com", "password123")}
-                  >
-                    Pharmacy: pharmacy@demo.com / password123
-                  </Button>
-                </div>
+          <div className="mt-6 pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground text-center mb-3">
+              Don't have access yet?
+            </p>
+            <form onSubmit={handleAccessRequest} className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="accessEmail">Request Access</Label>
+                <Input
+                  id="accessEmail"
+                  type="email"
+                  placeholder="Enter your email to request access"
+                  value={accessRequestEmail}
+                  onChange={(e) => setAccessRequestEmail(e.target.value)}
+                  required
+                />
               </div>
-            )}
+              <Button
+                type="submit"
+                variant="outline"
+                className="w-full"
+                disabled={isRequestingAccess}
+              >
+                {isRequestingAccess ? "Sending Request..." : "Request Access"}
+              </Button>
+            </form>
           </div>
         </CardContent>
       </Card>
