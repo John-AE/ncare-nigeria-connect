@@ -198,6 +198,42 @@ export type Database = {
           },
         ]
       }
+      email_clicks: {
+        Row: {
+          bill_id: string | null
+          clicked_at: string | null
+          hospital_id: string | null
+          id: string
+        }
+        Insert: {
+          bill_id?: string | null
+          clicked_at?: string | null
+          hospital_id?: string | null
+          id?: string
+        }
+        Update: {
+          bill_id?: string | null
+          clicked_at?: string | null
+          hospital_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_clicks_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_clicks_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hospitals: {
         Row: {
           address: string | null
@@ -227,6 +263,237 @@ export type Database = {
           is_active?: boolean
           name?: string
           phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lab_orders: {
+        Row: {
+          clinical_notes: string | null
+          created_at: string
+          doctor_id: string
+          hospital_id: string
+          id: string
+          order_date: string
+          ordered_by: string
+          patient_id: string
+          priority: string
+          status: string
+          test_type_id: string
+          updated_at: string
+          visit_id: string | null
+        }
+        Insert: {
+          clinical_notes?: string | null
+          created_at?: string
+          doctor_id: string
+          hospital_id: string
+          id?: string
+          order_date?: string
+          ordered_by: string
+          patient_id: string
+          priority?: string
+          status?: string
+          test_type_id: string
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Update: {
+          clinical_notes?: string | null
+          created_at?: string
+          doctor_id?: string
+          hospital_id?: string
+          id?: string
+          order_date?: string
+          ordered_by?: string
+          patient_id?: string
+          priority?: string
+          status?: string
+          test_type_id?: string
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Relationships: []
+      }
+      lab_result_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          hospital_id: string
+          id: string
+          result_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          hospital_id: string
+          id?: string
+          result_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          hospital_id?: string
+          id?: string
+          result_id?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
+      lab_results: {
+        Row: {
+          comments: string | null
+          created_at: string
+          hospital_id: string
+          id: string
+          is_abnormal: boolean | null
+          is_critical: boolean | null
+          order_id: string
+          reference_range: string | null
+          result_status: string
+          result_value: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          tested_at: string | null
+          tested_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          hospital_id: string
+          id?: string
+          is_abnormal?: boolean | null
+          is_critical?: boolean | null
+          order_id: string
+          reference_range?: string | null
+          result_status?: string
+          result_value?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          tested_at?: string | null
+          tested_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          hospital_id?: string
+          id?: string
+          is_abnormal?: boolean | null
+          is_critical?: boolean | null
+          order_id?: string
+          reference_range?: string | null
+          result_status?: string
+          result_value?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          tested_at?: string | null
+          tested_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lab_samples: {
+        Row: {
+          collected_at: string | null
+          collected_by: string | null
+          created_at: string
+          hospital_id: string
+          id: string
+          notes: string | null
+          order_id: string
+          received_at: string | null
+          sample_condition: string | null
+          sample_id: string
+          updated_at: string
+        }
+        Insert: {
+          collected_at?: string | null
+          collected_by?: string | null
+          created_at?: string
+          hospital_id: string
+          id?: string
+          notes?: string | null
+          order_id: string
+          received_at?: string | null
+          sample_condition?: string | null
+          sample_id: string
+          updated_at?: string
+        }
+        Update: {
+          collected_at?: string | null
+          collected_by?: string | null
+          created_at?: string
+          hospital_id?: string
+          id?: string
+          notes?: string | null
+          order_id?: string
+          received_at?: string | null
+          sample_condition?: string | null
+          sample_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lab_test_types: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          hospital_id: string
+          id: string
+          is_active: boolean
+          name: string
+          normal_range: string | null
+          preparation_instructions: string | null
+          price: number
+          sample_type: string
+          turnaround_time_hours: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string
+          hospital_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          normal_range?: string | null
+          preparation_instructions?: string | null
+          price?: number
+          sample_type: string
+          turnaround_time_hours?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          hospital_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          normal_range?: string | null
+          preparation_instructions?: string | null
+          price?: number
+          sample_type?: string
+          turnaround_time_hours?: number | null
+          unit?: string | null
           updated_at?: string
         }
         Relationships: []
