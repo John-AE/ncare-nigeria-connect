@@ -136,10 +136,10 @@ export const TestTypesManagement = () => {
                             )}
                           </div>
                           
-                          {test.description && (
+                          {test.preparation_instructions && (
                             <div className="mt-2">
-                              <span className="font-medium">Description:</span>
-                              <p className="text-xs mt-1">{test.description}</p>
+                              <span className="font-medium">Instructions:</span>
+                              <p className="text-xs mt-1">{test.preparation_instructions}</p>
                             </div>
                           )}
                         </div>

@@ -11,6 +11,7 @@ import NurseDashboard from "./components/dashboards/NurseDashboard";
 import FinanceDashboard from "./components/dashboards/FinanceDashboard";
 import { AdminDashboard } from "./components/dashboards/AdminDashboard";
 import { PharmacyDashboard } from "./components/dashboards/PharmacyDashboard";
+import { LaboratoryDashboard } from "./components/dashboards/LaboratoryDashboard";
 import { RecordVisit } from "./pages/RecordVisit";
 import Layout from "./components/Layout";
 import { AuthProvider, useAuth } from "./components/AuthProvider";
@@ -79,6 +80,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRole="pharmacy">
                   <PharmacyDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/laboratory-dashboard" 
+              element={
+                <ProtectedRoute allowedRole="laboratory">
+                  <LaboratoryDashboard />
                 </ProtectedRoute>
               } 
             />

@@ -313,7 +313,36 @@ export type Database = {
           updated_at?: string
           visit_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_lab_orders_doctor_id"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_lab_orders_hospital_id"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_lab_orders_patient_id"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_lab_orders_test_type_id"
+            columns: ["test_type_id"]
+            isOneToOne: false
+            referencedRelation: "lab_test_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lab_result_attachments: {
         Row: {
@@ -349,7 +378,15 @@ export type Database = {
           result_id?: string
           uploaded_by?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_lab_attachments_result_id"
+            columns: ["result_id"]
+            isOneToOne: false
+            referencedRelation: "lab_results"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lab_results: {
         Row: {
@@ -403,7 +440,15 @@ export type Database = {
           tested_by?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_lab_results_order_id"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "lab_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lab_samples: {
         Row: {
@@ -445,13 +490,22 @@ export type Database = {
           sample_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_lab_samples_order_id"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "lab_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lab_test_types: {
         Row: {
           category: string
           code: string
           created_at: string
+          description: string | null
           hospital_id: string
           id: string
           is_active: boolean
@@ -468,6 +522,7 @@ export type Database = {
           category: string
           code: string
           created_at?: string
+          description?: string | null
           hospital_id: string
           id?: string
           is_active?: boolean
@@ -484,6 +539,7 @@ export type Database = {
           category?: string
           code?: string
           created_at?: string
+          description?: string | null
           hospital_id?: string
           id?: string
           is_active?: boolean

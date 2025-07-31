@@ -23,6 +23,12 @@ const Index = () => {
         case 'finance':
           navigate('/finance-dashboard');
           break;
+        case 'laboratory':
+          navigate('/laboratory-dashboard');
+          break;
+        case 'pharmacy':
+          navigate('/pharmacy-dashboard');
+          break;
         default:
           // Stay on login page if role is not recognized
           break;

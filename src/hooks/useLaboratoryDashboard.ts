@@ -55,7 +55,8 @@ export const useLaboratoryDashboard = () => {
       const { data: revenueData } = await supabase
         .from("lab_orders")
         .select(`
-          lab_test_types!inner(price)
+          *,
+          lab_test_types(price)
         `)
         .gte("created_at", thirtyDaysAgo)
         .eq("status", "completed");
@@ -65,7 +66,7 @@ export const useLaboratoryDashboard = () => {
         .from("lab_orders")
         .select(`
           test_type_id,
-          lab_test_types!inner(name)
+          lab_test_types(name)
         `)
         .gte("created_at", thirtyDaysAgo);
 
@@ -78,14 +79,16 @@ export const useLaboratoryDashboard = () => {
 
       // Calculate stats
       const totalRevenue = revenueData?.reduce((sum, order) => {
-        return sum + (Number(order.lab_test_types.price) || 0);
+        return sum + (Number(order.lab_test_types?.price) || 0);
       }, 0) || 0;
 
       // Group test counts
       const testCountMap = new Map();
       testCounts?.forEach(order => {
-        const testName = order.lab_test_types.name;
-        testCountMap.set(testName, (testCountMap.get(testName) || 0) + 1);
+        const testName = order.lab_test_types?.name;
+        if (testName) {
+          testCountMap.set(testName, (testCountMap.get(testName) || 0) + 1);
+        }
       });
 
       const mostOrderedTests = Array.from(testCountMap.entries())

@@ -14,9 +14,9 @@ export const RecentTestResults = () => {
         .from("lab_results")
         .select(`
           *,
-          lab_orders!inner(
-            patients!inner(first_name, last_name),
-            lab_test_types!inner(name, code, normal_range)
+          lab_orders(
+            patients(first_name, last_name),
+            lab_test_types(name, code, normal_range)
           )
         `)
         .eq("result_status", "completed")
@@ -83,7 +83,7 @@ export const RecentTestResults = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h4 className="font-semibold">
-                      {result.lab_orders.patients.first_name} {result.lab_orders.patients.last_name}
+                      {result.lab_orders?.patients?.first_name} {result.lab_orders?.patients?.last_name}
                     </h4>
                     <Badge className={getResultStatusColor(result.is_abnormal, result.is_critical)}>
                       {getResultIcon(result.is_abnormal, result.is_critical)}
@@ -94,7 +94,7 @@ export const RecentTestResults = () => {
                   <div className="text-sm text-muted-foreground space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">Test:</span>
-                      {result.lab_orders.lab_test_types.name} ({result.lab_orders.lab_test_types.code})
+                      {result.lab_orders?.lab_test_types?.name} ({result.lab_orders?.lab_test_types?.code})
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium">Result:</span>

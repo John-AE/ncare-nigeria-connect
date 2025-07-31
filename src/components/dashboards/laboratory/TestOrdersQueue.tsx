@@ -14,9 +14,9 @@ export const TestOrdersQueue = () => {
         .from("lab_orders")
         .select(`
           *,
-          patients!inner(first_name, last_name),
-          lab_test_types!inner(name, code, sample_type),
-          profiles!lab_orders_doctor_id_fkey(username),
+          patients(first_name, last_name),
+          lab_test_types(name, code, sample_type),
+          profiles(username),
           lab_samples(id, collected_at, sample_condition)
         `)
         .in("status", ["ordered", "sample_collected", "in_progress"])
@@ -100,7 +100,7 @@ export const TestOrdersQueue = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h4 className="font-semibold">
-                      {order.patients.first_name} {order.patients.last_name}
+                      {order.patients?.first_name} {order.patients?.last_name}
                     </h4>
                     <Badge className={getPriorityColor(order.priority)}>
                       {order.priority}
@@ -113,11 +113,11 @@ export const TestOrdersQueue = () => {
                   <div className="text-sm text-muted-foreground space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">Test:</span>
-                      {order.lab_test_types.name} ({order.lab_test_types.code})
+                      {order.lab_test_types?.name} ({order.lab_test_types?.code})
                     </div>
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      <span>Dr. {order.profiles.username}</span>
+                      <span>Dr. {order.profiles?.username}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -126,7 +126,7 @@ export const TestOrdersQueue = () => {
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium">Sample:</span> {order.lab_test_types.sample_type}
+                      <span className="font-medium">Sample:</span> {order.lab_test_types?.sample_type}
                     </div>
                     {order.clinical_notes && (
                       <div className="flex items-start gap-2">
