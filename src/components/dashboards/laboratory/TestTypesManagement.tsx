@@ -191,7 +191,7 @@ export const TestTypesManagement = () => {
                               <span className="font-medium">Sample:</span> {test.sample_type}
                             </div>
                             <div>
-                              <span className="font-medium">Price:</span> ${test.price}
+                              <span className="font-medium">Price:</span> ₦{(test.price * 700).toLocaleString()}
                             </div>
                             <div>
                               <span className="font-medium">TAT:</span> {test.turnaround_time_hours}h
@@ -218,16 +218,14 @@ export const TestTypesManagement = () => {
                           variant="outline"
                           onClick={() => handleEditTestType(test)}
                         >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
+                          <Edit className="h-4 w-4" />
                         </Button>
                         <Button 
                           size="sm" 
                           variant="outline"
                           onClick={() => handleDeleteTestType(test)}
                         >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
