@@ -1,14 +1,32 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Edit, TestTube } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Search, Edit, TestTube, Trash2 } from "lucide-react";
+import { TestTypeDialog } from "./TestTypeDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const TestTypesManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedTestType, setSelectedTestType] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [testTypeToDelete, setTestTypeToDelete] = useState(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: testTypes, isLoading } = useQuery({
     queryKey: ["lab-test-types", searchTerm],
@@ -50,6 +68,55 @@ export const TestTypesManagement = () => {
     return colors[category] || "bg-gray-100 text-gray-800";
   };
 
+  const handleAddTestType = () => {
+    setSelectedTestType(null);
+    setShowDialog(true);
+  };
+
+  const handleEditTestType = (testType) => {
+    setSelectedTestType(testType);
+    setShowDialog(true);
+  };
+
+  const handleDeleteTestType = (testType) => {
+    setTestTypeToDelete(testType);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!testTypeToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("lab_test_types")
+        .update({ is_active: false })
+        .eq("id", testTypeToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Test type deleted successfully",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["lab-test-types"] });
+    } catch (error) {
+      console.error("Error deleting test type:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete test type",
+        variant: "destructive",
+      });
+    } finally {
+      setShowDeleteDialog(false);
+      setTestTypeToDelete(null);
+    }
+  };
+
+  const handleDialogSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["lab-test-types"] });
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -75,7 +142,7 @@ export const TestTypesManagement = () => {
             <TestTube className="h-5 w-5" />
             Test Types Management
           </CardTitle>
-          <Button size="sm">
+          <Button size="sm" onClick={handleAddTestType}>
             <Plus className="h-4 w-4 mr-1" />
             Add Test Type
           </Button>
@@ -145,10 +212,24 @@ export const TestTypesManagement = () => {
                         </div>
                       </div>
                       
-                      <Button size="sm" variant="outline">
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditTestType(test)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeleteTestType(test)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -163,6 +244,28 @@ export const TestTypesManagement = () => {
           )}
         </div>
       </CardContent>
+
+      <TestTypeDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        testType={selectedTestType}
+        onSuccess={handleDialogSuccess}
+      />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Test Type</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{testTypeToDelete?.name}"? This action will mark the test type as inactive and it won't be available for new orders.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

@@ -314,6 +314,7 @@ export const AdminDashboard = () => {
       nurse: hospitalUsers.filter(u => u.role === 'nurse').length,
       finance: hospitalUsers.filter(u => u.role === 'finance').length,
       pharmacy: hospitalUsers.filter(u => u.role === 'pharmacy').length,
+      laboratory: hospitalUsers.filter(u => u.role === 'laboratory').length,
     };
     return { total: hospitalUsers.length, ...roleCounts };
   };
@@ -443,6 +444,7 @@ export const AdminDashboard = () => {
                       <SelectItem value="doctor">Doctor</SelectItem>
                       <SelectItem value="finance">Finance</SelectItem>
                       <SelectItem value="pharmacy">Pharmacy</SelectItem>
+                      <SelectItem value="laboratory">Laboratory</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -574,29 +576,33 @@ export const AdminDashboard = () => {
                     </div>
                   </div>
                   
-                  {/* User Statistics */}
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3 p-3 bg-muted/30 rounded-lg">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-primary">{stats.total}</div>
-                      <div className="text-xs text-muted-foreground">Total Users</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-blue-600">{stats.doctor}</div>
-                      <div className="text-xs text-muted-foreground">Doctors</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-green-600">{stats.nurse}</div>
-                      <div className="text-xs text-muted-foreground">Nurses</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-orange-600">{stats.finance}</div>
-                      <div className="text-xs text-muted-foreground">Finance</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-purple-600">{stats.pharmacy}</div>
-                      <div className="text-xs text-muted-foreground">Pharmacy</div>
-                    </div>
-                  </div>
+                   {/* User Statistics */}
+                   <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mt-3 p-3 bg-muted/30 rounded-lg">
+                     <div className="text-center">
+                       <div className="text-lg font-bold text-primary">{stats.total}</div>
+                       <div className="text-xs text-muted-foreground">Total Users</div>
+                     </div>
+                     <div className="text-center">
+                       <div className="text-lg font-bold text-blue-600">{stats.doctor}</div>
+                       <div className="text-xs text-muted-foreground">Doctors</div>
+                     </div>
+                     <div className="text-center">
+                       <div className="text-lg font-bold text-green-600">{stats.nurse}</div>
+                       <div className="text-xs text-muted-foreground">Nurses</div>
+                     </div>
+                     <div className="text-center">
+                       <div className="text-lg font-bold text-orange-600">{stats.finance}</div>
+                       <div className="text-xs text-muted-foreground">Finance</div>
+                     </div>
+                     <div className="text-center">
+                       <div className="text-lg font-bold text-purple-600">{stats.pharmacy}</div>
+                       <div className="text-xs text-muted-foreground">Pharmacy</div>
+                     </div>
+                     <div className="text-center">
+                       <div className="text-lg font-bold text-teal-600">{stats.laboratory}</div>
+                       <div className="text-xs text-muted-foreground">Laboratory</div>
+                     </div>
+                   </div>
                 </div>
               );
             })}
