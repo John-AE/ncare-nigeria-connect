@@ -191,7 +191,7 @@ export const TestTypesManagement = () => {
                               <span className="font-medium">Sample:</span> {test.sample_type}
                             </div>
                             <div>
-                              <span className="font-medium">Price:</span> ₦{(test.price * 700).toLocaleString()}
+                              <span className="font-medium">Price:</span> ₦{Number(test.price).toLocaleString()}
                             </div>
                             <div>
                               <span className="font-medium">TAT:</span> {test.turnaround_time_hours}h

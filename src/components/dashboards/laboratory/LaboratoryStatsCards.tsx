@@ -36,7 +36,7 @@ export const LaboratoryStatsCards = ({ stats }: LaboratoryStatsCardsProps) => {
     },
     { 
       label: "Monthly Revenue", 
-      value: `$${stats.totalRevenue.toFixed(2)}`, 
+      value: `₦${stats.totalRevenue.toLocaleString()}`, 
       borderColor: "border-l-primary",
       bgColor: "bg-primary/5",
       textColor: "text-primary"
