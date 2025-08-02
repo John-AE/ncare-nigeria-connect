@@ -3,6 +3,7 @@ import { LaboratoryStatsCards } from "./laboratory/LaboratoryStatsCards";
 import { TestOrdersQueue } from "./laboratory/TestOrdersQueue";
 import { RecentTestResults } from "./laboratory/RecentTestResults";
 import { TestTypesManagement } from "./laboratory/TestTypesManagement";
+import { TestOrderBilling } from "./laboratory/TestOrderBilling";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Loader2 } from "lucide-react";
@@ -99,11 +100,12 @@ export const LaboratoryDashboard = () => {
         {/* Left Column */}
         <div className="space-y-6">
           <TestOrdersQueue />
-          <TestTypesManagement />
+          <TestOrderBilling />
         </div>
 
         {/* Right Column */}
         <div className="space-y-6">
+          <TestTypesManagement />
           <RecentTestResults />
         </div>
       </div>
