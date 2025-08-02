@@ -53,9 +53,6 @@ const FinanceDashboard = () => {
         outstandingAmount={outstandingAmount}
       />
 
-      {/* Revenue Analytics */}
-      <RevenueTrends />
-
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Payment Management */}
@@ -73,16 +70,19 @@ const FinanceDashboard = () => {
           loading={loading}
         />
 
-        {/* Financial Reports */}
-        <EnhancedFinancialReports />
-
         {/* Pending Bills */}
         <EnhancedPendingBills
           pendingBills={pendingBills}
           loading={loading}
           onBillSelect={handleBillSelect}
         />
+
+        {/* Financial Reports */}
+        <EnhancedFinancialReports />
       </div>
+
+      {/* Revenue Analytics - Moved to bottom */}
+      <RevenueTrends />
 
       {/* Payment Dialog */}
       <PaymentDialog

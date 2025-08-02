@@ -50,9 +50,16 @@ export const PaymentManagement = ({
               >
                 <div className="flex items-center justify-between mb-2">
                   <p className="font-medium">{bill.patient_name}</p>
-                  <Badge variant={getStatusBadgeVariant(bill.payment_status)}>
-                    {getStatusLabel(bill.payment_status)}
-                  </Badge>
+                  <div className="flex gap-2">
+                    <Badge variant={getStatusBadgeVariant(bill.payment_status)}>
+                      {getStatusLabel(bill.payment_status)}
+                    </Badge>
+                    {bill.bill_type === 'lab_test' && (
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        Lab Test
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm text-muted-foreground">

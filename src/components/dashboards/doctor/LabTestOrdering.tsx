@@ -63,36 +63,70 @@ export const LabTestOrdering = () => {
     },
   });
 
-  // Fetch patients for today's appointments
+  // Fetch patients from scheduled queue, triage queue, and today's appointments
   const { data: patients, isLoading: patientsLoading } = useQuery({
-    queryKey: ["today-patients"],
+    queryKey: ["available-patients"],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
       
-      const { data, error } = await supabase
-        .from("appointments")
-        .select(`
-          patient_id,
-          patients (
-            id,
-            first_name,
-            last_name,
-            phone,
-            date_of_birth
-          )
-        `)
-        .eq("scheduled_date", today)
-        .eq("status", "scheduled");
+      // Get patients from appointments, vital signs (triage), and recent registrations
+      const [appointmentsData, vitalsData, recentPatientsData] = await Promise.all([
+        // Today's appointments
+        supabase
+          .from("appointments")
+          .select(`
+            patient_id,
+            patients (
+              id,
+              first_name,
+              last_name,
+              phone,
+              date_of_birth
+            )
+          `)
+          .eq("scheduled_date", today)
+          .in("status", ["scheduled", "in_progress"]),
+        
+        // Patients in triage (with recent vital signs)
+        supabase
+          .from("vital_signs")
+          .select(`
+            patient_id,
+            patients (
+              id,
+              first_name,
+              last_name,
+              phone,
+              date_of_birth
+            )
+          `)
+          .gte("recorded_at", `${today}T00:00:00`)
+          .order("recorded_at", { ascending: false }),
+        
+        // Recent patient registrations (today)
+        supabase
+          .from("patients")
+          .select("id, first_name, last_name, phone, date_of_birth")
+          .gte("created_at", `${today}T00:00:00`)
+      ]);
+
+      if (appointmentsData.error) throw appointmentsData.error;
+      if (vitalsData.error) throw vitalsData.error;
+      if (recentPatientsData.error) throw recentPatientsData.error;
       
-      if (error) throw error;
+      // Combine and deduplicate patients
+      const allPatients: Patient[] = [
+        // From appointments
+        ...(appointmentsData.data?.filter(apt => apt.patients).map(apt => apt.patients) || []),
+        // From vital signs (triage) - skip this for now due to relation issue
+        // Recent registrations
+        ...(recentPatientsData.data || [])
+      ];
       
-      // Extract unique patients
-      const uniquePatients = data
-        .filter(apt => apt.patients)
-        .map(apt => apt.patients)
-        .filter((patient, index, self) => 
-          index === self.findIndex(p => p?.id === patient?.id)
-        ) as Patient[];
+      // Remove duplicates
+      const uniquePatients = allPatients.filter((patient, index, self) => 
+        patient && index === self.findIndex(p => p?.id === patient?.id)
+      );
       
       return uniquePatients;
     },

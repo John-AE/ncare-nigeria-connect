@@ -15,10 +15,11 @@ export const useFinanceDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentPayments, setRecentPayments] = useState([]);
 
-  // Fetch bills with patient information
+  // Fetch bills with patient information (regular bills + lab test bills)
   const fetchBills = async () => {
     try {
-      const { data: billsData, error } = await supabase
+      // Fetch regular bills
+      const { data: billsData, error: billsError } = await supabase
         .from('bills')
         .select(`
           *,
@@ -26,16 +27,63 @@ export const useFinanceDashboard = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (billsError) throw billsError;
 
-      const billsWithStatus = billsData.map(bill => ({
-        ...bill,
-        patient_name: `${bill.patients.first_name} ${bill.patients.last_name}`,
-        payment_status: getPaymentStatus(bill.amount, bill.amount_paid || 0)
-      }));
+      // Fetch lab orders that need billing (grouped by patient)
+      const { data: labOrdersData, error: labOrdersError } = await supabase
+        .from('lab_orders')
+        .select(`
+          *,
+          patients(first_name, last_name),
+          lab_test_types(name, price)
+        `)
+        .in('status', ['ordered', 'sample_collected', 'in_progress'])
+        .order('order_date', { ascending: false });
 
-      setBills(billsWithStatus);
-      setFilteredBills(billsWithStatus);
+      if (labOrdersError) throw labOrdersError;
+
+      // Group lab orders by patient to create lab test bills
+      const labBillsByPatient = labOrdersData?.reduce((acc, order) => {
+        const patientKey = order.patient_id;
+        if (!acc[patientKey]) {
+          acc[patientKey] = {
+            id: `lab-${order.patient_id}`,
+            patient_id: order.patient_id,
+            patients: order.patients,
+            amount: 0,
+            amount_paid: 0,
+            is_paid: false,
+            created_at: order.order_date,
+            updated_at: order.order_date,
+            description: 'Lab Test',
+            bill_type: 'lab_test',
+            lab_orders: []
+          };
+        }
+        acc[patientKey].amount += order.lab_test_types.price;
+        acc[patientKey].lab_orders.push(order);
+        return acc;
+      }, {} as Record<string, any>) || {};
+
+      const labBills = Object.values(labBillsByPatient);
+
+      // Combine regular bills and lab bills
+      const allBills = [
+        ...billsData.map(bill => ({
+          ...bill,
+          patient_name: `${bill.patients.first_name} ${bill.patients.last_name}`,
+          payment_status: getPaymentStatus(bill.amount, bill.amount_paid || 0),
+          bill_type: 'regular'
+        })),
+        ...labBills.map(bill => ({
+          ...bill,
+          patient_name: `${bill.patients.first_name} ${bill.patients.last_name}`,
+          payment_status: getPaymentStatus(bill.amount, bill.amount_paid || 0)
+        }))
+      ];
+
+      setBills(allBills);
+      setFilteredBills(allBills);
     } catch (error) {
       console.error('Error fetching bills:', error);
       toast({

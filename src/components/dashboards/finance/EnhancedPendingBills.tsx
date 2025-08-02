@@ -16,6 +16,7 @@ interface Bill {
   created_at: string;
   patient_name: string;
   patient_phone?: string;
+  bill_type?: string;
 }
 
 interface EnhancedPendingBillsProps {
@@ -141,7 +142,14 @@ export const EnhancedPendingBills = ({ pendingBills, loading, onBillSelect }: En
                     onClick={() => onBillSelect(bill)}
                   >
                     <div>
-                      <p className="font-medium">{bill.patient_name}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium">{bill.patient_name}</p>
+                        {bill.bill_type === 'lab_test' && (
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
+                            Lab Test
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {bill.description || 'No description'}
                       </p>
