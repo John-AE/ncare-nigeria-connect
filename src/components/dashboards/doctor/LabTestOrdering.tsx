@@ -63,72 +63,17 @@ export const LabTestOrdering = () => {
     },
   });
 
-  // Fetch patients from scheduled queue, triage queue, and today's appointments
+  // Fetch all patients (simplified like Direct Patient Billing)
   const { data: patients, isLoading: patientsLoading } = useQuery({
-    queryKey: ["available-patients"],
+    queryKey: ["all-patients"],
     queryFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from("patients")
+        .select("id, first_name, last_name, phone, date_of_birth")
+        .order("first_name");
       
-      // Get patients from appointments, vital signs (triage), and recent registrations
-      const [appointmentsData, vitalsData, recentPatientsData] = await Promise.all([
-        // Today's appointments
-        supabase
-          .from("appointments")
-          .select(`
-            patient_id,
-            patients (
-              id,
-              first_name,
-              last_name,
-              phone,
-              date_of_birth
-            )
-          `)
-          .eq("scheduled_date", today)
-          .in("status", ["scheduled", "in_progress"]),
-        
-        // Patients in triage (with recent vital signs)
-        supabase
-          .from("vital_signs")
-          .select(`
-            patient_id,
-            patients (
-              id,
-              first_name,
-              last_name,
-              phone,
-              date_of_birth
-            )
-          `)
-          .gte("recorded_at", `${today}T00:00:00`)
-          .order("recorded_at", { ascending: false }),
-        
-        // Recent patient registrations (today)
-        supabase
-          .from("patients")
-          .select("id, first_name, last_name, phone, date_of_birth")
-          .gte("created_at", `${today}T00:00:00`)
-      ]);
-
-      if (appointmentsData.error) throw appointmentsData.error;
-      if (vitalsData.error) throw vitalsData.error;
-      if (recentPatientsData.error) throw recentPatientsData.error;
-      
-      // Combine and deduplicate patients
-      const allPatients: Patient[] = [
-        // From appointments
-        ...(appointmentsData.data?.filter(apt => apt.patients).map(apt => apt.patients) || []),
-        // From vital signs (triage) - skip this for now due to relation issue
-        // Recent registrations
-        ...(recentPatientsData.data || [])
-      ];
-      
-      // Remove duplicates
-      const uniquePatients = allPatients.filter((patient, index, self) => 
-        patient && index === self.findIndex(p => p?.id === patient?.id)
-      );
-      
-      return uniquePatients;
+      if (error) throw error;
+      return data as Patient[];
     },
   });
 
@@ -244,17 +189,17 @@ export const LabTestOrdering = () => {
                   <label className="text-sm font-medium mb-2 block">Select Patient</label>
                   <Select value={selectedPatient} onValueChange={setSelectedPatient}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Choose a patient from today's appointments" />
+                      <SelectValue placeholder="Search and select any patient" />
                     </SelectTrigger>
                     <SelectContent>
                       {patientsLoading ? (
                         <SelectItem value="loading" disabled>Loading patients...</SelectItem>
                       ) : patients?.length === 0 ? (
-                        <SelectItem value="no-patients" disabled>No patients scheduled for today</SelectItem>
+                        <SelectItem value="no-patients" disabled>No patients found</SelectItem>
                       ) : (
                         patients?.map((patient) => (
                           <SelectItem key={patient.id} value={patient.id}>
-                            {patient.first_name} {patient.last_name} - {patient.phone}
+                            {patient.first_name} {patient.last_name} - {patient.phone || 'No phone'}
                           </SelectItem>
                         ))
                       )}

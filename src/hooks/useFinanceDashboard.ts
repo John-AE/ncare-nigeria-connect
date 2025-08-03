@@ -176,19 +176,57 @@ export const useFinanceDashboard = () => {
 
     try {
       console.log('Recording payment with paid_by:', user.id);
-      const { error } = await supabase
-        .from('bills')
-        .update({
-          amount_paid: newAmountPaid,
-          is_paid: isFullyPaid,
-          paid_at: isFullyPaid ? new Date().toISOString() : null,
-          paid_by: user.id,
-          payment_method: paymentMethod,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedBill.id);
+      
+      // Handle lab test bills differently - they don't exist in the bills table yet
+      if (selectedBill.bill_type === 'lab_test') {
+        // Create a new bill record for the lab test
+        const { data: billData, error: billError } = await supabase
+          .from('bills')
+          .insert({
+            patient_id: selectedBill.patient_id,
+            amount: selectedBill.amount,
+            amount_paid: newAmountPaid,
+            is_paid: isFullyPaid,
+            paid_at: isFullyPaid ? new Date().toISOString() : null,
+            paid_by: user.id,
+            payment_method: paymentMethod,
+            description: 'Lab Test',
+            created_by: user.id,
+            hospital_id: user.hospital_id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (billError) throw billError;
+
+        // Update lab orders status to indicate they've been billed
+        const labOrderIds = selectedBill.lab_orders?.map(order => order.id) || [];
+        if (labOrderIds.length > 0) {
+          const { error: updateError } = await supabase
+            .from('lab_orders')
+            .update({ status: 'completed' })
+            .in('id', labOrderIds);
+          
+          if (updateError) console.error('Error updating lab orders:', updateError);
+        }
+      } else {
+        // Handle regular bills
+        const { error } = await supabase
+          .from('bills')
+          .update({
+            amount_paid: newAmountPaid,
+            is_paid: isFullyPaid,
+            paid_at: isFullyPaid ? new Date().toISOString() : null,
+            paid_by: user.id,
+            payment_method: paymentMethod,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedBill.id);
+
+        if (error) throw error;
+      }
 
       toast({
         title: "Payment Recorded",

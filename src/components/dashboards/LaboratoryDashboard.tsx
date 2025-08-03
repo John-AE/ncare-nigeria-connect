@@ -35,7 +35,22 @@ export const LaboratoryDashboard = () => {
       {/* Stats Cards */}
       <LaboratoryStatsCards stats={stats} />
 
-      {/* Charts Row */}
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div className="space-y-6">
+          <TestOrdersQueue />
+          <TestOrderBilling />
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          <TestTypesManagement />
+          <RecentTestResults />
+        </div>
+      </div>
+
+      {/* Charts Row - Moved to bottom */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Orders Chart */}
         <Card>
@@ -93,21 +108,6 @@ export const LaboratoryDashboard = () => {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column */}
-        <div className="space-y-6">
-          <TestOrdersQueue />
-          <TestOrderBilling />
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          <TestTypesManagement />
-          <RecentTestResults />
-        </div>
       </div>
     </div>
   );
