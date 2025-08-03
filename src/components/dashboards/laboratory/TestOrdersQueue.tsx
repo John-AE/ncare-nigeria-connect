@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,8 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, User, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { EnterResultsDialog } from "./EnterResultsDialog";
 
 export const TestOrdersQueue = () => {
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
+  
   const { data: orders, isLoading, refetch } = useQuery({
     queryKey: ["lab-orders-queue"],
     queryFn: async () => {
@@ -158,7 +163,10 @@ export const TestOrdersQueue = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {/* Open result entry dialog */}}
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setIsResultDialogOpen(true);
+                      }}
                     >
                       Enter Results
                     </Button>
@@ -175,6 +183,13 @@ export const TestOrdersQueue = () => {
           )}
         </div>
       </CardContent>
+      
+      <EnterResultsDialog
+        isOpen={isResultDialogOpen}
+        onClose={() => setIsResultDialogOpen(false)}
+        order={selectedOrder}
+        onResultSubmitted={refetch}
+      />
     </Card>
   );
 };

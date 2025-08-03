@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,8 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, AlertTriangle, CheckCircle2, Eye } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { TestResultViewDialog } from "./TestResultViewDialog";
 
 export const RecentTestResults = () => {
+  const [selectedResult, setSelectedResult] = useState<any>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  
   const { data: results, isLoading } = useQuery({
     queryKey: ["recent-lab-results"],
     queryFn: async () => {
@@ -77,7 +82,11 @@ export const RecentTestResults = () => {
           {results?.map((result) => (
             <div
               key={result.id}
-              className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+              className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => {
+                setSelectedResult(result);
+                setIsViewDialogOpen(true);
+              }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -125,7 +134,15 @@ export const RecentTestResults = () => {
                 </div>
                 
                 <div className="flex flex-col gap-2 ml-4">
-                  <Button size="sm" variant="outline">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedResult(result);
+                      setIsViewDialogOpen(true);
+                    }}
+                  >
                     <Eye className="h-4 w-4 mr-1" />
                     View
                   </Button>
@@ -146,6 +163,12 @@ export const RecentTestResults = () => {
           )}
         </div>
       </CardContent>
+      
+      <TestResultViewDialog
+        isOpen={isViewDialogOpen}
+        onClose={() => setIsViewDialogOpen(false)}
+        result={selectedResult}
+      />
     </Card>
   );
 };

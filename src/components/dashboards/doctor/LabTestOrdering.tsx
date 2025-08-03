@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { TestTube, Plus, Loader2 } from "lucide-react";
+import { TestTube, Plus, Loader2, Eye, Clock } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { TestResultViewDialog } from "../laboratory/TestResultViewDialog";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +48,8 @@ export const LabTestOrdering = () => {
   const [clinicalNotes, setClinicalNotes] = useState("");
   const [priority, setPriority] = useState<"routine" | "urgent" | "stat">("routine");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedResult, setSelectedResult] = useState<any>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
   // Fetch available test types
   const { data: testTypes, isLoading: testTypesLoading } = useQuery({
@@ -75,6 +79,28 @@ export const LabTestOrdering = () => {
       if (error) throw error;
       return data as Patient[];
     },
+  });
+
+  // Fetch doctor's ordered tests
+  const { data: orderedTests, isLoading: orderedTestsLoading } = useQuery({
+    queryKey: ["doctor-lab-orders"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lab_orders")
+        .select(`
+          *,
+          patients(first_name, last_name),
+          lab_test_types(name, code, sample_type),
+          lab_results(id, result_value, result_status, is_abnormal, is_critical, reviewed_at)
+        `)
+        .eq("doctor_id", profile?.user_id)
+        .order("order_date", { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 30000,
   });
 
   const groupedTests = testTypes?.reduce((acc, test) => {
@@ -138,6 +164,7 @@ export const LabTestOrdering = () => {
 
       // Refresh relevant queries
       queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["doctor-lab-orders"] });
       
     } catch (error) {
       console.error("Error creating lab orders:", error);
@@ -156,6 +183,38 @@ export const LabTestOrdering = () => {
       case "stat": return "bg-red-100 text-red-800";
       case "urgent": return "bg-yellow-100 text-yellow-800";
       default: return "bg-blue-100 text-blue-800";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "ordered": return "bg-gray-100 text-gray-800";
+      case "sample_collected": return "bg-yellow-100 text-yellow-800";
+      case "in_progress": return "bg-blue-100 text-blue-800";
+      case "completed": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const viewTestResult = async (order: any) => {
+    if (order.lab_results?.length > 0) {
+      // Fetch full result details
+      const { data: result, error } = await supabase
+        .from("lab_results")
+        .select(`
+          *,
+          lab_orders(
+            patients(first_name, last_name),
+            lab_test_types(name, code, sample_type, normal_range)
+          )
+        `)
+        .eq("id", order.lab_results[0].id)
+        .single();
+      
+      if (!error && result) {
+        setSelectedResult(result);
+        setIsViewDialogOpen(true);
+      }
     }
   };
 
@@ -343,6 +402,79 @@ export const LabTestOrdering = () => {
           <p className="text-sm mt-1">Orders will appear in the Laboratory Test Queue</p>
         </div>
       </CardContent>
+      
+      {/* Ordered Tests List */}
+      {orderedTests && orderedTests.length > 0 && (
+        <CardContent className="pt-0">
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-3">Recent Orders ({orderedTests.length})</h4>
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {orderedTests.map((order) => (
+                <div
+                  key={order.id}
+                  className="border rounded-lg p-3 hover:shadow-sm transition-shadow"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h5 className="font-medium text-sm">
+                          {order.patients?.first_name} {order.patients?.last_name}
+                        </h5>
+                        <Badge className={getPriorityColor(order.priority)} variant="secondary">
+                          {order.priority}
+                        </Badge>
+                        <Badge className={getStatusColor(order.status)} variant="outline">
+                          {order.status.replace("_", " ")}
+                        </Badge>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <div>
+                          <span className="font-medium">Test:</span> {order.lab_test_types?.name}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-3 w-3" />
+                          <span>
+                            Ordered {formatDistanceToNow(new Date(order.order_date))} ago
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="ml-3">
+                      {order.status === "completed" && order.lab_results?.length > 0 ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => viewTestResult(order)}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          View Result
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          View Result
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      )}
+      
+      <TestResultViewDialog
+        isOpen={isViewDialogOpen}
+        onClose={() => setIsViewDialogOpen(false)}
+        result={selectedResult}
+      />
     </Card>
   );
 };
