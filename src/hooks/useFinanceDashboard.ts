@@ -110,7 +110,15 @@ export const useFinanceDashboard = () => {
 
   // Handle payment
   const handlePayment = async () => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "Please log in again",
+        variant: "destructive",
+      });
+      return;
+    }
     console.log('Current user from localStorage:', user);
     
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
