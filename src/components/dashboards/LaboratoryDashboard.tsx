@@ -50,9 +50,9 @@ export const LaboratoryDashboard = () => {
         </div>
       </div>
 
-      {/* Charts Row - Moved to bottom */}
+      {/* Charts Section - Moved to bottom */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Daily Orders Chart */}
+        {/* Daily Test Orders Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Daily Test Orders (Last 30 Days)</CardTitle>
@@ -61,49 +61,28 @@ export const LaboratoryDashboard = () => {
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={stats.dailyOrders}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => new Date(value).toLocaleDateString()}
-                />
+                <XAxis dataKey="date" />
                 <YAxis />
-                <Tooltip 
-                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="orders" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))" }}
-                />
+                <Tooltip />
+                <Line type="monotone" dataKey="orders" stroke="#8884d8" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Most Ordered Tests */}
+        {/* Most Ordered Tests Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Most Ordered Tests (Last 30 Days)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.mostOrderedTests} layout="horizontal">
+              <BarChart data={stats.mostOrderedTests}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis 
-                  dataKey="name" 
-                  type="category"
-                  tick={{ fontSize: 11 }}
-                  width={100}
-                />
+                <XAxis dataKey="name" />
+                <YAxis />
                 <Tooltip />
-                <Bar 
-                  dataKey="count" 
-                  fill="hsl(var(--primary))"
-                  radius={[0, 4, 4, 0]}
-                />
+                <Bar dataKey="count" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

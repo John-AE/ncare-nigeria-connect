@@ -133,6 +133,7 @@ export type Database = {
         Row: {
           amount: number
           amount_paid: number
+          bill_type: string | null
           created_at: string
           created_by: string
           description: string | null
@@ -141,6 +142,7 @@ export type Database = {
           hospital_id: string | null
           id: string
           is_paid: boolean
+          lab_order_id: string | null
           paid_at: string | null
           paid_by: string | null
           patient_id: string
@@ -150,6 +152,7 @@ export type Database = {
         Insert: {
           amount: number
           amount_paid?: number
+          bill_type?: string | null
           created_at?: string
           created_by: string
           description?: string | null
@@ -158,6 +161,7 @@ export type Database = {
           hospital_id?: string | null
           id?: string
           is_paid?: boolean
+          lab_order_id?: string | null
           paid_at?: string | null
           paid_by?: string | null
           patient_id: string
@@ -167,6 +171,7 @@ export type Database = {
         Update: {
           amount?: number
           amount_paid?: number
+          bill_type?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
@@ -175,6 +180,7 @@ export type Database = {
           hospital_id?: string | null
           id?: string
           is_paid?: boolean
+          lab_order_id?: string | null
           paid_at?: string | null
           paid_by?: string | null
           patient_id?: string
@@ -187,6 +193,13 @@ export type Database = {
             columns: ["hospital_id"]
             isOneToOne: false
             referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bills_lab_order_id_fkey"
+            columns: ["lab_order_id"]
+            isOneToOne: false
+            referencedRelation: "lab_orders"
             referencedColumns: ["id"]
           },
           {
@@ -1128,6 +1141,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_lab_payment_status: {
+        Args: { order_id: string }
+        Returns: boolean
+      }
       get_current_user_hospital_id: {
         Args: Record<PropertyKey, never>
         Returns: string

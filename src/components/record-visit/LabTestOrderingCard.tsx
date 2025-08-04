@@ -114,7 +114,7 @@ export const LabTestOrderingCard = ({ patientId }: LabTestOrderingCardProps) => 
     setIsSubmitting(true);
 
     try {
-      // Create lab orders for each selected test
+      // First, create the lab orders
       const orders = selectedTests.map(testTypeId => ({
         patient_id: patientId,
         doctor_id: profile?.user_id,
@@ -126,11 +126,25 @@ export const LabTestOrderingCard = ({ patientId }: LabTestOrderingCardProps) => 
         status: "ordered",
       }));
 
-      const { error } = await supabase
+      const { data: insertedOrders, error: orderError } = await supabase
         .from("lab_orders")
-        .insert(orders);
+        .insert(orders)
+        .select();
 
-      if (error) throw error;
+      if (orderError) throw orderError;
+
+      // Update bills with lab_order_id for linkage
+      if (insertedOrders) {
+        for (const order of insertedOrders) {
+          await supabase
+            .from("bills")
+            .update({ lab_order_id: order.id })
+            .eq("patient_id", patientId)
+            .eq("bill_type", "lab_test")
+            .is("lab_order_id", null)
+            .limit(1);
+        }
+      }
 
       toast({
         title: "Success",

@@ -37,7 +37,7 @@ interface LabOrderWithDetails {
 export const TestOrderBilling = () => {
   const [selectedPatient, setSelectedPatient] = useState<string>("");
 
-  // Fetch lab orders with patient and test details
+  // Fetch lab orders with patient and test details plus payment status
   const { data: orders, isLoading } = useQuery({
     queryKey: ["lab-orders-billing"],
     queryFn: async () => {
@@ -59,9 +59,15 @@ export const TestOrderBilling = () => {
             price,
             category,
             sample_type
+          ),
+          bills!bills_lab_order_id_fkey (
+            id,
+            amount,
+            amount_paid,
+            bill_type
           )
         `)
-        .in("status", ["ordered", "sample_collected", "in_progress"])
+        .in("status", ["ordered", "sample_collected", "in_progress", "completed"])
         .order("order_date", { ascending: false });
 
       if (error) throw error;
@@ -112,6 +118,35 @@ export const TestOrderBilling = () => {
     }
   };
 
+  const getPaymentStatusColor = (order: any) => {
+    if (!order.bills || order.bills.length === 0) {
+      return "bg-red-100 text-red-800"; // No bill - error state
+    }
+    
+    const bill = order.bills[0];
+    if (bill.amount_paid >= bill.amount) {
+      return "bg-green-100 text-green-800"; // Paid
+    } else if (bill.amount_paid > 0) {
+      return "bg-yellow-100 text-yellow-800"; // Partially paid
+    } else {
+      return "bg-red-100 text-red-800"; // Unpaid
+    }
+  };
+
+  const getPaymentStatusText = (order: any) => {
+    if (!order.bills || order.bills.length === 0) {
+      return "No Bill";
+    }
+    
+    const bill = order.bills[0];
+    if (bill.amount_paid >= bill.amount) {
+      return "Paid";
+    } else if (bill.amount_paid > 0) {
+      return "Partial";
+    } else {
+      return "Unpaid";
+    }
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ordered": return "bg-blue-100 text-blue-800";
@@ -229,6 +264,9 @@ export const TestOrderBilling = () => {
                               </Badge>
                               <Badge className={getStatusColor(order.status)}>
                                 {order.status.replace('_', ' ')}
+                              </Badge>
+                              <Badge className={getPaymentStatusColor(order)}>
+                                {getPaymentStatusText(order)}
                               </Badge>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">

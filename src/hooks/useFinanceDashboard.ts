@@ -15,72 +15,32 @@ export const useFinanceDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentPayments, setRecentPayments] = useState([]);
 
-  // Fetch bills with patient information (regular bills + lab test bills)
+  // Fetch bills with patient information including lab test bills
   const fetchBills = async () => {
     try {
-      // Fetch regular bills
+      // Fetch all bills (including lab test bills from the database)
       const { data: billsData, error: billsError } = await supabase
         .from('bills')
         .select(`
           *,
-          patients(first_name, last_name)
+          patients(first_name, last_name),
+          lab_orders(
+            lab_test_types(name, code)
+          )
         `)
         .order('created_at', { ascending: false });
 
       if (billsError) throw billsError;
 
-      // Fetch lab orders that need billing (grouped by patient)
-      const { data: labOrdersData, error: labOrdersError } = await supabase
-        .from('lab_orders')
-        .select(`
-          *,
-          patients(first_name, last_name),
-          lab_test_types(name, price)
-        `)
-        .in('status', ['ordered', 'sample_collected', 'in_progress'])
-        .order('order_date', { ascending: false });
-
-      if (labOrdersError) throw labOrdersError;
-
-      // Group lab orders by patient to create lab test bills
-      const labBillsByPatient = labOrdersData?.reduce((acc, order) => {
-        const patientKey = order.patient_id;
-        if (!acc[patientKey]) {
-          acc[patientKey] = {
-            id: `lab-${order.patient_id}`,
-            patient_id: order.patient_id,
-            patients: order.patients,
-            amount: 0,
-            amount_paid: 0,
-            is_paid: false,
-            created_at: order.order_date,
-            updated_at: order.order_date,
-            description: 'Lab Test',
-            bill_type: 'lab_test',
-            lab_orders: []
-          };
-        }
-        acc[patientKey].amount += order.lab_test_types.price;
-        acc[patientKey].lab_orders.push(order);
-        return acc;
-      }, {} as Record<string, any>) || {};
-
-      const labBills = Object.values(labBillsByPatient);
-
-      // Combine regular bills and lab bills
-      const allBills = [
-        ...billsData.map(bill => ({
-          ...bill,
-          patient_name: `${bill.patients.first_name} ${bill.patients.last_name}`,
-          payment_status: getPaymentStatus(bill.amount, bill.amount_paid || 0),
-          bill_type: 'regular'
-        })),
-        ...labBills.map(bill => ({
-          ...bill,
-          patient_name: `${bill.patients.first_name} ${bill.patients.last_name}`,
-          payment_status: getPaymentStatus(bill.amount, bill.amount_paid || 0)
-        }))
-      ];
+      // Transform bills data to include proper bill types and payment status
+      const allBills = billsData.map(bill => ({
+        ...bill,
+        patient_name: `${bill.patients.first_name} ${bill.patients.last_name}`,
+        payment_status: getPaymentStatus(bill.amount, bill.amount_paid || 0),
+        bill_type: bill.bill_type || 'medical_service',
+        // Add lab test name for lab test bills
+        lab_test_name: bill.lab_orders?.[0]?.lab_test_types?.name || null
+      }));
 
       setBills(allBills);
       setFilteredBills(allBills);
@@ -175,58 +135,35 @@ export const useFinanceDashboard = () => {
     const isFullyPaid = newAmountPaid >= selectedBill.amount;
 
     try {
-      console.log('Recording payment with paid_by:', user.id);
+      console.log('Recording payment for bill:', selectedBill);
       
-      // Handle lab test bills differently - they don't exist in the bills table yet
-      if (selectedBill.bill_type === 'lab_test') {
-        // Create a new bill record for the lab test
-        const { data: billData, error: billError } = await supabase
-          .from('bills')
-          .insert({
-            patient_id: selectedBill.patient_id,
-            amount: selectedBill.amount,
-            amount_paid: newAmountPaid,
-            is_paid: isFullyPaid,
-            paid_at: isFullyPaid ? new Date().toISOString() : null,
-            paid_by: user.id,
-            payment_method: paymentMethod,
-            description: 'Lab Test',
-            created_by: user.id,
-            hospital_id: user.hospital_id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
+      // Update the bill record
+      const { error: billError } = await supabase
+        .from('bills')
+        .update({
+          amount_paid: newAmountPaid,
+          is_paid: isFullyPaid,
+          paid_at: isFullyPaid ? new Date().toISOString() : null,
+          paid_by: user.id,
+          payment_method: paymentMethod,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedBill.id);
 
-        if (billError) throw billError;
+      if (billError) throw billError;
 
-        // Update lab orders status to indicate they've been billed
-        const labOrderIds = selectedBill.lab_orders?.map(order => order.id) || [];
-        if (labOrderIds.length > 0) {
-          const { error: updateError } = await supabase
-            .from('lab_orders')
-            .update({ status: 'completed' })
-            .in('id', labOrderIds);
-          
-          if (updateError) console.error('Error updating lab orders:', updateError);
-        }
-      } else {
-        // Handle regular bills
-        const { error } = await supabase
-          .from('bills')
-          .update({
-            amount_paid: newAmountPaid,
-            is_paid: isFullyPaid,
-            paid_at: isFullyPaid ? new Date().toISOString() : null,
-            paid_by: user.id,
-            payment_method: paymentMethod,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', selectedBill.id);
+      // Create payment history record
+      const { error: paymentError } = await supabase
+        .from('payment_history')
+        .insert({
+          bill_id: selectedBill.id,
+          payment_amount: parseFloat(paymentAmount),
+          payment_method: paymentMethod,
+          paid_by: user.id,
+          hospital_id: user.hospital_id,
+        });
 
-        if (error) throw error;
-      }
+      if (paymentError) throw paymentError;
 
       toast({
         title: "Payment Recorded",
