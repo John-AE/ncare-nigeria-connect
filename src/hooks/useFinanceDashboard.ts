@@ -168,7 +168,7 @@ export const useFinanceDashboard = () => {
           payment_amount: parseFloat(paymentAmount),
           payment_method: paymentMethod,
           paid_by: user.id,
-          hospital_id: user.hospital_id,
+          hospital_id: user.user_metadata?.hospital_id || null,
         });
 
       if (paymentError) throw paymentError;
