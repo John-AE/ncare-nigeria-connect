@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { TestTube, Plus, Loader2, Eye, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { TestResultViewDialog } from "../laboratory/TestResultViewDialog";
+import { TestResultViewDialog } from "../dashboards/laboratory/TestResultViewDialog";
 import {
   Dialog,
   DialogContent,
@@ -30,20 +30,15 @@ interface TestType {
   preparation_instructions?: string;
 }
 
-interface Patient {
-  id: string;
-  first_name: string;
-  last_name: string;
-  phone?: string;
-  date_of_birth: string;
+interface LabTestOrderingCardProps {
+  patientId: string;
 }
 
-export const LabTestOrdering = () => {
+export const LabTestOrderingCard = ({ patientId }: LabTestOrderingCardProps) => {
   const { profile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [selectedTests, setSelectedTests] = useState<string[]>([]);
   const [clinicalNotes, setClinicalNotes] = useState("");
   const [priority, setPriority] = useState<"routine" | "urgent" | "stat">("routine");
@@ -67,23 +62,9 @@ export const LabTestOrdering = () => {
     },
   });
 
-  // Fetch all patients (simplified like Direct Patient Billing)
-  const { data: patients, isLoading: patientsLoading } = useQuery({
-    queryKey: ["all-patients"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("patients")
-        .select("id, first_name, last_name, phone, date_of_birth")
-        .order("first_name");
-      
-      if (error) throw error;
-      return data as Patient[];
-    },
-  });
-
-  // Fetch doctor's ordered tests
+  // Fetch doctor's ordered tests for this patient
   const { data: orderedTests, isLoading: orderedTestsLoading } = useQuery({
-    queryKey: ["doctor-lab-orders"],
+    queryKey: ["doctor-lab-orders", patientId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lab_orders")
@@ -94,6 +75,7 @@ export const LabTestOrdering = () => {
           lab_results(id, result_value, result_status, is_abnormal, is_critical, reviewed_at)
         `)
         .eq("doctor_id", profile?.user_id)
+        .eq("patient_id", patientId)
         .order("order_date", { ascending: false })
         .limit(10);
       
@@ -120,10 +102,10 @@ export const LabTestOrdering = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedPatient || selectedTests.length === 0) {
+    if (selectedTests.length === 0) {
       toast({
         title: "Error",
-        description: "Please select a patient and at least one test",
+        description: "Please select at least one test",
         variant: "destructive",
       });
       return;
@@ -134,7 +116,7 @@ export const LabTestOrdering = () => {
     try {
       // Create lab orders for each selected test
       const orders = selectedTests.map(testTypeId => ({
-        patient_id: selectedPatient,
+        patient_id: patientId,
         doctor_id: profile?.user_id,
         test_type_id: testTypeId,
         hospital_id: profile?.hospital_id,
@@ -156,7 +138,6 @@ export const LabTestOrdering = () => {
       });
 
       // Reset form
-      setSelectedPatient("");
       setSelectedTests([]);
       setClinicalNotes("");
       setPriority("routine");
@@ -164,7 +145,7 @@ export const LabTestOrdering = () => {
 
       // Refresh relevant queries
       queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["doctor-lab-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["doctor-lab-orders", patientId] });
       
     } catch (error) {
       console.error("Error creating lab orders:", error);
@@ -218,7 +199,6 @@ export const LabTestOrdering = () => {
     }
   };
 
-  const selectedPatientData = patients?.find(p => p.id === selectedPatient);
   const selectedTestsData = testTypes?.filter(test => selectedTests.includes(test.id)) || [];
   const totalCost = selectedTestsData.reduce((sum, test) => sum + test.price, 0);
 
@@ -243,29 +223,6 @@ export const LabTestOrdering = () => {
               </DialogHeader>
               
               <div className="space-y-6">
-                {/* Patient Selection */}
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Select Patient</label>
-                  <Select value={selectedPatient} onValueChange={setSelectedPatient}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Search and select any patient" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {patientsLoading ? (
-                        <SelectItem value="loading" disabled>Loading patients...</SelectItem>
-                      ) : patients?.length === 0 ? (
-                        <SelectItem value="no-patients" disabled>No patients found</SelectItem>
-                      ) : (
-                        patients?.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id}>
-                            {patient.first_name} {patient.last_name} - {patient.phone || 'No phone'}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Test Selection */}
                 <div>
                   <label className="text-sm font-medium mb-2 block">Select Tests</label>
@@ -337,13 +294,10 @@ export const LabTestOrdering = () => {
                 </div>
 
                 {/* Order Summary */}
-                {selectedPatientData && selectedTests.length > 0 && (
+                {selectedTests.length > 0 && (
                   <div className="border rounded-lg p-4 bg-muted/50">
                     <h4 className="font-medium mb-2">Order Summary</h4>
                     <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="font-medium">Patient:</span> {selectedPatientData.first_name} {selectedPatientData.last_name}
-                      </div>
                       <div>
                         <span className="font-medium">Doctor:</span> Dr. {profile?.username}
                       </div>
@@ -382,7 +336,7 @@ export const LabTestOrdering = () => {
                   </Button>
                   <Button
                     onClick={handleSubmit}
-                    disabled={!selectedPatient || selectedTests.length === 0 || isSubmitting}
+                    disabled={selectedTests.length === 0 || isSubmitting}
                   >
                     {isSubmitting ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -395,19 +349,13 @@ export const LabTestOrdering = () => {
           </Dialog>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="text-center py-4 text-muted-foreground">
-          <TestTube className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p>Click "Order Tests" to create new laboratory test orders</p>
-        </div>
-      </CardContent>
       
       {/* Ordered Tests List */}
       {orderedTests && orderedTests.length > 0 && (
-        <CardContent className="pt-0">
-          <div className="border-t pt-4">
+        <CardContent>
+          <div>
             <h4 className="font-medium mb-3">Recent Orders ({orderedTests.length})</h4>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
+            <div className="space-y-3 max-h-60 overflow-y-auto">
               {orderedTests.map((order) => (
                 <div
                   key={order.id}
@@ -416,9 +364,6 @@ export const LabTestOrdering = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h5 className="font-medium text-sm">
-                          {order.patients?.first_name} {order.patients?.last_name}
-                        </h5>
                         <Badge className={getPriorityColor(order.priority)} variant="secondary">
                           {order.priority}
                         </Badge>

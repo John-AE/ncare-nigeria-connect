@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { useRecordVisit } from "@/hooks/useRecordVisit";
 import { PatientInfoCard } from "@/components/record-visit/PatientInfoCard";
 import { VisitDetailsCard } from "@/components/record-visit/VisitDetailsCard";
+import { LabTestOrderingCard } from "@/components/record-visit/LabTestOrderingCard";
 import { PatientBillingSystem } from "@/components/record-visit/PatientBillingSystem";
 
 export const RecordVisit = () => {
@@ -53,6 +54,8 @@ export const RecordVisit = () => {
         <PatientInfoCard appointment={appointment} />
         <VisitDetailsCard visitData={visitData} setVisitData={setVisitData} />
       </div>
+
+      <LabTestOrderingCard patientId={appointment.patient_id} />
 
       <PatientBillingSystem 
         appointment={appointment} 
