@@ -161,6 +161,8 @@ export const useFinanceDashboard = () => {
       if (billError) throw billError;
 
       // Create payment history record
+      console.log('User data:', user);
+      console.log('User metadata:', user.user_metadata);
       const { error: paymentError } = await supabase
         .from('payment_history')
         .insert({
