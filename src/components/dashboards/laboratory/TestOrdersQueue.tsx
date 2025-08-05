@@ -16,41 +16,21 @@ export const TestOrdersQueue = () => {
   const { data: orders, isLoading, refetch } = useQuery({
     queryKey: ["lab-orders-queue"],
     queryFn: async () => {
-      // First try with bills relation
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from("lab_orders")
         .select(`
           *,
           patients(first_name, last_name),
           lab_test_types(name, code, sample_type, price),
           profiles(username),
-          lab_samples(id, collected_at, sample_condition)
+          lab_samples(id, collected_at, sample_condition),
+          bills!lab_order_id(id, amount, amount_paid, bill_type)
         `)
         .in("status", ["ordered", "sample_collected", "in_progress"])
         .order("order_date", { ascending: true })
         .limit(20);
 
       if (error) throw error;
-
-      // Try to fetch bills separately for each order
-      if (data && data.length > 0) {
-        const ordersWithBills = await Promise.all(
-          data.map(async (order) => {
-            const { data: bills } = await supabase
-              .from("bills")
-              .select("id, amount, amount_paid, bill_type, status")
-              .eq("lab_order_id", order.id)
-              .limit(1);
-            
-            return {
-              ...order,
-              bills: bills || []
-            };
-          })
-        );
-        return ordersWithBills;
-      }
-
       return data;
     },
     refetchInterval: 30000,
