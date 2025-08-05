@@ -15,6 +15,12 @@ export const useFinanceDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentPayments, setRecentPayments] = useState([]);
 
+  // Initialize data fetching
+  useEffect(() => {
+    fetchBills();
+    fetchRecentPayments();
+  }, []);
+
   // Fetch bills with patient information including lab test bills
   const fetchBills = async () => {
     try {
@@ -180,7 +186,12 @@ const handlePayment = async () => {
         hospital_id: profileData?.hospital_id,
       });
 
-    if (paymentError) throw paymentError;
+    console.log('Payment history insert error:', paymentError);
+
+    if (paymentError) {
+      console.error('Payment history error details:', paymentError);
+      throw paymentError;
+    }
 
     toast({
       title: "Payment Recorded",
