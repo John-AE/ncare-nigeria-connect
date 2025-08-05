@@ -83,8 +83,8 @@ export const TestOrdersQueue = () => {
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string, order: any) => {
-    // For now, let's make payment checking optional until we confirm the bills structure
-    const shouldCheckPayment = false; // Set to true once bills integration is confirmed
+    // Enable payment checking - bills integration is now confirmed
+    const shouldCheckPayment = true;
     
     if (shouldCheckPayment && (newStatus === "sample_collected" || newStatus === "in_progress")) {
       if (!isBillPaid(order)) {
