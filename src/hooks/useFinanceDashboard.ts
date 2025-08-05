@@ -108,106 +108,100 @@ export const useFinanceDashboard = () => {
     setFilteredBills(filtered);
   };
 
-  // Handle payment
-  const handlePayment = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({
-        title: "Authentication Error",
-        description: "Please log in again",
-        variant: "destructive",
-      });
-      return;
-    }
-    console.log('Current user from localStorage:', user);
+// Handle payment
+const handlePayment = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    toast({
+      title: "Authentication Error",
+      description: "Please log in again",
+      variant: "destructive",
+    });
+    return;
+  }
+  console.log('Current user from localStorage:', user);
+  
+  if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
+    toast({
+      title: "Invalid Amount",
+      description: "Please enter a valid payment amount",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (!paymentMethod) {
+    toast({
+      title: "Payment Method Required",
+      description: "Please select a payment method",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const newAmountPaid = (selectedBill.amount_paid || 0) + parseFloat(paymentAmount);
+  const isFullyPaid = newAmountPaid >= selectedBill.amount;
+
+  try {
+    console.log('Recording payment for bill:', selectedBill);
     
-    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid payment amount",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Update the bill record
+    const { error: billError } = await supabase
+      .from('bills')
+      .update({
+        amount_paid: newAmountPaid,
+        is_paid: isFullyPaid,
+        paid_at: isFullyPaid ? new Date().toISOString() : null,
+        paid_by: user.id,
+        payment_method: paymentMethod,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', selectedBill.id);
 
-    if (!paymentMethod) {
-      toast({
-        title: "Payment Method Required",
-        description: "Please select a payment method",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (billError) throw billError;
 
-    const newAmountPaid = (selectedBill.amount_paid || 0) + parseFloat(paymentAmount);
-    const isFullyPaid = newAmountPaid >= selectedBill.amount;
+    // Get hospital_id from profiles table
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('hospital_id')
+      .eq('user_id', user.id)
+      .single();
 
-    try {
-      console.log('Recording payment for bill:', selectedBill);
-      
-      // Update the bill record
-      const { error: billError } = await supabase
-        .from('bills')
-        .update({
-          amount_paid: newAmountPaid,
-          is_paid: isFullyPaid,
-          paid_at: isFullyPaid ? new Date().toISOString() : null,
-          paid_by: user.id,
-          payment_method: paymentMethod,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedBill.id);
-
-      if (billError) throw billError;
-
-      // Create payment history record
-      console.log('User data:', user);
-      console.log('User metadata:', user.user_metadata);
-      const { error: paymentError } = await supabase
-        .from('payment_history')
-        .insert({
-          bill_id: selectedBill.id,
-          payment_amount: parseFloat(paymentAmount),
-          payment_method: paymentMethod,
-          paid_by: user.id,
-          // Get hospital_id from profiles table instead
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('hospital_id')
-            .eq('user_id', user.id)
-            .single();
-          
-          // Then in the insert:
-          hospital_id: profileData?.hospital_id,
-        });
-
-      if (paymentError) throw paymentError;
-
-      toast({
-        title: "Payment Recorded",
-        description: isFullyPaid ? "Bill has been fully paid!" : "Partial payment recorded successfully",
+    // Create payment history record
+    console.log('User data:', user);
+    console.log('User metadata:', user.user_metadata);
+    const { error: paymentError } = await supabase
+      .from('payment_history')
+      .insert({
+        bill_id: selectedBill.id,
+        payment_amount: parseFloat(paymentAmount),
+        payment_method: paymentMethod,
+        paid_by: user.id,
+        hospital_id: profileData?.hospital_id,
       });
 
-      setIsPaymentDialogOpen(false);
-      setPaymentAmount("");
-      setPaymentMethod("");
-      setSelectedBill(null);
-      fetchBills();
-      fetchRecentPayments();
-    } catch (error) {
-      console.error('Error recording payment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to record payment",
-        variant: "destructive",
-      });
-    }
-  };
+    if (paymentError) throw paymentError;
 
-  useEffect(() => {
+    toast({
+      title: "Payment Recorded",
+      description: isFullyPaid ? "Bill has been fully paid!" : "Partial payment recorded successfully",
+    });
+
+    setIsPaymentDialogOpen(false);
+    setPaymentAmount("");
+    setPaymentMethod("");
+    setSelectedBill(null);
     fetchBills();
     fetchRecentPayments();
-  }, []);
+  } catch (error) {
+    console.error('Error recording payment:', error);
+    toast({
+      title: "Error",
+      description: "Failed to record payment",
+      variant: "destructive",
+    });
+  }
+};
 
   // Calculate stats
   const pendingBillsCount = bills.filter(bill => bill.payment_status !== 'fully_paid').length;
