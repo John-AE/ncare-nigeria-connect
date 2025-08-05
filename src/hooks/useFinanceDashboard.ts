@@ -170,7 +170,15 @@ export const useFinanceDashboard = () => {
           payment_amount: parseFloat(paymentAmount),
           payment_method: paymentMethod,
           paid_by: user.id,
-          hospital_id: user.user_metadata?.hospital_id || null,
+          // Get hospital_id from profiles table instead
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('hospital_id')
+            .eq('user_id', user.id)
+            .single();
+          
+          // Then in the insert:
+          hospital_id: profileData?.hospital_id,
         });
 
       if (paymentError) throw paymentError;
