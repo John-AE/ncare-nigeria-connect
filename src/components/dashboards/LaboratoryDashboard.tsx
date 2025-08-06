@@ -4,6 +4,7 @@ import { TestOrdersQueue } from "./laboratory/TestOrdersQueue";
 import { RecentTestResults } from "./laboratory/RecentTestResults";
 import { TestTypesManagement } from "./laboratory/TestTypesManagement";
 import { TestOrderBilling } from "./laboratory/TestOrderBilling";
+import { LabBillingHistory } from "./laboratory/LabBillingHistory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Loader2, Activity, TrendingUp } from "lucide-react";
@@ -84,8 +85,7 @@ export const LaboratoryDashboard = () => {
 
           {/* Lab Billing History */}
           <div className="w-full transform hover:scale-[1.01] transition-all duration-300 hover:shadow-xl">
-            {/* Note: You'll need to import and add your Lab Billing History component here */}
-            {/* <LabBillingHistory /> */}
+            <LabBillingHistory />
           </div>
         </div>
 

@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Clock, Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, Loader2, Search } from "lucide-react";
 
 interface HistoryRow {
   id: string;
@@ -21,54 +19,74 @@ interface HistoryRow {
 export const LabBillingHistory = () => {
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
-  const [page, setPage] = useState(0);
-  const pageSize = 10;
+  const pageSize = 5; // Show first 5, then load more on scroll
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
     return () => clearTimeout(t);
   }, [search]);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["lab-billing-history", debounced, page, pageSize],
-    queryFn: async () => {
-      let query = supabase
-        .from("lab_orders")
-        .select(
-          `*,
-           patients ( first_name, last_name ),
-           lab_test_types ( name, code, price ),
-           bills!bills_lab_order_id_fkey ( amount, amount_paid ),
-           lab_results ( result_status, reviewed_at )
-          `,
-          { count: "exact" }
-        )
-        .order("order_date", { ascending: false })
-        .range(page * pageSize, page * pageSize + pageSize - 1);
+  const queryKey = useMemo(() => ["lab-billing-history", debounced, pageSize], [debounced]);
 
-      if (debounced) {
-        query = query.or(
-          `patients.first_name.ilike.%${debounced}%,patients.last_name.ilike.%${debounced}%`
-        );
-      }
+  const fetchPage = async ({ pageParam = 0 }): Promise<{ rows: HistoryRow[]; nextOffset: number | null }> => {
+    let query = supabase
+      .from("lab_orders")
+      .select(
+        `*,
+         patients ( first_name, last_name ),
+         lab_test_types ( name, code, price ),
+         bills!bills_lab_order_id_fkey ( amount, amount_paid ),
+         lab_results ( result_status, reviewed_at )
+        `
+      )
+      .order("order_date", { ascending: false })
+      .range(pageParam, pageParam + pageSize - 1);
 
-      const { data, error, count } = await query;
-      if (error) throw error;
-
-      // Keep only orders that have a completed result
-      const rows = (data as HistoryRow[]).filter((o) =>
-        (o.lab_results || []).some((r) => r.result_status === "completed")
+    if (debounced) {
+      query = query.or(
+        `patients.first_name.ilike.%${debounced}%,patients.last_name.ilike.%${debounced}%`
       );
+    }
 
-      return { rows, total: count ?? rows.length };
-    },
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const rows = (data as HistoryRow[]).filter((o) =>
+      (o.lab_results || []).some((r) => r.result_status === "completed")
+    );
+
+    // If fewer than pageSize returned, no more pages
+    const nextOffset = rows.length < pageSize ? null : pageParam + pageSize;
+    return { rows, nextOffset };
+  };
+
+  const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage, refetch } = useInfiniteQuery({
+    queryKey,
+    queryFn: fetchPage,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
     refetchInterval: 30000,
   });
 
-  const totalPages = useMemo(() => {
-    const total = data?.total ?? 0;
-    return Math.max(1, Math.ceil(total / pageSize));
-  }, [data?.total]);
+  // Intersection Observer for infinite scroll
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { root: node.parentElement, rootMargin: "0px", threshold: 0.1 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, data]);
+
+  const rows = useMemo(() => (data?.pages || []).flatMap((p) => p.rows), [data]);
 
   return (
     <Card>
@@ -85,27 +103,10 @@ export const LabBillingHistory = () => {
                 placeholder="Search patient..."
                 value={search}
                 onChange={(e) => {
-                  setPage(0);
                   setSearch(e.target.value);
                 }}
                 className="pl-8"
               />
-            </div>
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {page + 1} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page + 1 >= totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </CardTitle>
@@ -116,9 +117,9 @@ export const LabBillingHistory = () => {
             <Loader2 className="h-6 w-6 animate-spin mr-2" />
             <span>Loading history...</span>
           </div>
-        ) : data && data.rows.length > 0 ? (
-          <div className="space-y-3">
-            {data.rows.map((row) => {
+        ) : rows.length > 0 ? (
+          <div className="space-y-3 max-h-[28rem] overflow-auto pr-1">
+            {rows.map((row) => {
               const bill = row.bills?.[0];
               const paid = bill && bill.amount_paid >= bill.amount;
               return (
@@ -148,6 +149,14 @@ export const LabBillingHistory = () => {
                 </div>
               );
             })}
+            {/* Sentinel for infinite scrolling */}
+            <div ref={sentinelRef} />
+            {isFetchingNextPage && (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                <span className="text-sm">Loading more...</span>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
