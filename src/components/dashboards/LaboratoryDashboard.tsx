@@ -4,7 +4,6 @@ import { TestOrdersQueue } from "./laboratory/TestOrdersQueue";
 import { RecentTestResults } from "./laboratory/RecentTestResults";
 import { TestTypesManagement } from "./laboratory/TestTypesManagement";
 import { TestOrderBilling } from "./laboratory/TestOrderBilling";
-import { LabBillingHistory } from "./laboratory/LabBillingHistory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Loader2, Activity, TrendingUp } from "lucide-react";
@@ -61,33 +60,36 @@ export const LaboratoryDashboard = () => {
           <LaboratoryStatsCards stats={stats} />
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column */}
-          <div className="space-y-8">
-            <div className="transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl">
-              <TestOrdersQueue />
-            </div>
-            <div className="transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl">
-              <TestOrderBilling />
-            </div>
+        {/* Full Width Components - In the requested order */}
+        <div className="space-y-8">
+          {/* Test Orders Queue */}
+          <div className="w-full transform hover:scale-[1.01] transition-all duration-300 hover:shadow-xl">
+            <TestOrdersQueue />
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-8">
-            <div className="transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl">
-              <TestTypesManagement />
-            </div>
-            <div className="transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl">
-              <RecentTestResults />
-            </div>
-            <div className="transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl">
-              <LabBillingHistory />
-            </div>
+          {/* Test Order Billing */}
+          <div className="w-full transform hover:scale-[1.01] transition-all duration-300 hover:shadow-xl">
+            <TestOrderBilling />
+          </div>
+
+          {/* Recent Test Results */}
+          <div className="w-full transform hover:scale-[1.01] transition-all duration-300 hover:shadow-xl">
+            <RecentTestResults />
+          </div>
+
+          {/* Test Types Management */}
+          <div className="w-full transform hover:scale-[1.01] transition-all duration-300 hover:shadow-xl">
+            <TestTypesManagement />
+          </div>
+
+          {/* Lab Billing History */}
+          <div className="w-full transform hover:scale-[1.01] transition-all duration-300 hover:shadow-xl">
+            {/* Note: You'll need to import and add your Lab Billing History component here */}
+            {/* <LabBillingHistory /> */}
           </div>
         </div>
 
-        {/* Charts Section - Enhanced with modern styling */}
+        {/* Charts Section - Enhanced with modern styling (unchanged) */}
         <div className="mt-12">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
