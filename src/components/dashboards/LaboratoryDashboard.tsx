@@ -4,6 +4,7 @@ import { TestOrdersQueue } from "./laboratory/TestOrdersQueue";
 import { RecentTestResults } from "./laboratory/RecentTestResults";
 import { TestTypesManagement } from "./laboratory/TestTypesManagement";
 import { TestOrderBilling } from "./laboratory/TestOrderBilling";
+import { LabBillingHistory } from "./laboratory/LabBillingHistory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Loader2, Activity, TrendingUp } from "lucide-react";
@@ -79,6 +80,9 @@ export const LaboratoryDashboard = () => {
             </div>
             <div className="transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl">
               <RecentTestResults />
+            </div>
+            <div className="transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl">
+              <LabBillingHistory />
             </div>
           </div>
         </div>
