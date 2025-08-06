@@ -120,6 +120,7 @@ export const LabTestOrdering = () => {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
     if (!selectedPatient || selectedTests.length === 0) {
       toast({
         title: "Error",
