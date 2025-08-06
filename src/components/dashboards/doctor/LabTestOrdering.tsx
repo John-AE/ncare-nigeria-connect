@@ -148,9 +148,9 @@ export const LabTestOrdering = () => {
       const { error } = await supabase
         .from("lab_orders")
         .insert(orders);
-
+      
       if (error) throw error;
-
+      
       // Create bill for lab tests
       const totalCost = selectedTestsData.reduce((sum, test) => sum + test.price, 0);
       
@@ -172,7 +172,7 @@ export const LabTestOrdering = () => {
       // Create bill items
       const labBillItems = selectedTestsData.map(test => ({
         bill_id: billData.id,
-        service_id: test.id,
+        service_id: null,
         quantity: 1,
         unit_price: test.price,
         total_price: test.price,
