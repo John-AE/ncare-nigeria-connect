@@ -152,39 +152,7 @@ export const LabTestOrdering = () => {
       
       if (error) throw error;
       
-      // Create bill for lab tests
-      const totalCost = selectedTestsData.reduce((sum, test) => sum + test.price, 0);
-      
-      const { data: billData, error: billError } = await supabase
-        .from("bills")
-        .insert({
-          patient_id: selectedPatient,
-          lab_order_id: createdOrders[0].id,
-          amount: totalCost,
-          description: `Lab tests for ${selectedPatientData.first_name} ${selectedPatientData.last_name}`,
-          bill_type: "lab_test",
-          created_by: profile?.user_id,
-          hospital_id: profile?.hospital_id,
-        })
-        .select()
-        .single();
-      
-      if (billError) throw billError;
-      
-      // Create bill items
-      const labBillItems = selectedTestsData.map(test => ({
-        bill_id: billData.id,
-        service_id: null,
-        quantity: 1,
-        unit_price: test.price,
-        total_price: test.price,
-      }));
-      
-      const { error: itemsError } = await supabase
-        .from('bill_items')
-        .insert(labBillItems);
-      
-      if (itemsError) throw itemsError;
+      // Bills will be automatically created by the database trigger
       
       toast({
         title: "Success",
