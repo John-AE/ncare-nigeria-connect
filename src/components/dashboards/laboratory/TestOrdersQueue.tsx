@@ -24,7 +24,7 @@ export const TestOrdersQueue = () => {
           lab_test_types(name, code, sample_type, price),
           profiles(username),
           lab_samples(id, collected_at, sample_condition),
-          bills!lab_order_id(id, amount, amount_paid, bill_type)
+          bills!bills_lab_order_id_fkey(id, amount, amount_paid, bill_type)
         `)
         .in("status", ["ordered", "sample_collected", "in_progress"])
         .order("order_date", { ascending: true })

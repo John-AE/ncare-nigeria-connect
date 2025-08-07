@@ -133,18 +133,7 @@ export const LabTestOrderingCard = ({ patientId }: LabTestOrderingCardProps) => 
 
       if (orderError) throw orderError;
 
-      // Update bills with lab_order_id for linkage
-      if (insertedOrders) {
-        for (const order of insertedOrders) {
-          await supabase
-            .from("bills")
-            .update({ lab_order_id: order.id })
-            .eq("patient_id", patientId)
-            .eq("bill_type", "lab_test")
-            .is("lab_order_id", null)
-            .limit(1);
-        }
-      }
+      // Bills will be automatically created by the database trigger
 
       toast({
         title: "Success",
