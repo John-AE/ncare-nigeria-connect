@@ -9,7 +9,7 @@ import { TodaysSchedule } from "./doctor/TodaysSchedule";
 import { TriageQueue } from "./nurse/TriageQueue";
 import { CompletedAppointmentsBills } from "./doctor/CompletedAppointmentsBills";
 import { StandaloneBillingCard } from "./doctor/StandaloneBillingCard";
-import { LabTestOrdering } from "./doctor/LabTestOrdering";
+
 import { DashboardToggle } from "../DashboardToggle";
 import { PatientTimelineView } from "../PatientTimelineView";
 
@@ -82,8 +82,6 @@ const DoctorDashboard = () => {
         refreshTrigger={triageQueueRefreshRef}
       />
 
-      {/* Lab Test Ordering */}
-      <LabTestOrdering />
 
       {/* Standalone Billing Card */}
       <StandaloneBillingCard />
