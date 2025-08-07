@@ -36,10 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [presenceChannel, setPresenceChannel] = useState<any>(null);
-  const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(null);
-  const [lastActivity, setLastActivity] = useState<number>(Date.now());
   
-  const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
   const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // Check every 5 minutes
 
   const fetchProfile = async (userId: string) => {
@@ -55,23 +52,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('Error fetching profile:', error);
       setProfile(null);
-    }
-  };
-
-  // Reset inactivity timer
-  const resetInactivityTimer = () => {
-    setLastActivity(Date.now());
-    if (inactivityTimer) {
-      clearTimeout(inactivityTimer);
-    }
-    
-    if (user) {
-      const timer = setTimeout(() => {
-        console.log('User inactive for 30 minutes, logging out...');
-        signOut();
-      }, INACTIVITY_TIMEOUT);
-      
-      setInactivityTimer(timer);
     }
   };
 
@@ -92,41 +72,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }, 1000);
     }
   };
-
-  // Setup activity tracking
-  useEffect(() => {
-    if (user) {
-      const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-      
-      const handleActivity = () => {
-        resetInactivityTimer();
-      };
-      
-      // Add event listeners
-      activityEvents.forEach(event => {
-        document.addEventListener(event, handleActivity, true);
-      });
-      
-      // Set initial timer
-      resetInactivityTimer();
-      
-      return () => {
-        // Remove event listeners
-        activityEvents.forEach(event => {
-          document.removeEventListener(event, handleActivity, true);
-        });
-        if (inactivityTimer) {
-          clearTimeout(inactivityTimer);
-        }
-      };
-    } else {
-      // Clear timer when user logs out
-      if (inactivityTimer) {
-        clearTimeout(inactivityTimer);
-        setInactivityTimer(null);
-      }
-    }
-  }, [user]);
 
   // Setup presence tracking for logged in users with session enforcement
   useEffect(() => {
