@@ -66,23 +66,13 @@ function CompactDatePicker({
   };
 
   const handleCustomDate = () => {
-    const input = document.createElement('input');
-    input.type = 'date';
-    input.style.opacity = '0';
-    input.style.position = 'absolute';
-    input.style.pointerEvents = 'none';
-    document.body.appendChild(input);
-    
-    input.addEventListener('change', (e) => {
-      const target = e.target as HTMLInputElement;
-      if (target.value) {
-        const selectedDate = new Date(target.value + 'T00:00:00');
+    const dateString = prompt('Enter date (YYYY-MM-DD):');
+    if (dateString) {
+      const selectedDate = new Date(dateString + 'T00:00:00');
+      if (!isNaN(selectedDate.getTime())) {
         handleDateSelect(selectedDate);
       }
-      document.body.removeChild(input);
-    });
-    
-    input.click();
+    }
   };
 
   return (
