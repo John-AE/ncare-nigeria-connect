@@ -132,7 +132,11 @@ function BeautifulDatePicker({
       </div>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in slide-in-from-top-2 duration-200">
+        <div className="fixed top-auto left-auto right-auto mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-[9999] overflow-hidden animate-in slide-in-from-top-2 duration-200 min-w-[320px]" 
+             style={{
+               top: dropdownRef.current ? dropdownRef.current.getBoundingClientRect().bottom + 8 : 'auto',
+               left: dropdownRef.current ? dropdownRef.current.getBoundingClientRect().left : 'auto'
+             }}>
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
             <button
               onClick={() => navigateMonth('prev')}
