@@ -126,28 +126,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, profile]);
 
-  // Periodic session validation
-  useEffect(() => {
-    if (user && session) {
-      const validateSession = async () => {
-        try {
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
-          if (!currentSession) {
-            console.log('Session expired, logging out...');
-            signOut();
-          }
-        } catch (error) {
-          console.error('Session validation error:', error);
-          signOut();
-        }
-      };
-
-      const interval = setInterval(validateSession, SESSION_CHECK_INTERVAL);
-      
-      return () => clearInterval(interval);
-    }
-  }, [user, session]);
-
+  
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
