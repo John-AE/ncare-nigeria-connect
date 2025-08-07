@@ -145,9 +145,10 @@ export const LabTestOrdering = () => {
         status: "ordered",
       }));
 
-      const { error } = await supabase
+      const { data: createdOrders, error } = await supabase
         .from("lab_orders")
-        .insert(orders);
+        .insert(orders)
+        .select("id");
       
       if (error) throw error;
       
@@ -158,6 +159,7 @@ export const LabTestOrdering = () => {
         .from("bills")
         .insert({
           patient_id: selectedPatient,
+          lab_order_id: createdOrders[0].id,
           amount: totalCost,
           description: `Lab tests for ${selectedPatientData.first_name} ${selectedPatientData.last_name}`,
           bill_type: "lab_test",
