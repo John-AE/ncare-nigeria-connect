@@ -43,9 +43,8 @@ export const LabBillingHistory = () => {
       .range(pageParam, pageParam + pageSize - 1);
 
     if (debounced) {
-      // Apply filter directly in the main query instead of using .or() 
-      query = query.ilike('patients.first_name', `%${debounced}%`)
-        .or(`patients.last_name.ilike.%${debounced}%`);
+      // Search by patient name (same style as Direct Patient Billing)
+      query = query.or(`patients.first_name.ilike.%${debounced}%,patients.last_name.ilike.%${debounced}%`);
     }
 
     const { data, error } = await query;
@@ -114,7 +113,7 @@ export const LabBillingHistory = () => {
             <span>Loading history...</span>
           </div>
         ) : rows.length > 0 ? (
-          <div className="space-y-3 max-h-[28rem] overflow-auto pr-1">
+          <div className="space-y-3 max-h-[20rem] overflow-auto pr-1">
             {rows.map((row) => {
               const bill = row.bills?.[0];
               const paid = bill && bill.amount_paid >= bill.amount;

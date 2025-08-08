@@ -73,8 +73,9 @@ export const EnhancedCompletedConsultations = () => {
         }
 
         const visitIds = visitsData.map(v => v.id);
+        const patientIds = visitsData.map(v => v.patient_id);
         
-        // Fetch prescriptions for these visits
+        // Fetch prescriptions for these visits (services-based meds)
         const { data: prescriptionsData } = await supabase
           .from('prescriptions')
           .select(`
@@ -84,7 +85,7 @@ export const EnhancedCompletedConsultations = () => {
             services(name, price)
           `)
           .in('visit_id', visitIds);
-
+        
         // Fetch lab orders for these visits
         const { data: labOrdersData } = await supabase
           .from('lab_orders')
@@ -95,15 +96,64 @@ export const EnhancedCompletedConsultations = () => {
             lab_test_types(name)
           `)
           .in('visit_id', visitIds);
-
+        
+        // Fetch bills for these patients today (to capture MedicationSelector items)
+        const dayStart = `${today}T00:00:00.000Z`;
+        const dayEnd = `${today}T23:59:59.999Z`;
+        const { data: billsData } = await supabase
+          .from('bills')
+          .select('id, patient_id, created_at')
+          .in('patient_id', patientIds)
+          .gte('created_at', dayStart)
+          .lt('created_at', dayEnd);
+        
+        const billIds = (billsData || []).map(b => b.id);
+        
+        // Pull medication bill items (MedicationSelector writes to bill_items with medication_id)
+        const { data: billItemsData } = billIds.length
+          ? await supabase
+              .from('bill_items')
+              .select('bill_id, medication_id, quantity, unit_price, total_price')
+              .in('bill_id', billIds)
+              .not('medication_id', 'is', null)
+          : { data: [], error: null } as any;
+        
+        // Resolve medication names with strict typing
+        const medicationIds = Array.from(
+          new Set((billItemsData || []).map((bi: any) => bi.medication_id))
+        ).filter((id: any): id is string => typeof id === 'string');
+        const { data: medsData } = medicationIds.length
+          ? await supabase
+              .from('medications')
+              .select('id, name')
+              .in('id', medicationIds as string[])
+          : { data: [], error: null } as any;
+        const medNameById = new Map<string, string>((medsData || []).map((m: any) => [m.id as string, m.name as string]));
+        
+        // Group medication bill items by patient via their bill
+        const billsById = new Map((billsData || []).map(b => [b.id, b]));
+        const medsByPatient = new Map<string, Array<{ id: string; name: string; quantity: number; unit_price: number }>>();
+        (billItemsData || []).forEach((bi: any) => {
+          const bill = billsById.get(bi.bill_id);
+          if (!bill) return;
+          const arr = medsByPatient.get(bill.patient_id) || [];
+          arr.push({
+            id: bi.medication_id,
+            name: medNameById.get(bi.medication_id) || 'Medication',
+            quantity: bi.quantity || 0,
+            unit_price: Number(bi.unit_price) || 0,
+          });
+          medsByPatient.set(bill.patient_id, arr);
+        });
+        
         // Check which visits have been dispensed
         const { data: dispensingData } = await supabase
           .from('medication_dispensing')
           .select('visit_id')
           .in('visit_id', visitIds);
-
+        
         const dispensedVisitIds = new Set(dispensingData?.map(d => d.visit_id) || []);
-
+        
         // Group prescriptions and lab orders by visit_id
         const prescriptionsByVisit = new Map();
         prescriptionsData?.forEach(p => {
@@ -112,7 +162,7 @@ export const EnhancedCompletedConsultations = () => {
           }
           prescriptionsByVisit.get(p.visit_id).push(p);
         });
-
+        
         const labOrdersByVisit = new Map();
         labOrdersData?.forEach(l => {
           if (!labOrdersByVisit.has(l.visit_id)) {
@@ -120,31 +170,35 @@ export const EnhancedCompletedConsultations = () => {
           }
           labOrdersByVisit.get(l.visit_id).push(l);
         });
-
-        const formattedVisits = visitsData.map(visit => ({
-          id: visit.id,
-          patient_id: visit.patient_id,
-          patient_name: `${visit.patients.first_name} ${visit.patients.last_name}`,
-          complaints: visit.complaints || '',
-          diagnosis: visit.diagnosis || '',
-          treatment_plan: visit.treatment_plan || '',
-          prescriptions: visit.prescriptions || '',
-          visit_date: visit.visit_date,
-          visit_time: visit.visit_time,
-          medications: prescriptionsByVisit.get(visit.id)?.map(p => ({
+        
+        const formattedVisits = visitsData.map(visit => {
+          const medsFromPrescriptions = (prescriptionsByVisit.get(visit.id) || []).map((p: any) => ({
             id: p.service_id,
             name: p.services?.name || '',
             quantity: p.quantity,
-            unit_price: p.services?.price || 0
-          })) || [],
-          labTests: labOrdersByVisit.get(visit.id)?.map(l => ({
-            id: l.id,
-            name: l.lab_test_types?.name || '',
-            status: l.status
-          })) || [],
-          dispensed: dispensedVisitIds.has(visit.id)
-        }));
-
+            unit_price: p.services?.price || 0,
+          }));
+          const medsFromBillItems = medsByPatient.get(visit.patient_id) || [];
+          return {
+            id: visit.id,
+            patient_id: visit.patient_id,
+            patient_name: `${visit.patients.first_name} ${visit.patients.last_name}`,
+            complaints: visit.complaints || '',
+            diagnosis: visit.diagnosis || '',
+            treatment_plan: visit.treatment_plan || '',
+            prescriptions: visit.prescriptions || '',
+            visit_date: visit.visit_date,
+            visit_time: visit.visit_time,
+            medications: [...medsFromPrescriptions, ...medsFromBillItems],
+            labTests: (labOrdersByVisit.get(visit.id) || []).map((l: any) => ({
+              id: l.id,
+              name: l.lab_test_types?.name || '',
+              status: l.status,
+            })),
+            dispensed: dispensedVisitIds.has(visit.id),
+          } as CompletedVisit;
+        });
+        
         setCompletedVisits(formattedVisits);
       } catch (error) {
         console.error('Error fetching completed visits:', error);
@@ -171,54 +225,45 @@ export const EnhancedCompletedConsultations = () => {
     };
   }, []);
 
-  const handleMarkAsDispensed = async () => {
-    if (!selectedVisit || !profile) return;
+  const handleMarkAsDispensedForVisit = async (visit: CompletedVisit) => {
+    if (!visit || !profile) return;
 
     setIsDispensing(true);
     try {
-      // Create dispensing records for each medication
-      const dispensingRecords = selectedVisit.medications.map(med => ({
+      const dispensingRecords = visit.medications.map(med => ({
         medication_id: med.id,
-        patient_id: selectedVisit.patient_id,
-        visit_id: selectedVisit.id,
-        inventory_id: med.id, // This should be proper inventory_id from medication_inventory table
+        patient_id: visit.patient_id,
+        visit_id: visit.id,
+        inventory_id: med.id, // TODO: map to actual inventory if available
         quantity_dispensed: med.quantity,
         dispensed_by: profile.user_id,
         hospital_id: profile.hospital_id,
-        notes: `Dispensed for visit ${selectedVisit.id}`
+        notes: `Dispensed for visit ${visit.id}`
       }));
 
       if (dispensingRecords.length > 0) {
         const { error } = await supabase
           .from('medication_dispensing')
           .insert(dispensingRecords);
-
         if (error) throw error;
       }
 
-      // Update local state
-      setCompletedVisits(prev => prev.map(visit => 
-        visit.id === selectedVisit.id 
-          ? { ...visit, dispensed: true }
-          : visit
+      setCompletedVisits(prev => prev.map(v => 
+        v.id === visit.id ? { ...v, dispensed: true } : v
       ));
-
-      setSelectedVisit(prev => prev ? { ...prev, dispensed: true } : null);
-
-      toast({
-        title: "Success",
-        description: "Medications dispensed successfully!",
-      });
     } catch (error) {
       console.error('Error marking as dispensed:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark as dispensed",
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: 'Failed to mark as dispensed', variant: 'destructive' });
     } finally {
       setIsDispensing(false);
     }
+  };
+
+  const handleMarkAsDispensed = async () => {
+    if (!selectedVisit) return;
+    await handleMarkAsDispensedForVisit(selectedVisit);
+    setSelectedVisit(prev => prev ? { ...prev, dispensed: true } : null);
+    toast({ title: 'Success', description: 'Medications dispensed successfully!' });
   };
 
   if (loading) {
@@ -297,6 +342,11 @@ export const EnhancedCompletedConsultations = () => {
                       </Badge>
                     ) : (
                       <Badge variant="secondary">Pending</Badge>
+                    )}
+                    {!visit.dispensed && visit.medications.length > 0 && (
+                      <Button size="sm" onClick={(e) => { e.stopPropagation(); handleMarkAsDispensedForVisit(visit); }}>
+                        Mark Dispensed
+                      </Button>
                     )}
                     <Eye className="h-4 w-4 text-muted-foreground" />
                   </div>
