@@ -7,6 +7,7 @@ import { QuickStatsCards } from "./doctor/QuickStatsCards";
 import { DateAppointments } from "./doctor/DateAppointments";
 import { TodaysSchedule } from "./doctor/TodaysSchedule";
 import { TriageQueue } from "./nurse/TriageQueue";
+import { OrderedLabTestResults } from "./doctor/OrderedLabTestResults";
 import { CompletedAppointmentsBills } from "./doctor/CompletedAppointmentsBills";
 import { StandaloneBillingCard } from "./doctor/StandaloneBillingCard";
 
@@ -82,6 +83,8 @@ const DoctorDashboard = () => {
         refreshTrigger={triageQueueRefreshRef}
       />
 
+      {/* Ordered Lab Test Results */}
+      <OrderedLabTestResults />
 
       {/* Standalone Billing Card */}
       <StandaloneBillingCard />

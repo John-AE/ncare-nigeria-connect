@@ -1,5 +1,5 @@
 import { PharmacyStatsCards } from "./pharmacy/PharmacyStatsCards";
-import { CompletedConsultations } from "./nurse/CompletedConsultations";
+import { EnhancedCompletedConsultations } from "./pharmacy/EnhancedCompletedConsultations";
 import { MedicationInventory } from "./pharmacy/MedicationInventory";
 import { DispensedMedicationLog } from "./pharmacy/DispensedMedicationLog";
 import { usePharmacyDashboard } from "@/hooks/usePharmacyDashboard";
@@ -34,7 +34,7 @@ export const PharmacyDashboard = () => {
       {/* Main Content - Full Width Cards */}
       <div className="space-y-8">
         {/* Completed Consultations */}
-        <CompletedConsultations />
+        <EnhancedCompletedConsultations />
         
         {/* Medication Inventory */}
         <MedicationInventory />

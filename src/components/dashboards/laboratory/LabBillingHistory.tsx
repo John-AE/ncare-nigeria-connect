@@ -19,7 +19,7 @@ interface HistoryRow {
 export const LabBillingHistory = () => {
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
-  const pageSize = 5; // Show first 5, then load more on scroll
+  const pageSize = 3; // Show first 3, then load more on scroll
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
@@ -43,9 +43,9 @@ export const LabBillingHistory = () => {
       .range(pageParam, pageParam + pageSize - 1);
 
     if (debounced) {
-      query = query.or(
-        `patients.first_name.ilike.%${debounced}%,patients.last_name.ilike.%${debounced}%`
-      );
+      // Apply filter directly in the main query instead of using .or() 
+      query = query.ilike('patients.first_name', `%${debounced}%`)
+        .or(`patients.last_name.ilike.%${debounced}%`);
     }
 
     const { data, error } = await query;
@@ -91,25 +91,21 @@ export const LabBillingHistory = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Lab Billing History
-          </span>
-          <div className="flex items-center gap-2">
-            <div className="relative w-56">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search patient..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                }}
-                className="pl-8"
-              />
-            </div>
-          </div>
+        <CardTitle className="flex items-center gap-2 mb-4">
+          <Clock className="h-5 w-5" />
+          Lab Billing History
         </CardTitle>
+        <div className="relative w-full">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search patient..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+            }}
+            className="pl-8 w-full"
+          />
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (

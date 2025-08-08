@@ -186,7 +186,7 @@ export const StandaloneBillingCard = () => {
 
   return (
     <>
-      <Card>
+      <Card className="border-l-8 border-l-[#63ADF2]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Receipt className="h-5 w-5" />
