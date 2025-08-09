@@ -569,4 +569,4 @@ const expensiveValue = useMemo(() => {
 
 ---
 
-**This documentation is maintained by the NCare Nigeria Development Team. For questions or contributions, please contact the development team through the Lovable platform.**
+**This documentation is maintained by the NCare Nigeria Development Team. For questions or contributions, please contact the developer john@123185.xyz.**
