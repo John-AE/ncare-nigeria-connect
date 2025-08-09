@@ -37,8 +37,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [presenceChannel, setPresenceChannel] = useState<any>(null);
   
-  const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // Check every 5 minutes
-
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
