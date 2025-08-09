@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -360,7 +361,10 @@ export const EnhancedCompletedConsultations = () => {
       <Dialog open={!!selectedVisit} onOpenChange={() => setSelectedVisit(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Visit Details - {selectedVisit?.patient_name}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Visit Details - {selectedVisit?.patient_name}
+            </DialogTitle>
             <DialogDescription>
               Consultation completed on {selectedVisit?.visit_date} at {selectedVisit?.visit_time}
             </DialogDescription>
@@ -368,10 +372,10 @@ export const EnhancedCompletedConsultations = () => {
           
           {selectedVisit && (
             <div className="space-y-6">
-              {/* Basic Visit Information */}
+              {/* Basic Visit Information - 4 textboxes matching current format */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Patient Complaints</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Patient Complaints</Label>
                   <Textarea
                     value={selectedVisit.complaints}
                     readOnly
@@ -382,7 +386,7 @@ export const EnhancedCompletedConsultations = () => {
                 </div>
                 
                 <div>
-                  <Label>Diagnosis</Label>
+                  <Label className="text-sm font-medium text-muted-foreground">Diagnosis</Label>
                   <Textarea
                     value={selectedVisit.diagnosis}
                     readOnly
@@ -394,13 +398,24 @@ export const EnhancedCompletedConsultations = () => {
               </div>
 
               <div>
-                <Label>Treatment Plan / Lab work Requisition</Label>
+                <Label className="text-sm font-medium text-muted-foreground">Lab work Requisition</Label>
                 <Textarea
                   value={selectedVisit.treatment_plan}
                   readOnly
                   rows={2}
                   className="mt-1 bg-muted resize-none"
-                  placeholder="No treatment plan recorded"
+                  placeholder="No lab work requisition recorded"
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Prescriptions (Pharmacy)</Label>
+                <Textarea
+                  value={selectedVisit.prescriptions}
+                  readOnly
+                  rows={2}
+                  className="mt-1 bg-muted resize-none"
+                  placeholder="No prescriptions recorded"
                 />
               </div>
 
@@ -413,7 +428,7 @@ export const EnhancedCompletedConsultations = () => {
                 {selectedVisit.medications.length > 0 ? (
                   <div className="mt-2 space-y-2">
                     {selectedVisit.medications.map((med, index) => (
-                      <div key={med.id} className="p-3 border rounded-lg bg-blue-50">
+                      <div key={`${med.id}-${index}`} className="p-3 border rounded-lg bg-blue-50">
                         <div className="flex justify-between items-center">
                           <div>
                             <p className="font-medium">{med.name}</p>
@@ -442,7 +457,7 @@ export const EnhancedCompletedConsultations = () => {
                 {selectedVisit.labTests.length > 0 ? (
                   <div className="mt-2 space-y-2">
                     {selectedVisit.labTests.map((test, index) => (
-                      <div key={test.id} className="p-3 border rounded-lg bg-yellow-50">
+                      <div key={`${test.id}-${index}`} className="p-3 border rounded-lg bg-yellow-50">
                         <div className="flex justify-between items-center">
                           <p className="font-medium">{test.name}</p>
                           <Badge variant={test.status === 'completed' ? 'default' : 'secondary'}>
