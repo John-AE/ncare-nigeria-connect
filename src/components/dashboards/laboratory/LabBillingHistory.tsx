@@ -29,24 +29,26 @@ export const LabBillingHistory = () => {
   const queryKey = useMemo(() => ["lab-billing-history", debounced, pageSize], [debounced]);
 
   const fetchPage = async ({ pageParam = 0 }): Promise<{ rows: HistoryRow[]; nextOffset: number | null }> => {
-    let query = supabase
+    let baseQuery = supabase
       .from("lab_orders")
       .select(
         `*,
-         patients ( first_name, last_name ),
-         lab_test_types ( name, code, price ),
+         patients!inner ( first_name, last_name ),
+         lab_test_types!inner ( name, code, price ),
          bills!bills_lab_order_id_fkey ( amount, amount_paid ),
          lab_results ( result_status, reviewed_at )
         `
       )
-      .order("order_date", { ascending: false })
-      .range(pageParam, pageParam + pageSize - 1);
+      .order("order_date", { ascending: false });
 
     if (debounced) {
-      // Search by patient name and test name/code (similar pattern to Direct Patient Billing)
-      query = query.or(`patients.first_name.ilike.%${debounced}%,patients.last_name.ilike.%${debounced}%,lab_test_types.name.ilike.%${debounced}%,lab_test_types.code.ilike.%${debounced}%`);
+      // Search by patient name or test name/code
+      baseQuery = baseQuery.or(
+        `patients.first_name.ilike.%${debounced}%,patients.last_name.ilike.%${debounced}%,lab_test_types.name.ilike.%${debounced}%,lab_test_types.code.ilike.%${debounced}%`
+      );
     }
 
+    const query = baseQuery.range(pageParam, pageParam + pageSize - 1);
     const { data, error } = await query;
     if (error) throw error;
 
