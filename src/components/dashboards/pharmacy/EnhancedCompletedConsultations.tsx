@@ -92,6 +92,7 @@ export const EnhancedCompletedConsultations = () => {
           .from('lab_orders')
           .select(`
             visit_id,
+            patient_id,
             id,
             status,
             lab_test_types(name)
@@ -118,6 +119,26 @@ export const EnhancedCompletedConsultations = () => {
               .in('bill_id', billIds)
               .not('medication_id', 'is', null)
           : { data: [], error: null } as any;
+
+        // Also include lab orders created today that may not be linked to a visit but belong to these patients
+        const { data: patientLabOrdersData } = await supabase
+          .from('lab_orders')
+          .select(`
+            visit_id,
+            patient_id,
+            id,
+            status,
+            lab_test_types(name)
+          `)
+          .is('visit_id', null)
+          .in('patient_id', patientIds)
+          .gte('order_date', dayStart)
+          .lt('order_date', dayEnd);
+
+        const combinedLabOrdersData = [
+          ...(labOrdersData || []),
+          ...(patientLabOrdersData || []),
+        ];
         
         // Resolve medication names with strict typing
         const medicationIds = Array.from(
@@ -164,12 +185,19 @@ export const EnhancedCompletedConsultations = () => {
           prescriptionsByVisit.get(p.visit_id).push(p);
         });
         
-        const labOrdersByVisit = new Map();
-        labOrdersData?.forEach(l => {
-          if (!labOrdersByVisit.has(l.visit_id)) {
-            labOrdersByVisit.set(l.visit_id, []);
+        const labOrdersByVisit = new Map<string, any[]>();
+        (combinedLabOrdersData || []).forEach((l: any) => {
+          // If order isn't linked to a visit, attach to today's visit for the same patient
+          let vId = l.visit_id as string | null;
+          if (!vId) {
+            const v = visitsData.find((vv: any) => vv.patient_id === l.patient_id);
+            vId = v?.id || null;
           }
-          labOrdersByVisit.get(l.visit_id).push(l);
+          if (!vId) return;
+          if (!labOrdersByVisit.has(vId)) {
+            labOrdersByVisit.set(vId, []);
+          }
+          labOrdersByVisit.get(vId)!.push(l);
         });
         
         const formattedVisits = visitsData.map(visit => {
@@ -359,7 +387,7 @@ export const EnhancedCompletedConsultations = () => {
       </Card>
 
       <Dialog open={!!selectedVisit} onOpenChange={() => setSelectedVisit(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />

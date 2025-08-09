@@ -43,19 +43,17 @@ export const LabBillingHistory = () => {
       .range(pageParam, pageParam + pageSize - 1);
 
     if (debounced) {
-      // Search by patient name (same style as Direct Patient Billing)
-      query = query.or(`patients.first_name.ilike.%${debounced}%,patients.last_name.ilike.%${debounced}%`);
+      // Search by patient name and test name/code (similar pattern to Direct Patient Billing)
+      query = query.or(`patients.first_name.ilike.%${debounced}%,patients.last_name.ilike.%${debounced}%,lab_test_types.name.ilike.%${debounced}%,lab_test_types.code.ilike.%${debounced}%`);
     }
 
     const { data, error } = await query;
     if (error) throw error;
 
-    const rows = (data as HistoryRow[]).filter((o) =>
-      (o.lab_results || []).some((r) => r.result_status === "completed")
-    );
+    const rows = (data as HistoryRow[]);
 
     // If fewer than pageSize returned, no more pages
-    const nextOffset = rows.length < pageSize ? null : pageParam + pageSize;
+    const nextOffset = (data?.length || 0) < pageSize ? null : pageParam + pageSize;
     return { rows, nextOffset };
   };
 
