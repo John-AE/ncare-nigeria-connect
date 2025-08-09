@@ -1,3 +1,18 @@
+/**
+ * Main Layout Component
+ * 
+ * Provides the common layout structure for all authenticated pages in the application.
+ * Includes:
+ * - Header with branding and user information
+ * - Logout functionality
+ * - Breadcrumb navigation
+ * - Footer with copyright information
+ * 
+ * This layout is automatically applied to all protected routes through the ProtectedRoute component.
+ * 
+ * @author NCare Nigeria Development Team
+ */
+
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,11 +25,23 @@ interface LayoutProps {
   children: ReactNode;
 }
 
+/**
+ * Layout Component Implementation
+ * 
+ * Creates a consistent layout structure with header, main content area, and footer.
+ * Manages user authentication state and provides logout functionality.
+ */
 const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profile, signOut } = useAuth();
 
+  /**
+   * Handles user logout process
+   * - Signs out the user through the AuthProvider
+   * - Shows success/error notification
+   * - Redirects to home page
+   */
   const handleLogout = async () => {
     try {
       await signOut();
@@ -34,12 +61,19 @@ const Layout = ({ children }: LayoutProps) => {
     }
   };
 
+  /**
+   * Converts user role codes to display-friendly names
+   * @param role - The user's role code from the database
+   * @returns Human-readable role name for display
+   */
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case "doctor": return "Doctor";
       case "nurse": return "Nurse";
       case "finance": return "Finance Staff";
       case "pharmacy": return "Pharmacy Staff";
+      case "laboratory": return "Laboratory Staff";
+      case "admin": return "Administrator";
       default: return role;
     }
   };

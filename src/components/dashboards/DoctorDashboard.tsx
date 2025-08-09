@@ -1,34 +1,68 @@
+/**
+ * Doctor Dashboard Component
+ * 
+ * Main workspace for doctors featuring:
+ * - Patient consultation management
+ * - Visit recording and billing
+ * - Lab test ordering and results viewing
+ * - Appointment scheduling and management
+ * - Patient timeline viewing
+ * - Triage queue for urgent patients
+ * 
+ * The dashboard provides a comprehensive view of all doctor-related activities
+ * and integrates with other hospital systems for seamless workflow.
+ * 
+ * @author NCare Nigeria Development Team
+ */
+
 import { useState, useRef } from "react";
 import { useAuth } from "../AuthProvider";
 import { useDoctorDashboardStats } from "@/hooks/useDoctorDashboardStats";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+// Doctor-specific dashboard components
 import { QuickStatsCards } from "./doctor/QuickStatsCards";
 import { DateAppointments } from "./doctor/DateAppointments";
 import { TodaysSchedule } from "./doctor/TodaysSchedule";
-import { TriageQueue } from "./nurse/TriageQueue";
 import { OrderedLabTestResults } from "./doctor/OrderedLabTestResults";
 import { CompletedAppointmentsBills } from "./doctor/CompletedAppointmentsBills";
 import { StandaloneBillingCard } from "./doctor/StandaloneBillingCard";
 
+// Shared components
+import { TriageQueue } from "./nurse/TriageQueue";
 import { DashboardToggle } from "../DashboardToggle";
 import { PatientTimelineView } from "../PatientTimelineView";
 
 
+/**
+ * Doctor Dashboard Implementation
+ * 
+ * Manages the doctor's workspace with two main views:
+ * 1. Dashboard view - Shows all relevant cards and statistics
+ * 2. Timeline view - Patient-centric chronological view of care
+ */
 const DoctorDashboard = () => {
   const { profile } = useAuth();
   const stats = useDoctorDashboardStats();
   const [viewMode, setViewMode] = useState<'dashboard' | 'timeline'>('dashboard');
   
-  // Refs to trigger refreshes without re-mounting components
+  // Refs to trigger refreshes without re-mounting components - improves performance
   const triageQueueRefreshRef = useRef<() => void>(null);
   const dateAppointmentsRefreshRef = useRef<() => void>(null);
 
+  /**
+   * Handles manual dashboard refresh
+   * Force reloads the entire page to ensure all data is fresh
+   */
   const handleRefresh = () => {
     window.location.reload();
   };
 
-  // Handle vitals recording to refresh triage queue after 2 seconds
+  /**
+   * Handles vitals recording completion
+   * Refreshes the triage queue after a 2-second delay to allow database updates to propagate
+   */
   const handleVitalsRecorded = () => {
     setTimeout(() => {
       if (triageQueueRefreshRef.current) {
