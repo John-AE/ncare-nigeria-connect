@@ -2,7 +2,7 @@
 
 **A comprehensive, modern hospital management system designed specifically for Nigerian healthcare facilities.**
 
-[![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff69b4.svg)](https://lovable.dev)
+
 [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Latest-blue.svg)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-green.svg)](https://supabase.com/)
@@ -11,7 +11,6 @@
 
 NCare Nigeria is a full-featured hospital management system that streamlines healthcare operations through role-based dashboards and comprehensive patient care workflows. The system is built with modern web technologies and designed to enhance service delivery in Nigerian hospitals.
 
-**Project URL**: https://lovable.dev/projects/176dfdfe-e7ce-4758-9f14-542cfbc37010
 
 ## 🎯 Key Features
 
