@@ -14,12 +14,11 @@
  * @author NCare Nigeria Development Team
  */
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "../AuthProvider";
 import { useNurseDashboardStats } from "@/hooks/useNurseDashboardStats";
-import { useAutoRefresh } from '@/hooks/useAutoRefresh';
-import { RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useRefreshManager } from "@/hooks/useRefreshManager";
+import { useModalState } from "@/hooks/useModalState";
 
 // Nurse-specific dashboard components
 import { NurseStatsCards } from "./nurse/NurseStatsCards";
@@ -34,6 +33,7 @@ import { CompletedConsultations } from "./nurse/CompletedConsultations";
 import { DateAppointments } from "./doctor/DateAppointments";
 import { DashboardToggle } from "../DashboardToggle";
 import { PatientTimelineView } from "../PatientTimelineView";
+import { DashboardHeader } from "../shared/DashboardHeader";
 
 // Form components for patient and appointment management
 import PatientRegistrationForm from "../PatientRegistrationForm";
@@ -44,56 +44,45 @@ const NurseDashboard = () => {
   const { profile } = useAuth();
   const { stats, loading, refetch } = useNurseDashboardStats();
   const [viewMode, setViewMode] = useState<'dashboard' | 'timeline'>('dashboard');
-
-  
-  const [showPatientForm, setShowPatientForm] = useState(false);
-  const [showAppointmentForm, setShowAppointmentForm] = useState(false);
-  const [showRecurringForm, setShowRecurringForm] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   
-  // Refs to trigger refreshes without re-mounting components
-  const recentRegistrationsRefreshRef = useRef<() => void>(null);
-  const triageQueueRefreshRef = useRef<() => void>(null);
-  const dateAppointmentsRefreshRef = useRef<() => void>(null);
+  const { registerRefresh, triggerRefresh, triggerAllRefresh } = useRefreshManager();
+  const { 
+    openModal, 
+    closeModal, 
+    closeAllModals, 
+    isModalOpen 
+  } = useModalState({
+    patientForm: false,
+    appointmentForm: false,
+    recurringForm: false
+  });
 
   const handleRefresh = () => {
-    window.location.reload();
+    triggerAllRefresh();
+    refetch();
   };
 
   const handlePatientRegistrationSuccess = () => {
-    // Auto-refresh Recent Registrations when a patient is registered
-    if (recentRegistrationsRefreshRef.current) {
-      recentRegistrationsRefreshRef.current();
-    }
-    // Stats are automatically updated via real-time listeners in useNurseDashboardStats
+    triggerRefresh('recentRegistrations');
+    closeModal('patientForm');
   };
 
   const handleVitalsRecorded = () => {
-    // Auto-refresh both Recent Registrations and Triage Queue when vitals are recorded
-    // Add 2-second delay for triage queue refresh as requested
-    if (recentRegistrationsRefreshRef.current) {
-      recentRegistrationsRefreshRef.current();
-    }
+    triggerRefresh('recentRegistrations');
     setTimeout(() => {
-      if (triageQueueRefreshRef.current) {
-        triageQueueRefreshRef.current();
-      }
+      triggerRefresh('triageQueue');
     }, 2000);
   };
 
   const handlePatientArrived = () => {
-    // Trigger refresh of components when a patient is marked as arrived
-    if (dateAppointmentsRefreshRef.current) {
-      dateAppointmentsRefreshRef.current();
-    }
+    triggerRefresh('dateAppointments');
   };
 
   const handleAppointmentScheduled = () => {
-    // Auto-refresh Appointments by Date when an appointment is scheduled
-    if (dateAppointmentsRefreshRef.current) {
-      dateAppointmentsRefreshRef.current();
-    }
-    // Stats are automatically updated via real-time listeners in useNurseDashboardStats
+    triggerRefresh('dateAppointments');
+    closeModal('appointmentForm');
+    closeModal('recurringForm');
   };
 
   if (viewMode === 'timeline') {
@@ -103,23 +92,11 @@ const NurseDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="border-b border-border pb-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Nurse Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {profile?.username}</p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
-        </div>
-      </div>
+      <DashboardHeader
+        title="Nurse Dashboard"
+        subtitle={`Welcome back, ${profile?.username}`}
+        onRefresh={handleRefresh}
+      />
 
       {/* Quick Stats */}
       <NurseStatsCards stats={stats} />
@@ -130,14 +107,14 @@ const NurseDashboard = () => {
       {/* Main Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PatientManagement
-          onRegisterPatient={() => setShowPatientForm(true)}
-          onScheduleAppointment={() => setShowAppointmentForm(true)}
+          onRegisterPatient={() => openModal('patientForm')}
+          onScheduleAppointment={() => openModal('appointmentForm')}
           onPatientSelect={setSelectedPatient}
         />
 
         <AppointmentManagement
-          onScheduleAppointment={() => setShowAppointmentForm(true)}
-          onSetupRecurring={() => setShowRecurringForm(true)}
+          onScheduleAppointment={() => openModal('appointmentForm')}
+          onSetupRecurring={() => openModal('recurringForm')}
         />
       </div>
 
@@ -145,27 +122,27 @@ const NurseDashboard = () => {
       <div className="space-y-6">
         <DateAppointments 
           onPatientArrived={handlePatientArrived}
-          refreshTrigger={dateAppointmentsRefreshRef}
+          refreshTrigger={(fn) => registerRefresh('dateAppointments', fn)}
         />
         <ScheduledPatientsQueue />
         <RecentRegistrations 
-          refreshTrigger={recentRegistrationsRefreshRef}
+          refreshTrigger={(fn) => registerRefresh('recentRegistrations', fn)}
           onVitalsRecorded={handleVitalsRecorded}
         />
-        <TriageQueue refreshTrigger={triageQueueRefreshRef} />
+        <TriageQueue refreshTrigger={(fn) => registerRefresh('triageQueue', fn)} />
         <CompletedConsultations />
       </div>
 
       <PatientRegistrationForm
-        isOpen={showPatientForm}
-        onClose={() => setShowPatientForm(false)}
+        isOpen={isModalOpen('patientForm')}
+        onClose={() => closeModal('patientForm')}
         onSuccess={handlePatientRegistrationSuccess}
       />
       
       <AppointmentSchedulingForm
-        isOpen={showAppointmentForm}
+        isOpen={isModalOpen('appointmentForm')}
         onClose={() => {
-          setShowAppointmentForm(false);
+          closeModal('appointmentForm');
           setSelectedPatient(null);
         }}
         preSelectedPatient={selectedPatient}
@@ -173,8 +150,8 @@ const NurseDashboard = () => {
       />
       
       <RecurringAppointmentForm
-        isOpen={showRecurringForm}
-        onClose={() => setShowRecurringForm(false)}
+        isOpen={isModalOpen('recurringForm')}
+        onClose={() => closeModal('recurringForm')}
       />
     </div>
   );

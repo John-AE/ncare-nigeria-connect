@@ -25,7 +25,7 @@ interface Patient {
 }
 
 interface RecentRegistrationsProps {
-  refreshTrigger?: React.MutableRefObject<(() => void) | null>;
+  refreshTrigger?: React.MutableRefObject<(() => void) | null> | ((fn: () => void) => void);
   onVitalsRecorded?: () => void;
 }
 
@@ -38,7 +38,11 @@ export const RecentRegistrations = ({ refreshTrigger, onVitalsRecorded }: Recent
   // Expose refresh function via refreshTrigger ref
   useEffect(() => {
     if (refreshTrigger) {
-      refreshTrigger.current = fetchRecentPatients;
+      if (typeof refreshTrigger === 'function') {
+        refreshTrigger(fetchRecentPatients);
+      } else {
+        refreshTrigger.current = fetchRecentPatients;
+      }
     }
   }, [refreshTrigger]);
 

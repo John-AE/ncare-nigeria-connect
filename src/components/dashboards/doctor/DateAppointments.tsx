@@ -154,7 +154,7 @@ function CompactDatePicker({
 
 interface DateAppointmentsProps {
   onPatientArrived?: () => void;
-  refreshTrigger?: React.MutableRefObject<(() => void) | null>;
+  refreshTrigger?: React.MutableRefObject<(() => void) | null> | ((fn: () => void) => void);
 }
 
 export const DateAppointments = ({ onPatientArrived, refreshTrigger }: DateAppointmentsProps) => {
@@ -191,7 +191,11 @@ export const DateAppointments = ({ onPatientArrived, refreshTrigger }: DateAppoi
 
   useEffect(() => {
     if (refreshTrigger) {
-      refreshTrigger.current = fetchSelectedDateAppointments;
+      if (typeof refreshTrigger === 'function') {
+        refreshTrigger(fetchSelectedDateAppointments);
+      } else {
+        refreshTrigger.current = fetchSelectedDateAppointments;
+      }
     }
   }, [refreshTrigger, fetchSelectedDateAppointments]);
 

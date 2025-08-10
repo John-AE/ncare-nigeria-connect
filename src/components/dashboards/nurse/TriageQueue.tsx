@@ -57,7 +57,7 @@ interface PatientWithVitals {
 interface TriageQueueProps {
   showRecordVisitButton?: boolean;
   showVitalSigns?: boolean;
-  refreshTrigger?: React.MutableRefObject<(() => void) | null>;
+  refreshTrigger?: React.MutableRefObject<(() => void) | null> | ((fn: () => void) => void);
 }
 
 // Priority scoring function based on vital signs
@@ -112,7 +112,11 @@ export const TriageQueue = ({ showRecordVisitButton = false, showVitalSigns = fa
     
     // Set up refresh trigger if provided
     if (refreshTrigger) {
-      refreshTrigger.current = fetchQueuePatients;
+      if (typeof refreshTrigger === 'function') {
+        refreshTrigger(fetchQueuePatients);
+      } else {
+        refreshTrigger.current = fetchQueuePatients;
+      }
     }
     
     // Poll every 2 seconds instead of real-time listener
