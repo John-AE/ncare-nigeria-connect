@@ -178,7 +178,16 @@ export const EnhancedCompletedConsultations = ({ refreshTrigger }: EnhancedCompl
           .select('visit_id')
           .in('visit_id', visitIds);
         
-        const dispensedVisitIds = new Set(dispensingData?.map(d => d.visit_id) || []);
+        // Get visits that either have dispensing records OR have no medications at all
+        const visitsWithMeds = new Set();
+        formattedVisits.forEach(v => {
+          if (v.medications.length > 0) visitsWithMeds.add(v.id);
+        });
+        
+        const dispensedVisitIds = new Set([
+          ...(dispensingData?.map(d => d.visit_id) || []),
+          ...visitIds.filter(id => !visitsWithMeds.has(id)) // Auto-mark visits with no meds as dispensed
+        ]);
         
         // Group prescriptions and lab orders by visit_id
         const prescriptionsByVisit = new Map();
@@ -275,10 +284,6 @@ const handleMarkAsDispensedForVisit = async (visit: CompletedVisit) => {
   try {
     // Filter only actual medications
     const dispensableMeds = visit.medications.filter(med => med.isMedication);
-
-    if (dispensableMeds.length === 0) {
-      return;  // Nothing to dispense
-    }
 
     // Get unique medication IDs
     const medicationIds = [...new Set(dispensableMeds.map(med => med.id))];
