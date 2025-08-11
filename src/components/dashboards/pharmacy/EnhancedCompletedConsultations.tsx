@@ -299,7 +299,7 @@ export const EnhancedCompletedConsultations = ({ refreshTrigger }: EnhancedCompl
   const handleMarkAsDispensed = async () => {
     if (!selectedVisit) return;
     await handleMarkAsDispensedForVisit(selectedVisit);
-    setSelectedVisit(prev => prev ? { ...prev, dispensed: true } : null);
+    setSelectedVisit(null); // Close dialog
     toast({ title: 'Success', description: 'Medications dispensed successfully!' });
   };
 
@@ -379,11 +379,6 @@ export const EnhancedCompletedConsultations = ({ refreshTrigger }: EnhancedCompl
                       </Badge>
                     ) : (
                       <Badge variant="secondary">Pending</Badge>
-                    )}
-                    {!visit.dispensed && visit.medications.length > 0 && (
-                      <Button size="sm" onClick={(e) => { e.stopPropagation(); handleMarkAsDispensedForVisit(visit); }}>
-                        Mark Dispensed
-                      </Button>
                     )}
                     <Eye className="h-4 w-4 text-muted-foreground" />
                   </div>
