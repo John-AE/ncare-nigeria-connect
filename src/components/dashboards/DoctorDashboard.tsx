@@ -46,15 +46,7 @@ const DoctorDashboard = () => {
   const { profile } = useAuth();
   const stats = useDoctorDashboardStats();
   const [viewMode, setViewMode] = useState<'dashboard' | 'timeline'>('dashboard');
-  const { registerRefresh, triggerRefresh, triggerAllRefresh } = useRefreshManager();
-
-  /**
-   * Handles manual dashboard refresh
-   * Triggers all registered refresh functions instead of page reload
-   */
-  const handleRefresh = () => {
-    triggerAllRefresh();
-  };
+  const { registerRefresh, triggerRefresh } = useRefreshManager();
 
   /**
    * Handles vitals recording completion
@@ -76,7 +68,6 @@ const DoctorDashboard = () => {
       <DashboardHeader
         title="Doctor Dashboard"
         subtitle={`Welcome back, Dr. ${profile?.username}`}
-        onRefresh={handleRefresh}
       />
 
       {/* Quick Stats */}

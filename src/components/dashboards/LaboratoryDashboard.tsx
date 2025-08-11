@@ -14,12 +14,7 @@ import { DashboardHeader } from "../shared/DashboardHeader";
 
 export const LaboratoryDashboard = () => {
   const { data: stats, isLoading, error, refetch } = useLaboratoryDashboard();
-  const { registerRefresh, triggerAllRefresh } = useRefreshManager();
-
-  const handleRefresh = () => {
-    triggerAllRefresh();
-    refetch();
-  };
+  const { registerRefresh } = useRefreshManager();
 
   if (isLoading) {
     return (
@@ -61,7 +56,6 @@ export const LaboratoryDashboard = () => {
         <DashboardHeader
           title="Laboratory Dashboard"
           subtitle="Real-time insights and analytics for laboratory operations"
-          onRefresh={handleRefresh}
         />
 
         {/* Stats Cards */}

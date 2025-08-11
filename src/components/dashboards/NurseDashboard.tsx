@@ -46,7 +46,7 @@ const NurseDashboard = () => {
   const [viewMode, setViewMode] = useState<'dashboard' | 'timeline'>('dashboard');
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   
-  const { registerRefresh, triggerRefresh, triggerAllRefresh } = useRefreshManager();
+  const { registerRefresh, triggerRefresh } = useRefreshManager();
   const { 
     openModal, 
     closeModal, 
@@ -57,11 +57,6 @@ const NurseDashboard = () => {
     appointmentForm: false,
     recurringForm: false
   });
-
-  const handleRefresh = () => {
-    triggerAllRefresh();
-    refetch();
-  };
 
   const handlePatientRegistrationSuccess = () => {
     triggerRefresh('recentRegistrations');
@@ -95,7 +90,6 @@ const NurseDashboard = () => {
       <DashboardHeader
         title="Nurse Dashboard"
         subtitle={`Welcome back, ${profile?.username}`}
-        onRefresh={handleRefresh}
       />
 
       {/* Quick Stats */}

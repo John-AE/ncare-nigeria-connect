@@ -8,7 +8,7 @@ import { DashboardHeader } from "../shared/DashboardHeader";
 
 export const PharmacyDashboard = () => {
   const { stats, loading, error } = usePharmacyDashboard();
-  const { registerRefresh, triggerAllRefresh } = useRefreshManager();
+  const { registerRefresh } = useRefreshManager();
 
   if (loading) {
     return (
@@ -35,7 +35,6 @@ export const PharmacyDashboard = () => {
       <DashboardHeader
         title="Pharmacy Dashboard"
         subtitle="Manage medications, inventory, and dispensing operations"
-        onRefresh={triggerAllRefresh}
       />
       
       {/* Stats Cards */}
