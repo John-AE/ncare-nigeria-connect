@@ -210,7 +210,6 @@ export const EnhancedCompletedConsultations = ({ refreshTrigger }: EnhancedCompl
             name: p.services?.name || '',
             quantity: p.quantity,
             unit_price: p.services?.price || 0,
-            isMedication: false  // Assume services are not dispensable meds; adjust if wrong
           }));
           const medsFromBillItems = medsByPatient.get(visit.patient_id) || [];
           return {
@@ -268,31 +267,54 @@ const handleMarkAsDispensedForVisit = async (visit: CompletedVisit) => {
 
   setIsDispensing(true);
 
-  // Optimistic update: Change status immediately
+  // Optimistic update
   setCompletedVisits(prev => prev.map(v => 
     v.id === visit.id ? { ...v, dispensed: true } : v
   ));
 
   try {
-    const dispensingRecords = visit.medications.map(med => ({
-      medication_id: med.id,
-      patient_id: visit.patient_id,
-      visit_id: visit.id,
-      inventory_id: med.id, // TODO: map to actual inventory if available
-      quantity_dispensed: med.quantity,
-      dispensed_by: profile.user_id,
-      hospital_id: profile.hospital_id,
-      notes: `Dispensed for visit ${visit.id}`
-    }));
+    // Filter only actual medications
+    const dispensableMeds = visit.medications.filter(med => med.isMedication);
 
-    if (dispensingRecords.length > 0) {
-      const { error } = await supabase
-        .from('medication_dispensing')
-        .insert(dispensingRecords);
-      if (error) throw error;
+    if (dispensableMeds.length === 0) {
+      return;  // Nothing to dispense
     }
 
-    // No need for setCompletedVisits here anymore
+    // Get unique medication IDs
+    const medicationIds = [...new Set(dispensableMeds.map(med => med.id))];
+
+    // Query inventory for this hospital
+    const { data: inventoryData, error: invError } = await supabase
+      .from('medication_inventory')
+      .select('id, medication_id')
+      .eq('hospital_id', profile.hospital_id)
+      .in('medication_id', medicationIds);
+
+    if (invError) throw invError;
+    if (!inventoryData || inventoryData.length === 0) throw new Error('No inventory found for medications');
+
+    const inventoryMap = new Map(inventoryData.map(inv => [inv.medication_id, inv.id]));
+
+    const dispensingRecords = dispensableMeds.map(med => {
+      const invId = inventoryMap.get(med.id);
+      if (!invId) throw new Error(`No inventory for medication ${med.name} (ID: ${med.id})`);
+      return {
+        medication_id: med.id,
+        patient_id: visit.patient_id,
+        visit_id: visit.id,
+        inventory_id: invId,  // Use queried ID
+        quantity_dispensed: med.quantity,
+        dispensed_by: profile.user_id,
+        hospital_id: profile.hospital_id,
+        notes: `Dispensed for visit ${visit.id}`
+      };
+    });
+
+    const { error } = await supabase
+      .from('medication_dispensing')
+      .insert(dispensingRecords);
+
+    if (error) throw error;
   } catch (error) {
     // Revert on error
     setCompletedVisits(prev => prev.map(v => 
