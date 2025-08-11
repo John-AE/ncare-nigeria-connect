@@ -210,6 +210,7 @@ export const EnhancedCompletedConsultations = ({ refreshTrigger }: EnhancedCompl
             name: p.services?.name || '',
             quantity: p.quantity,
             unit_price: p.services?.price || 0,
+            isMedication: false  // Assume services are not dispensable meds; adjust if wrong
           }));
           const medsFromBillItems = medsByPatient.get(visit.patient_id) || [];
           return {
