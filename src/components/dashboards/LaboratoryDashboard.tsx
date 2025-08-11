@@ -15,28 +15,10 @@ import { DashboardHeader } from "../shared/DashboardHeader";
 export const LaboratoryDashboard = () => {
   const { data: stats, isLoading, error, refetch } = useLaboratoryDashboard();
   const { registerRefresh, triggerAllRefresh } = useRefreshManager();
-  const queryClient = useQueryClient();
 
   const handleRefresh = () => {
-    // Force refetch of the main query
-    if (refetch) {
-      refetch();
-    }
-    
-    // Trigger all registered refresh functions
     triggerAllRefresh();
-    
-    // Invalidate all related queries
-    queryClient.invalidateQueries({ queryKey: ["laboratory-dashboard"] });
-    queryClient.invalidateQueries({ queryKey: ["lab-orders-queue"] });
-    queryClient.invalidateQueries({ queryKey: ["lab-orders-actionable"] });
-    queryClient.invalidateQueries({ queryKey: ["recent-lab-results"] });
-    queryClient.invalidateQueries({ queryKey: ["lab-test-billing"] });
-    queryClient.invalidateQueries({ queryKey: ["lab-billing-history"] });
-    queryClient.invalidateQueries({ queryKey: ["test-types"] });
-    
-    // Force a complete cache refresh
-    queryClient.refetchQueries({ queryKey: ["laboratory-dashboard"] });
+    refetch();
   };
 
   if (isLoading) {
