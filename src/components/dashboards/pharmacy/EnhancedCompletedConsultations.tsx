@@ -262,39 +262,47 @@ export const EnhancedCompletedConsultations = ({ refreshTrigger }: EnhancedCompl
     };
   }, [fetchCompletedVisits]);
 
-  const handleMarkAsDispensedForVisit = async (visit: CompletedVisit) => {
-    if (!visit || !profile) return;
+const handleMarkAsDispensedForVisit = async (visit: CompletedVisit) => {
+  if (!visit || !profile) return;
 
-    setIsDispensing(true);
-    try {
-      const dispensingRecords = visit.medications.map(med => ({
-        medication_id: med.id,
-        patient_id: visit.patient_id,
-        visit_id: visit.id,
-        inventory_id: med.id, // TODO: map to actual inventory if available
-        quantity_dispensed: med.quantity,
-        dispensed_by: profile.user_id,
-        hospital_id: profile.hospital_id,
-        notes: `Dispensed for visit ${visit.id}`
-      }));
+  setIsDispensing(true);
 
-      if (dispensingRecords.length > 0) {
-        const { error } = await supabase
-          .from('medication_dispensing')
-          .insert(dispensingRecords);
-        if (error) throw error;
-      }
+  // Optimistic update: Change status immediately
+  setCompletedVisits(prev => prev.map(v => 
+    v.id === visit.id ? { ...v, dispensed: true } : v
+  ));
 
-      setCompletedVisits(prev => prev.map(v => 
-        v.id === visit.id ? { ...v, dispensed: true } : v
-      ));
-    } catch (error) {
-      console.error('Error marking as dispensed:', error);
-      toast({ title: 'Error', description: 'Failed to mark as dispensed', variant: 'destructive' });
-    } finally {
-      setIsDispensing(false);
+  try {
+    const dispensingRecords = visit.medications.map(med => ({
+      medication_id: med.id,
+      patient_id: visit.patient_id,
+      visit_id: visit.id,
+      inventory_id: med.id, // TODO: map to actual inventory if available
+      quantity_dispensed: med.quantity,
+      dispensed_by: profile.user_id,
+      hospital_id: profile.hospital_id,
+      notes: `Dispensed for visit ${visit.id}`
+    }));
+
+    if (dispensingRecords.length > 0) {
+      const { error } = await supabase
+        .from('medication_dispensing')
+        .insert(dispensingRecords);
+      if (error) throw error;
     }
-  };
+
+    // No need for setCompletedVisits here anymore
+  } catch (error) {
+    // Revert on error
+    setCompletedVisits(prev => prev.map(v => 
+      v.id === visit.id ? { ...v, dispensed: false } : v
+    ));
+    console.error('Error marking as dispensed:', error);
+    toast({ title: 'Error', description: 'Failed to mark as dispensed', variant: 'destructive' });
+  } finally {
+    setIsDispensing(false);
+  }
+};
 
   const handleMarkAsDispensed = async () => {
     if (!selectedVisit) return;
