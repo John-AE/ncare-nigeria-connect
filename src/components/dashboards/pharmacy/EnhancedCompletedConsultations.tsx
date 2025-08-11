@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -27,7 +26,6 @@ interface CompletedVisit {
     name: string;
     quantity: number;
     unit_price: number;
-    isMedication: boolean;
   }>;
   labTests: Array<{
     id: string;
@@ -172,23 +170,6 @@ export const EnhancedCompletedConsultations = ({ refreshTrigger }: EnhancedCompl
           medsByPatient.set(bill.patient_id, arr);
         });
         
-        // Check which visits have been dispensed
-        const { data: dispensingData } = await supabase
-          .from('medication_dispensing')
-          .select('visit_id')
-          .in('visit_id', visitIds);
-        
-        // Get visits that either have dispensing records OR have no medications at all
-        const visitsWithMeds = new Set();
-        formattedVisits.forEach(v => {
-          if (v.medications.length > 0) visitsWithMeds.add(v.id);
-        });
-        
-        const dispensedVisitIds = new Set([
-          ...(dispensingData?.map(d => d.visit_id) || []),
-          ...visitIds.filter(id => !visitsWithMeds.has(id)) // Auto-mark visits with no meds as dispensed
-        ]);
-        
         // Group prescriptions and lab orders by visit_id
         const prescriptionsByVisit = new Map();
         prescriptionsData?.forEach(p => {
@@ -237,8 +218,30 @@ export const EnhancedCompletedConsultations = ({ refreshTrigger }: EnhancedCompl
               name: l.lab_test_types?.name || '',
               status: l.status,
             })),
-            dispensed: dispensedVisitIds.has(visit.id),
+            dispensed: false, // Will be set below
           } as CompletedVisit;
+        });
+
+        // Check which visits have been dispensed
+        const { data: dispensingData } = await supabase
+          .from('medication_dispensing')
+          .select('visit_id')
+          .in('visit_id', visitIds);
+
+        // Get visits that either have dispensing records OR have no medications at all
+        const visitsWithMeds = new Set();
+        formattedVisits.forEach(v => {
+          if (v.medications.length > 0) visitsWithMeds.add(v.id);
+        });
+
+        const dispensedVisitIds = new Set([
+          ...(dispensingData?.map(d => d.visit_id) || []),
+          ...visitIds.filter(id => !visitsWithMeds.has(id))
+        ]);
+
+        // Update dispensed status
+        formattedVisits.forEach(visit => {
+          visit.dispensed = dispensedVisitIds.has(visit.id);
         });
         
         setCompletedVisits(formattedVisits);
@@ -282,44 +285,46 @@ const handleMarkAsDispensedForVisit = async (visit: CompletedVisit) => {
   ));
 
   try {
-    // Filter only actual medications
-    const dispensableMeds = visit.medications.filter(med => med.isMedication);
+    // Use all medications
+    const dispensableMeds = visit.medications;
 
     // Get unique medication IDs
     const medicationIds = [...new Set(dispensableMeds.map(med => med.id))];
 
-    // Query inventory for this hospital
-    const { data: inventoryData, error: invError } = await supabase
-      .from('medication_inventory')
-      .select('id, medication_id')
-      .eq('hospital_id', profile.hospital_id)
-      .in('medication_id', medicationIds);
+    if (medicationIds.length > 0) {
+      // Query inventory for this hospital
+      const { data: inventoryData, error: invError } = await supabase
+        .from('medication_inventory')
+        .select('id, medication_id')
+        .eq('hospital_id', profile.hospital_id)
+        .in('medication_id', medicationIds);
 
-    if (invError) throw invError;
-    if (!inventoryData || inventoryData.length === 0) throw new Error('No inventory found for medications');
+      if (invError) throw invError;
+      if (!inventoryData || inventoryData.length === 0) throw new Error('No inventory found for medications');
 
-    const inventoryMap = new Map(inventoryData.map(inv => [inv.medication_id, inv.id]));
+      const inventoryMap = new Map(inventoryData.map(inv => [inv.medication_id, inv.id]));
 
-    const dispensingRecords = dispensableMeds.map(med => {
-      const invId = inventoryMap.get(med.id);
-      if (!invId) throw new Error(`No inventory for medication ${med.name} (ID: ${med.id})`);
-      return {
-        medication_id: med.id,
-        patient_id: visit.patient_id,
-        visit_id: visit.id,
-        inventory_id: invId,  // Use queried ID
-        quantity_dispensed: med.quantity,
-        dispensed_by: profile.user_id,
-        hospital_id: profile.hospital_id,
-        notes: `Dispensed for visit ${visit.id}`
-      };
-    });
+      const dispensingRecords = dispensableMeds.map(med => {
+        const invId = inventoryMap.get(med.id);
+        if (!invId) throw new Error(`No inventory for medication ${med.name} (ID: ${med.id})`);
+        return {
+          medication_id: med.id,
+          patient_id: visit.patient_id,
+          visit_id: visit.id,
+          inventory_id: invId,
+          quantity_dispensed: med.quantity,
+          dispensed_by: profile.user_id,
+          hospital_id: profile.hospital_id,
+          notes: `Dispensed for visit ${visit.id}`
+        };
+      });
 
-    const { error } = await supabase
-      .from('medication_dispensing')
-      .insert(dispensingRecords);
+      const { error } = await supabase
+        .from('medication_dispensing')
+        .insert(dispensingRecords);
 
-    if (error) throw error;
+      if (error) throw error;
+    }
   } catch (error) {
     // Revert on error
     setCompletedVisits(prev => prev.map(v => 
@@ -540,32 +545,30 @@ const handleMarkAsDispensedForVisit = async (visit: CompletedVisit) => {
               </div>
 
               {/* Dispensing Action */}
-              {selectedVisit.medications.length > 0 && (
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Checkbox 
-                      id="dispensed" 
-                      checked={selectedVisit.dispensed}
-                      disabled={selectedVisit.dispensed}
-                    />
-                    <Label 
-                      htmlFor="dispensed" 
-                      className={selectedVisit.dispensed ? "text-green-600" : ""}
-                    >
-                      {selectedVisit.dispensed ? "Medications have been dispensed" : "Mark as dispensed after giving medications to patient"}
-                    </Label>
-                  </div>
-                  {!selectedVisit.dispensed && (
-                    <Button 
-                      onClick={handleMarkAsDispensed}
-                      disabled={isDispensing}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      {isDispensing ? "Processing..." : "Mark as Dispensed"}
-                    </Button>
-                  )}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Checkbox 
+                    id="dispensed" 
+                    checked={selectedVisit.dispensed}
+                    disabled={selectedVisit.dispensed}
+                  />
+                  <Label 
+                    htmlFor="dispensed" 
+                    className={selectedVisit.dispensed ? "text-green-600" : ""}
+                  >
+                    {selectedVisit.dispensed ? "Visit has been processed by pharmacy" : "Mark as processed after reviewing visit"}
+                  </Label>
                 </div>
-              )}
+                {!selectedVisit.dispensed && (
+                  <Button 
+                    onClick={handleMarkAsDispensed}
+                    disabled={isDispensing}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {isDispensing ? "Processing..." : "Mark as Processed"}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
