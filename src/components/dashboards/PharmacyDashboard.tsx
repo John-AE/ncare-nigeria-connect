@@ -8,7 +8,7 @@ import { DashboardHeader } from "../shared/DashboardHeader";
 
 export const PharmacyDashboard = () => {
   const { stats, loading, error } = usePharmacyDashboard();
-  const { triggerAllRefresh } = useRefreshManager();
+  const { registerRefresh, triggerAllRefresh } = useRefreshManager();
 
   if (loading) {
     return (
@@ -44,13 +44,19 @@ export const PharmacyDashboard = () => {
       {/* Main Content - Full Width Cards */}
       <div className="space-y-8">
         {/* Completed Consultations */}
-        <EnhancedCompletedConsultations />
+        <EnhancedCompletedConsultations 
+          refreshTrigger={(fn) => registerRefresh('pharmacy-completed-consultations', fn)}
+        />
         
         {/* Medication Inventory */}
-        <MedicationInventory />
+        <MedicationInventory 
+          refreshTrigger={(fn) => registerRefresh('pharmacy-medication-inventory', fn)}
+        />
         
         {/* Dispensed Medication Log */}
-        <DispensedMedicationLog />
+        <DispensedMedicationLog 
+          refreshTrigger={(fn) => registerRefresh('pharmacy-dispensed-log', fn)}
+        />
       </div>
     </div>
   );

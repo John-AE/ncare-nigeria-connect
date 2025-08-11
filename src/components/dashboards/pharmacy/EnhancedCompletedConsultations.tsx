@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Eye, CheckCircle, Pill, TestTube } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/AuthProvider";
-
+import { useUnifiedRefresh } from "@/hooks/useUnifiedRefresh";
 interface CompletedVisit {
   id: string;
   patient_id: string;
@@ -27,6 +27,7 @@ interface CompletedVisit {
     name: string;
     quantity: number;
     unit_price: number;
+    isMedication: boolean;
   }>;
   labTests: Array<{
     id: string;
