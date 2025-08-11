@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +31,7 @@ export const EnterResultsDialog = ({
 }: EnterResultsDialogProps) => {
   const { profile } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -85,6 +87,12 @@ export const EnterResultsDialog = ({
         title: "Success",
         description: "Test results entered successfully",
       });
+
+      // Invalidate all related queries to trigger refresh across lab components
+      queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["test-results"] });
+      queryClient.invalidateQueries({ queryKey: ["lab-billing"] });
+      queryClient.invalidateQueries({ queryKey: ["laboratory-dashboard"] });
 
       onResultSubmitted();
       onClose();

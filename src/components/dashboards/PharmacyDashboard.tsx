@@ -3,9 +3,12 @@ import { EnhancedCompletedConsultations } from "./pharmacy/EnhancedCompletedCons
 import { MedicationInventory } from "./pharmacy/MedicationInventory";
 import { DispensedMedicationLog } from "./pharmacy/DispensedMedicationLog";
 import { usePharmacyDashboard } from "@/hooks/usePharmacyDashboard";
+import { useRefreshManager } from "@/hooks/useRefreshManager";
+import { DashboardHeader } from "../shared/DashboardHeader";
 
 export const PharmacyDashboard = () => {
   const { stats, loading, error } = usePharmacyDashboard();
+  const { triggerAllRefresh } = useRefreshManager();
 
   if (loading) {
     return (
@@ -28,6 +31,13 @@ export const PharmacyDashboard = () => {
 
   return (
     <div className="space-y-8">
+      {/* Dashboard Header */}
+      <DashboardHeader
+        title="Pharmacy Dashboard"
+        subtitle="Manage medications, inventory, and dispensing operations"
+        onRefresh={triggerAllRefresh}
+      />
+      
       {/* Stats Cards */}
       <PharmacyStatsCards stats={stats} />
       

@@ -8,9 +8,23 @@ import { LabBillingHistory } from "./laboratory/LabBillingHistory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Loader2, Activity, TrendingUp } from "lucide-react";
+import { useRefreshManager } from "@/hooks/useRefreshManager";
+import { useQueryClient } from "@tanstack/react-query";
+import { DashboardHeader } from "../shared/DashboardHeader";
 
 export const LaboratoryDashboard = () => {
-  const { data: stats, isLoading, error } = useLaboratoryDashboard();
+  const { data: stats, isLoading, error, refetch } = useLaboratoryDashboard();
+  const { registerRefresh, triggerAllRefresh } = useRefreshManager();
+  const queryClient = useQueryClient();
+
+  const handleRefresh = () => {
+    refetch();
+    triggerAllRefresh();
+    // Invalidate related queries for all lab components
+    queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+    queryClient.invalidateQueries({ queryKey: ["test-results"] });
+    queryClient.invalidateQueries({ queryKey: ["lab-billing"] });
+  };
 
   if (isLoading) {
     return (
@@ -48,13 +62,12 @@ export const LaboratoryDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-            Laboratory Dashboard
-          </h1>
-          <p className="text-gray-600 mt-2">Real-time insights and analytics for laboratory operations</p>
-        </div>
+        {/* Dashboard Header */}
+        <DashboardHeader
+          title="Laboratory Dashboard"
+          subtitle="Real-time insights and analytics for laboratory operations"
+          onRefresh={handleRefresh}
+        />
 
         {/* Stats Cards */}
         <div className="transform hover:scale-[1.01] transition-transform duration-300">
