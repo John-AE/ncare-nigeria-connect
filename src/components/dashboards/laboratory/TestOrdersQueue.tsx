@@ -8,8 +8,13 @@ import { Clock, User, AlertCircle, CreditCard } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { EnterResultsDialog } from "./EnterResultsDialog";
 import { toast } from "sonner";
+import { useUnifiedRefresh } from "@/hooks/useUnifiedRefresh";
 
-export const TestOrdersQueue = () => {
+interface TestOrdersQueueProps {
+  refreshTrigger?: (fn: () => void) => void;
+}
+
+export const TestOrdersQueue = ({ refreshTrigger }: TestOrdersQueueProps) => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
   
@@ -35,6 +40,9 @@ export const TestOrdersQueue = () => {
     },
     refetchInterval: 30000,
   });
+
+  // Use unified refresh hook
+  useUnifiedRefresh(refreshTrigger, refetch);
 
   // Helper function to check if bill is paid
   const isBillPaid = (order: any) => {

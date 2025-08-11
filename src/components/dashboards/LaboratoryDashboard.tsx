@@ -21,9 +21,11 @@ export const LaboratoryDashboard = () => {
     refetch();
     triggerAllRefresh();
     // Invalidate related queries for all lab components
-    queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
-    queryClient.invalidateQueries({ queryKey: ["test-results"] });
-    queryClient.invalidateQueries({ queryKey: ["lab-billing"] });
+    queryClient.invalidateQueries({ queryKey: ["lab-orders-queue"] });
+    queryClient.invalidateQueries({ queryKey: ["lab-orders-actionable"] });
+    queryClient.invalidateQueries({ queryKey: ["recent-lab-results"] });
+    queryClient.invalidateQueries({ queryKey: ["lab-test-billing"] });
+    queryClient.invalidateQueries({ queryKey: ["lab-billing-history"] });
   };
 
   if (isLoading) {
@@ -78,17 +80,23 @@ export const LaboratoryDashboard = () => {
         <div className="space-y-8">
           {/* Test Orders Queue */}
           <div className="w-full transform hover:scale-[1.01] transition-all duration-300 hover:shadow-xl">
-            <TestOrdersQueue />
+            <TestOrdersQueue 
+              refreshTrigger={(fn) => registerRefresh('lab-orders-queue', fn)}
+            />
           </div>
 
           {/* Test Order Billing */}
           <div className="w-full transform hover:scale-[1.01] transition-all duration-300 hover:shadow-xl">
-            <TestOrderBilling />
+            <TestOrderBilling 
+              refreshTrigger={(fn) => registerRefresh('lab-orders-billing', fn)}
+            />
           </div>
 
           {/* Recent Test Results */}
           <div className="w-full transform hover:scale-[1.01] transition-all duration-300 hover:shadow-xl">
-            <RecentTestResults />
+            <RecentTestResults 
+              refreshTrigger={(fn) => registerRefresh('recent-lab-results', fn)}
+            />
           </div>
 
           {/* Test Types Management */}

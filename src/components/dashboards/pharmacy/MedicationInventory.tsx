@@ -10,6 +10,7 @@ import { AddMedicationDialog } from "./AddMedicationDialog";
 import { ReceiveStockDialog } from "./ReceiveStockDialog";
 import { DispenseMedicationDialog } from "./DispenseMedicationDialog";
 import { InventoryReportsDialog } from "./InventoryReportsDialog";
+import { useUnifiedRefresh } from "@/hooks/useUnifiedRefresh";
 
 interface MedicationWithInventory {
   id: string;
@@ -24,7 +25,11 @@ interface MedicationWithInventory {
   expiry_dates: string[];
 }
 
-export const MedicationInventory = () => {
+interface MedicationInventoryProps {
+  refreshTrigger?: (fn: () => void) => void;
+}
+
+export const MedicationInventory = ({ refreshTrigger }: MedicationInventoryProps) => {
   const [medications, setMedications] = useState<MedicationWithInventory[]>([]);
   const [filteredMedications, setFilteredMedications] = useState<MedicationWithInventory[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,6 +91,9 @@ export const MedicationInventory = () => {
       setLoading(false);
     }
   };
+
+  // Use unified refresh hook
+  useUnifiedRefresh(refreshTrigger, fetchMedications);
 
   useEffect(() => {
     fetchMedications();

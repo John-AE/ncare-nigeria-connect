@@ -37,7 +37,11 @@ interface CompletedVisit {
   dispensed: boolean;
 }
 
-export const EnhancedCompletedConsultations = () => {
+interface EnhancedCompletedConsultationsProps {
+  refreshTrigger?: (fn: () => void) => void;
+}
+
+export const EnhancedCompletedConsultations = ({ refreshTrigger }: EnhancedCompletedConsultationsProps) => {
   const [completedVisits, setCompletedVisits] = useState<CompletedVisit[]>([]);
   const [selectedVisit, setSelectedVisit] = useState<CompletedVisit | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,8 +49,7 @@ export const EnhancedCompletedConsultations = () => {
   const { toast } = useToast();
   const { profile } = useAuth();
 
-  useEffect(() => {
-    const fetchCompletedVisits = async () => {
+  const fetchCompletedVisits = useCallback(async () => {
       try {
         const today = new Date().toISOString().split('T')[0];
         
@@ -235,8 +238,12 @@ export const EnhancedCompletedConsultations = () => {
       } finally {
         setLoading(false);
       }
-    };
+    }, [profile?.hospital_id]);
 
+  // Use unified refresh hook
+  useUnifiedRefresh(refreshTrigger, fetchCompletedVisits);
+
+  useEffect(() => {
     fetchCompletedVisits();
 
     // Set up real-time listener for new visits
@@ -253,7 +260,7 @@ export const EnhancedCompletedConsultations = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchCompletedVisits]);
 
   const handleMarkAsDispensedForVisit = async (visit: CompletedVisit) => {
     if (!visit || !profile) return;

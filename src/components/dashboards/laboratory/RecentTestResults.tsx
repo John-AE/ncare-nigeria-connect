@@ -7,12 +7,17 @@ import { Button } from "@/components/ui/button";
 import { FileText, AlertTriangle, CheckCircle2, Eye } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { TestResultViewDialog } from "./TestResultViewDialog";
+import { useUnifiedRefresh } from "@/hooks/useUnifiedRefresh";
 
-export const RecentTestResults = () => {
+interface RecentTestResultsProps {
+  refreshTrigger?: (fn: () => void) => void;
+}
+
+export const RecentTestResults = ({ refreshTrigger }: RecentTestResultsProps) => {
   const [selectedResult, setSelectedResult] = useState<any>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   
-  const { data: results, isLoading } = useQuery({
+  const { data: results, isLoading, refetch } = useQuery({
     queryKey: ["recent-lab-results"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -33,6 +38,9 @@ export const RecentTestResults = () => {
     },
     refetchInterval: 30000,
   });
+
+  // Use unified refresh hook
+  useUnifiedRefresh(refreshTrigger, refetch);
 
   const getResultStatusColor = (isAbnormal: boolean, isCritical: boolean) => {
     if (isCritical) return "bg-red-100 text-red-800";

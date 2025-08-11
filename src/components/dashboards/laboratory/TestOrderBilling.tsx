@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Receipt, Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { useUnifiedRefresh } from "@/hooks/useUnifiedRefresh";
 
 interface OrderRow {
   id: string;
@@ -20,7 +21,11 @@ interface OrderRow {
   lab_results: { result_status: string }[] | null;
 }
 
-export const TestOrderBilling = () => {
+interface TestOrderBillingProps {
+  refreshTrigger?: (fn: () => void) => void;
+}
+
+export const TestOrderBilling = ({ refreshTrigger }: TestOrderBillingProps) => {
   // Search + pagination for ACTIONABLE bills (orders without completed results)
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -32,7 +37,7 @@ export const TestOrderBilling = () => {
     return () => clearTimeout(t);
   }, [search]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["lab-orders-actionable", debounced, page, pageSize],
     queryFn: async () => {
       let query = supabase
@@ -69,6 +74,9 @@ export const TestOrderBilling = () => {
     },
     refetchInterval: 30000,
   });
+
+  // Use unified refresh hook
+  useUnifiedRefresh(refreshTrigger, refetch);
 
   const totalPages = useMemo(() => {
     const total = data?.total ?? 0;

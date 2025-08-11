@@ -89,9 +89,11 @@ export const EnterResultsDialog = ({
       });
 
       // Invalidate all related queries to trigger refresh across lab components
-      queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["test-results"] });
-      queryClient.invalidateQueries({ queryKey: ["lab-billing"] });
+      queryClient.invalidateQueries({ queryKey: ["lab-orders-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["lab-orders-actionable"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-lab-results"] });
+      queryClient.invalidateQueries({ queryKey: ["lab-test-billing"] });
+      queryClient.invalidateQueries({ queryKey: ["lab-billing-history"] });
       queryClient.invalidateQueries({ queryKey: ["laboratory-dashboard"] });
 
       onResultSubmitted();

@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useUnifiedRefresh } from "@/hooks/useUnifiedRefresh";
 
 interface DispensedMedication {
   id: string;
@@ -30,7 +31,7 @@ interface DispensedMedication {
 }
 
 interface DispensedMedicationLogProps {
-  refreshTrigger?: React.MutableRefObject<(() => void) | null>;
+  refreshTrigger?: (fn: () => void) => void;
 }
 
 export const DispensedMedicationLog = ({ refreshTrigger }: DispensedMedicationLogProps) => {
@@ -43,29 +44,6 @@ export const DispensedMedicationLog = ({ refreshTrigger }: DispensedMedicationLo
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const { profile } = useAuth();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (profile?.hospital_id) {
-      fetchDispensedMedications();
-      
-      // Set up refresh trigger if provided
-      if (refreshTrigger) {
-        refreshTrigger.current = fetchDispensedMedications;
-      }
-      
-      // Poll every 3 seconds for new dispensed medications
-      const interval = setInterval(() => {
-        // Don't show loading state on subsequent fetches
-        fetchDispensedMedications(false);
-      }, 3000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [profile?.hospital_id, refreshTrigger]);
-
-  useEffect(() => {
-    filterMedications();
-  }, [dispensedMedications, searchTerm]);
 
   const fetchDispensedMedications = async (showLoading = true) => {
     try {
@@ -113,6 +91,27 @@ export const DispensedMedicationLog = ({ refreshTrigger }: DispensedMedicationLo
       }
     }
   };
+
+  // Use unified refresh hook
+  useUnifiedRefresh(refreshTrigger, fetchDispensedMedications);
+
+  useEffect(() => {
+    if (profile?.hospital_id) {
+      fetchDispensedMedications();
+      
+      // Poll every 3 seconds for new dispensed medications
+      const interval = setInterval(() => {
+        // Don't show loading state on subsequent fetches
+        fetchDispensedMedications(false);
+      }, 3000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [profile?.hospital_id]);
+
+  useEffect(() => {
+    filterMedications();
+  }, [dispensedMedications, searchTerm]);
 
   const filterMedications = () => {
     if (!searchTerm.trim()) {
