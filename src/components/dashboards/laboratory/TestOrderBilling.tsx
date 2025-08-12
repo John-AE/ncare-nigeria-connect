@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
+
 import { Button } from "@/components/ui/button";
-import { Receipt, Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Receipt, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUnifiedRefresh } from "@/hooks/useUnifiedRefresh";
 
 interface OrderRow {
@@ -26,21 +26,14 @@ interface TestOrderBillingProps {
 }
 
 export const TestOrderBilling = ({ refreshTrigger }: TestOrderBillingProps) => {
-  // Search + pagination for ACTIONABLE bills (orders without completed results)
-  const [search, setSearch] = useState("");
-  const [debounced, setDebounced] = useState("");
+  // Pagination for ACTIONABLE bills (orders without completed results)
   const [page, setPage] = useState(0);
   const pageSize = 10;
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(search.trim()), 300);
-    return () => clearTimeout(t);
-  }, [search]);
-
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["lab-orders-actionable", debounced, page, pageSize],
+    queryKey: ["lab-orders-actionable", page, pageSize],
     queryFn: async () => {
-      let query = supabase
+      const query = supabase
         .from("lab_orders")
         .select(
           `*,
@@ -54,13 +47,6 @@ export const TestOrderBilling = ({ refreshTrigger }: TestOrderBillingProps) => {
         .in("status", ["ordered", "sample_collected", "in_progress"]) // exclude completed from actionable list
         .order("order_date", { ascending: false })
         .range(page * pageSize, page * pageSize + pageSize - 1);
-
-      if (debounced) {
-        // filter by patient name
-        query = query.or(
-          `patients.first_name.ilike.%${debounced}%,patients.last_name.ilike.%${debounced}%`
-        );
-      }
 
       const { data, error, count } = await query;
       if (error) throw error;
@@ -123,35 +109,21 @@ export const TestOrderBilling = ({ refreshTrigger }: TestOrderBillingProps) => {
             <Receipt className="h-5 w-5" />
             Test Order Billing
           </span>
-          <div className="flex items-center gap-2">
-            <div className="relative w-56">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search patient..."
-                value={search}
-                onChange={(e) => {
-                  setPage(0);
-                  setSearch(e.target.value);
-                }}
-                className="pl-8"
-              />
-            </div>
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {page + 1} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page + 1 >= totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {page + 1} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page + 1 >= totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </CardTitle>
       </CardHeader>
