@@ -27,6 +27,7 @@ import { TodaysSchedule } from "./doctor/TodaysSchedule";
 import { OrderedLabTestResults } from "./doctor/OrderedLabTestResults";
 import { CompletedAppointmentsBills } from "./doctor/CompletedAppointmentsBills";
 import { StandaloneBillingCard } from "./doctor/StandaloneBillingCard";
+import { DirectLabTestOrdering } from "./doctor/DirectLabTestOrdering";
 
 // Shared components
 import { TriageQueue } from "./nurse/TriageQueue";
@@ -90,6 +91,9 @@ const DoctorDashboard = () => {
         showVitalSigns={true} 
         refreshTrigger={(fn) => registerRefresh('triageQueue', fn)}
       />
+
+      {/* Direct Lab Test Ordering */}
+      <DirectLabTestOrdering />
 
       {/* Ordered Lab Test Results */}
       <OrderedLabTestResults />
