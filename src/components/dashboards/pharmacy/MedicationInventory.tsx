@@ -202,7 +202,11 @@ export const MedicationInventory = ({ refreshTrigger }: MedicationInventoryProps
           </div>
 
           {/* Medication List */}
-          <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+          <div className={`space-y-3 pr-2 ${
+            filteredMedications.length > 3 
+              ? "max-h-[390px] overflow-y-auto" 
+              : ""
+          }`}>
             {filteredMedications.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 {searchQuery || selectedCategory !== "all" 
