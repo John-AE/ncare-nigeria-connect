@@ -117,7 +117,7 @@ export const InpatientVitalsPanel = ({ admissionId }: InpatientVitalsPanelProps)
     
     switch (type) {
       case 'temperature':
-        if (value < 96 || value > 100.4) return 'abnormal';
+        if (value < 36.1 || value > 37.2) return 'abnormal';
         break;
       case 'systolic_bp':
         if (value < 90 || value > 140) return 'abnormal';
@@ -127,9 +127,6 @@ export const InpatientVitalsPanel = ({ admissionId }: InpatientVitalsPanelProps)
         break;
       case 'heart_rate':
         if (value < 60 || value > 100) return 'abnormal';
-        break;
-      case 'respiratory_rate':
-        if (value < 12 || value > 20) return 'abnormal';
         break;
       case 'oxygen_saturation':
         if (value < 95) return 'critical';
@@ -226,7 +223,7 @@ export const InpatientVitalsPanel = ({ admissionId }: InpatientVitalsPanelProps)
               icon={Thermometer}
               label="Temperature"
               value={latestVitals.temperature}
-              unit="°F"
+              unit="°C"
               status={getVitalStatus(latestVitals.temperature, 'temperature')}
             />
 
@@ -251,14 +248,6 @@ export const InpatientVitalsPanel = ({ admissionId }: InpatientVitalsPanelProps)
               value={latestVitals.heart_rate}
               unit="bpm"
               status={getVitalStatus(latestVitals.heart_rate, 'heart_rate')}
-            />
-
-            <VitalCard
-              icon={Activity}
-              label="Respiratory Rate"
-              value={latestVitals.respiratory_rate}
-              unit="/min"
-              status={getVitalStatus(latestVitals.respiratory_rate, 'respiratory_rate')}
             />
 
             <VitalCard
@@ -287,7 +276,6 @@ export const InpatientVitalsPanel = ({ admissionId }: InpatientVitalsPanelProps)
                     getVitalStatus(latestVitals.blood_pressure_systolic, 'systolic_bp'),
                     getVitalStatus(latestVitals.blood_pressure_diastolic, 'diastolic_bp'),
                     getVitalStatus(latestVitals.heart_rate, 'heart_rate'),
-                    getVitalStatus(latestVitals.respiratory_rate, 'respiratory_rate'),
                     getVitalStatus(latestVitals.oxygen_saturation, 'oxygen_saturation'),
                     getVitalStatus(latestVitals.pain_scale, 'pain_scale')
                   ];

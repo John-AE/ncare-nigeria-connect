@@ -97,14 +97,14 @@ const NurseDashboard = () => {
         subtitle={`Welcome back, ${profile?.username}`}
       />
 
-      {/* Quick Stats */}
-      <NurseStatsCards stats={stats} />
-
       {/* Dashboard Toggle */}
         <DashboardToggle 
           viewMode={viewMode} 
           onToggle={(mode: 'outpatients' | 'inpatients' | 'timeline') => setViewMode(mode)} 
         />
+
+      {/* Quick Stats */}
+      <NurseStatsCards stats={stats} />
 
       {/* Main Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

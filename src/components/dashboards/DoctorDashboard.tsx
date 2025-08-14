@@ -76,14 +76,14 @@ const DoctorDashboard = () => {
         subtitle={`Welcome back, Dr. ${profile?.username}`}
       />
 
-      {/* Quick Stats */}
-      <QuickStatsCards stats={stats} />
-
       {/* Dashboard Toggle */}
         <DashboardToggle 
           viewMode={viewMode} 
           onToggle={(mode: 'outpatients' | 'inpatients' | 'timeline') => setViewMode(mode)} 
         />
+
+      {/* Quick Stats */}
+      <QuickStatsCards stats={stats} />
 
       {/* Appointments by Date - Full Width */}
       <DateAppointments 
