@@ -85,7 +85,15 @@ export const InpatientManagement = () => {
         .from('inpatient_admissions')
         .select(`
           *,
-          patients!inner(*)
+          patients (
+            id,
+            first_name,
+            last_name,
+            date_of_birth,
+            gender,
+            blood_group,
+            allergies
+          )
         `)
         .eq('hospital_id', profile?.hospital_id)
         .eq('status', 'active')
@@ -95,11 +103,11 @@ export const InpatientManagement = () => {
       
       const admissionsData = data?.map(admission => ({
         ...admission,
-        patient: admission.patients
-      })) as InpatientAdmission[];
+        patient: admission.patients as Patient
+      })) as InpatientAdmission[] || [];
       
-      setAdmissions(admissionsData || []);
-      if (admissionsData && admissionsData.length > 0 && !selectedAdmission) {
+      setAdmissions(admissionsData);
+      if (admissionsData.length > 0 && !selectedAdmission) {
         setSelectedAdmission(admissionsData[0]);
       }
     } catch (error) {

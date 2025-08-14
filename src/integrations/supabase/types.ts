@@ -329,7 +329,29 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_inpatient_admissions_attending_doctor_id"
+            columns: ["attending_doctor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_admissions_created_by"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_admissions_patient_id"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inpatient_medications: {
         Row: {
@@ -374,7 +396,36 @@ export type Database = {
           prescribed_by?: string | null
           route?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_inpatient_medications_administered_by"
+            columns: ["administered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_medications_admission_id"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "inpatient_admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_medications_patient_id"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_medications_prescribed_by"
+            columns: ["prescribed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       inpatient_notes: {
         Row: {
@@ -410,7 +461,29 @@ export type Database = {
           patient_id?: string
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_inpatient_notes_admission_id"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "inpatient_admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_notes_created_by"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_notes_patient_id"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inpatient_procedures: {
         Row: {
@@ -455,7 +528,29 @@ export type Database = {
           procedure_name?: string
           start_time?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_inpatient_procedures_admission_id"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "inpatient_admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_procedures_patient_id"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_procedures_performed_by"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       inpatient_timeline_events: {
         Row: {
@@ -494,7 +589,29 @@ export type Database = {
           recorded_at?: string
           recorded_by?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_inpatient_timeline_events_admission_id"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "inpatient_admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_timeline_events_patient_id"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_timeline_events_recorded_by"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       inpatient_vitals: {
         Row: {
@@ -548,7 +665,29 @@ export type Database = {
           respiratory_rate?: number | null
           temperature?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_inpatient_vitals_admission_id"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "inpatient_admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_vitals_patient_id"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_vitals_recorded_by"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       lab_orders: {
         Row: {
