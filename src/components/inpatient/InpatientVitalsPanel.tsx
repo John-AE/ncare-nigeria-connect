@@ -47,25 +47,30 @@ export const InpatientVitalsPanel = ({ admissionId }: InpatientVitalsPanelProps)
 
   const fetchLatestVitals = async () => {
     try {
-      const { data, error } = await supabase
+      // First, get the latest vitals
+      const { data: vitalsData, error: vitalsError } = await supabase
         .from('inpatient_vitals')
-        .select(`
-          *,
-          staff:profiles!inpatient_vitals_recorded_by_fkey(username)
-        `)
+        .select('*')
         .eq('admission_id', admissionId)
         .order('recorded_at', { ascending: false })
         .limit(1)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      if (vitalsError && vitalsError.code !== 'PGRST116') {
+        throw vitalsError;
       }
 
-      if (data) {
+      if (vitalsData) {
+        // Get staff name separately
+        const { data: staffData } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('user_id', vitalsData.recorded_by)
+          .single();
+
         setLatestVitals({
-          ...data,
-          staff_name: 'Staff Member'
+          ...vitalsData,
+          staff_name: staffData?.username || 'Staff Member'
         });
       } else {
         setLatestVitals(null);

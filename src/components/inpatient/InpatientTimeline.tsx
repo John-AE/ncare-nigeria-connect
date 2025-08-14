@@ -55,21 +55,30 @@ export const InpatientTimeline = ({ admissionId }: InpatientTimelineProps) => {
   // Fetch timeline events
   const fetchEvents = async () => {
     try {
-      const { data, error } = await supabase
+      // First, get timeline events
+      const { data: eventsData, error } = await supabase
         .from('inpatient_timeline_events')
-        .select(`
-          *,
-          staff:profiles!inpatient_timeline_events_recorded_by_fkey(username)
-        `)
+        .select('*')
         .eq('admission_id', admissionId)
         .order('recorded_at', { ascending: false });
 
       if (error) throw error;
 
-      const eventsWithStaffNames = data?.map(event => ({
-        ...event,
-        staff_name: 'Staff Member'
-      })) || [];
+      // Then get staff names for each event
+      const eventsWithStaffNames = await Promise.all(
+        (eventsData || []).map(async (event) => {
+          const { data: staffData } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('user_id', event.recorded_by)
+            .single();
+
+          return {
+            ...event,
+            staff_name: staffData?.username || 'Staff Member'
+          };
+        })
+      );
 
       setEvents(eventsWithStaffNames);
       setFilteredEvents(eventsWithStaffNames);
