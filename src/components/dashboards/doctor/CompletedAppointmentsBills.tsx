@@ -55,6 +55,27 @@ export const CompletedAppointmentsBills = () => {
 
   useEffect(() => {
     fetchBills();
+
+    // Set up realtime subscription for bills table
+    const channel = supabase
+      .channel('completed-bills-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bills'
+        },
+        (payload) => {
+          console.log('Bills table change detected:', payload);
+          fetchBills();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [profile]);
 
   const fetchBills = async () => {
