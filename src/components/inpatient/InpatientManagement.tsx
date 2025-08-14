@@ -176,7 +176,7 @@ export const InpatientManagement = () => {
     <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="flex h-full">
         {/* Left Sidebar - Patient Selection */}
-        <div className="w-80 bg-white dark:bg-slate-800 border-r border-border shadow-sm">
+        <div className="w-64 bg-white dark:bg-slate-800 border-r border-border shadow-sm">
           <div className="p-4 border-b border-border">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
