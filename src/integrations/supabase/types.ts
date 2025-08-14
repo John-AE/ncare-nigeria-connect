@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -277,6 +277,276 @@ export type Database = {
           name?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      inpatient_admissions: {
+        Row: {
+          admission_date: string
+          admission_reason: string | null
+          admitting_diagnosis: string | null
+          attending_doctor_id: string
+          bed_number: string | null
+          created_at: string
+          created_by: string
+          discharge_date: string | null
+          hospital_id: string
+          id: string
+          patient_id: string
+          room_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admission_date?: string
+          admission_reason?: string | null
+          admitting_diagnosis?: string | null
+          attending_doctor_id: string
+          bed_number?: string | null
+          created_at?: string
+          created_by: string
+          discharge_date?: string | null
+          hospital_id: string
+          id?: string
+          patient_id: string
+          room_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admission_date?: string
+          admission_reason?: string | null
+          admitting_diagnosis?: string | null
+          attending_doctor_id?: string
+          bed_number?: string | null
+          created_at?: string
+          created_by?: string
+          discharge_date?: string | null
+          hospital_id?: string
+          id?: string
+          patient_id?: string
+          room_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inpatient_medications: {
+        Row: {
+          administered_at: string
+          administered_by: string
+          admission_id: string
+          created_at: string
+          dosage: string
+          hospital_id: string
+          id: string
+          medication_name: string
+          notes: string | null
+          patient_id: string
+          prescribed_by: string | null
+          route: string
+        }
+        Insert: {
+          administered_at: string
+          administered_by: string
+          admission_id: string
+          created_at?: string
+          dosage: string
+          hospital_id: string
+          id?: string
+          medication_name: string
+          notes?: string | null
+          patient_id: string
+          prescribed_by?: string | null
+          route: string
+        }
+        Update: {
+          administered_at?: string
+          administered_by?: string
+          admission_id?: string
+          created_at?: string
+          dosage?: string
+          hospital_id?: string
+          id?: string
+          medication_name?: string
+          notes?: string | null
+          patient_id?: string
+          prescribed_by?: string | null
+          route?: string
+        }
+        Relationships: []
+      }
+      inpatient_notes: {
+        Row: {
+          admission_id: string
+          content: string
+          created_at: string
+          created_by: string
+          hospital_id: string
+          id: string
+          note_type: string
+          patient_id: string
+          title: string
+        }
+        Insert: {
+          admission_id: string
+          content: string
+          created_at?: string
+          created_by: string
+          hospital_id: string
+          id?: string
+          note_type: string
+          patient_id: string
+          title: string
+        }
+        Update: {
+          admission_id?: string
+          content?: string
+          created_at?: string
+          created_by?: string
+          hospital_id?: string
+          id?: string
+          note_type?: string
+          patient_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      inpatient_procedures: {
+        Row: {
+          admission_id: string
+          assistants: string[] | null
+          created_at: string
+          end_time: string | null
+          hospital_id: string
+          id: string
+          notes: string | null
+          outcome: string | null
+          patient_id: string
+          performed_by: string
+          procedure_name: string
+          start_time: string
+        }
+        Insert: {
+          admission_id: string
+          assistants?: string[] | null
+          created_at?: string
+          end_time?: string | null
+          hospital_id: string
+          id?: string
+          notes?: string | null
+          outcome?: string | null
+          patient_id: string
+          performed_by: string
+          procedure_name: string
+          start_time: string
+        }
+        Update: {
+          admission_id?: string
+          assistants?: string[] | null
+          created_at?: string
+          end_time?: string | null
+          hospital_id?: string
+          id?: string
+          notes?: string | null
+          outcome?: string | null
+          patient_id?: string
+          performed_by?: string
+          procedure_name?: string
+          start_time?: string
+        }
+        Relationships: []
+      }
+      inpatient_timeline_events: {
+        Row: {
+          admission_id: string
+          created_at: string
+          event_data: Json
+          event_title: string
+          event_type: string
+          hospital_id: string
+          id: string
+          patient_id: string
+          recorded_at: string
+          recorded_by: string
+        }
+        Insert: {
+          admission_id: string
+          created_at?: string
+          event_data: Json
+          event_title: string
+          event_type: string
+          hospital_id: string
+          id?: string
+          patient_id: string
+          recorded_at?: string
+          recorded_by: string
+        }
+        Update: {
+          admission_id?: string
+          created_at?: string
+          event_data?: Json
+          event_title?: string
+          event_type?: string
+          hospital_id?: string
+          id?: string
+          patient_id?: string
+          recorded_at?: string
+          recorded_by?: string
+        }
+        Relationships: []
+      }
+      inpatient_vitals: {
+        Row: {
+          admission_id: string
+          blood_pressure_diastolic: number | null
+          blood_pressure_systolic: number | null
+          created_at: string
+          heart_rate: number | null
+          hospital_id: string
+          id: string
+          notes: string | null
+          oxygen_saturation: number | null
+          pain_scale: number | null
+          patient_id: string
+          recorded_at: string
+          recorded_by: string
+          respiratory_rate: number | null
+          temperature: number | null
+        }
+        Insert: {
+          admission_id: string
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          created_at?: string
+          heart_rate?: number | null
+          hospital_id: string
+          id?: string
+          notes?: string | null
+          oxygen_saturation?: number | null
+          pain_scale?: number | null
+          patient_id: string
+          recorded_at?: string
+          recorded_by: string
+          respiratory_rate?: number | null
+          temperature?: number | null
+        }
+        Update: {
+          admission_id?: string
+          blood_pressure_diastolic?: number | null
+          blood_pressure_systolic?: number | null
+          created_at?: string
+          heart_rate?: number | null
+          hospital_id?: string
+          id?: string
+          notes?: string | null
+          oxygen_saturation?: number | null
+          pain_scale?: number | null
+          patient_id?: string
+          recorded_at?: string
+          recorded_by?: string
+          respiratory_rate?: number | null
+          temperature?: number | null
         }
         Relationships: []
       }
@@ -1153,12 +1423,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           medication_name: string
-          total_quantity: number
           reorder_point: number
+          total_quantity: number
         }[]
       }
       get_payment_status: {
-        Args: { bill_amount: number; amount_paid: number }
+        Args: { amount_paid: number; bill_amount: number }
         Returns: string
       }
       is_admin: {

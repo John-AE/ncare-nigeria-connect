@@ -34,6 +34,7 @@ import { DateAppointments } from "./doctor/DateAppointments";
 import { DashboardToggle } from "../DashboardToggle";
 import { PatientTimelineView } from "../PatientTimelineView";
 import { DashboardHeader } from "../shared/DashboardHeader";
+import { InpatientManagement } from "@/components/inpatient/InpatientManagement";
 
 // Form components for patient and appointment management
 import PatientRegistrationForm from "../PatientRegistrationForm";
@@ -43,7 +44,7 @@ import RecurringAppointmentForm from "../RecurringAppointmentForm";
 const NurseDashboard = () => {
   const { profile } = useAuth();
   const { stats, loading, refetch } = useNurseDashboardStats();
-  const [viewMode, setViewMode] = useState<'dashboard' | 'timeline'>('dashboard');
+  const [viewMode, setViewMode] = useState<'outpatients' | 'inpatients' | 'timeline'>('outpatients');
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   
   const { registerRefresh, triggerRefresh } = useRefreshManager();
@@ -81,7 +82,11 @@ const NurseDashboard = () => {
   };
 
   if (viewMode === 'timeline') {
-    return <PatientTimelineView onBack={() => setViewMode('dashboard')} />;
+    return <PatientTimelineView onBack={() => setViewMode('outpatients')} />;
+  }
+
+  if (viewMode === 'inpatients') {
+    return <InpatientManagement />;
   }
 
   return (
@@ -96,7 +101,10 @@ const NurseDashboard = () => {
       <NurseStatsCards stats={stats} />
 
       {/* Dashboard Toggle */}
-      <DashboardToggle viewMode={viewMode} onToggle={setViewMode} />
+        <DashboardToggle 
+          viewMode={viewMode} 
+          onToggle={(mode: 'outpatients' | 'inpatients' | 'timeline') => setViewMode(mode)} 
+        />
 
       {/* Main Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

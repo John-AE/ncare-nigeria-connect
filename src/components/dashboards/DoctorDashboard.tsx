@@ -34,6 +34,7 @@ import { TriageQueue } from "./nurse/TriageQueue";
 import { DashboardToggle } from "../DashboardToggle";
 import { PatientTimelineView } from "../PatientTimelineView";
 import { DashboardHeader } from "../shared/DashboardHeader";
+import { InpatientManagement } from "@/components/inpatient/InpatientManagement";
 
 
 /**
@@ -46,7 +47,7 @@ import { DashboardHeader } from "../shared/DashboardHeader";
 const DoctorDashboard = () => {
   const { profile } = useAuth();
   const stats = useDoctorDashboardStats();
-  const [viewMode, setViewMode] = useState<'dashboard' | 'timeline'>('dashboard');
+  const [viewMode, setViewMode] = useState<'outpatients' | 'inpatients' | 'timeline'>('outpatients');
   const { registerRefresh, triggerRefresh } = useRefreshManager();
 
   /**
@@ -60,7 +61,11 @@ const DoctorDashboard = () => {
   };
 
   if (viewMode === 'timeline') {
-    return <PatientTimelineView onBack={() => setViewMode('dashboard')} />;
+    return <PatientTimelineView onBack={() => setViewMode('outpatients')} />;
+  }
+
+  if (viewMode === 'inpatients') {
+    return <InpatientManagement />;
   }
 
   return (
@@ -75,7 +80,10 @@ const DoctorDashboard = () => {
       <QuickStatsCards stats={stats} />
 
       {/* Dashboard Toggle */}
-      <DashboardToggle viewMode={viewMode} onToggle={setViewMode} />
+        <DashboardToggle 
+          viewMode={viewMode} 
+          onToggle={(mode: 'outpatients' | 'inpatients' | 'timeline') => setViewMode(mode)} 
+        />
 
       {/* Appointments by Date - Full Width */}
       <DateAppointments 
