@@ -86,7 +86,7 @@ const NurseDashboard = () => {
   }
 
   if (viewMode === 'inpatients') {
-    return <InpatientManagement />;
+    return <InpatientManagement onNavigate={setViewMode} />;
   }
 
   return (

@@ -33,6 +33,7 @@ import {
   Clock
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { DashboardToggle } from '../DashboardToggle';
 import { InpatientQuickActions } from './InpatientQuickActions';
 import { InpatientTimeline } from './InpatientTimeline';
 import { InpatientVitalsPanel } from './InpatientVitalsPanel';
@@ -64,7 +65,11 @@ interface InpatientAdmission {
   status: string;
 }
 
-export const InpatientManagement = () => {
+interface InpatientManagementProps {
+  onNavigate?: (mode: 'outpatients' | 'inpatients' | 'timeline') => void;
+}
+
+export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) => {
   const { profile } = useAuth();
   const [admissions, setAdmissions] = useState<InpatientAdmission[]>([]);
   const [selectedAdmission, setSelectedAdmission] = useState<InpatientAdmission | null>(null);
@@ -174,6 +179,16 @@ export const InpatientManagement = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      {/* Navigation Header */}
+      {onNavigate && (
+        <div className="bg-white dark:bg-slate-800 border-b border-border shadow-sm">
+          <DashboardToggle 
+            viewMode="inpatients" 
+            onToggle={onNavigate} 
+          />
+        </div>
+      )}
+      
       <div className="flex h-full">
         {/* Left Sidebar - Patient Selection */}
         <div className="w-64 bg-white dark:bg-slate-800 border-r border-border shadow-sm">
