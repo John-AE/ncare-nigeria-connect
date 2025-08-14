@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PatientProfileDialog } from "@/components/PatientProfileDialog";
+import { AdmitPatientDialog } from "./AdmitPatientDialog";
+import { toast } from "sonner";
 
 interface PatientManagementProps {
   onRegisterPatient: () => void;
@@ -21,6 +23,7 @@ export const PatientManagement = ({
   const [filteredPatients, setFilteredPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showPatientProfile, setShowPatientProfile] = useState(false);
+  const [showAdmitDialog, setShowAdmitDialog] = useState(false);
 
   // Fetch all patients for search
   useEffect(() => {
@@ -81,6 +84,19 @@ export const PatientManagement = ({
     if (selectedPatient) {
       setShowPatientProfile(true);
     }
+  };
+
+  const handleAdmitPatient = () => {
+    if (selectedPatient) {
+      setShowAdmitDialog(true);
+    }
+  };
+
+  const handleAdmissionSuccess = () => {
+    setShowAdmitDialog(false);
+    setSelectedPatient(null);
+    setSearchQuery("");
+    toast.success("Patient admitted successfully!");
   };
 
   return (
@@ -149,6 +165,13 @@ export const PatientManagement = ({
                 >
                   View Profile
                 </Button>
+                <Button 
+                  size="sm" 
+                  variant="default"
+                  onClick={handleAdmitPatient}
+                >
+                  Admit Patient
+                </Button>
               </div>
             </div>
           )}
@@ -159,6 +182,13 @@ export const PatientManagement = ({
         patient={selectedPatient}
         open={showPatientProfile}
         onOpenChange={setShowPatientProfile}
+      />
+      
+      <AdmitPatientDialog
+        patient={selectedPatient}
+        open={showAdmitDialog}
+        onOpenChange={setShowAdmitDialog}
+        onSuccess={handleAdmissionSuccess}
       />
     </Card>
   );
