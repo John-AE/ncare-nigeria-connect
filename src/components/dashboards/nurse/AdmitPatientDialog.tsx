@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -34,6 +34,7 @@ export const AdmitPatientDialog = ({
   // Fetch doctors when dialog opens
   const fetchDoctors = async () => {
     try {
+      console.log('Fetching doctors...');
       const { data, error } = await supabase
         .from('profiles')
         .select('user_id, username')
@@ -41,11 +42,19 @@ export const AdmitPatientDialog = ({
         .eq('is_active', true);
       
       if (error) throw error;
+      console.log('Fetched doctors:', data);
       setDoctors(data || []);
     } catch (error) {
       console.error('Error fetching doctors:', error);
     }
   };
+
+  // Fetch doctors when component mounts or dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchDoctors();
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,9 +103,6 @@ export const AdmitPatientDialog = ({
   };
 
   const handleOpenChange = (newOpen: boolean) => {
-    if (newOpen && doctors.length === 0) {
-      fetchDoctors();
-    }
     onOpenChange(newOpen);
   };
 
@@ -139,15 +145,19 @@ export const AdmitPatientDialog = ({
               onValueChange={(value) => setFormData(prev => ({ ...prev, attending_doctor_id: value }))}
               required
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select attending doctor" />
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder={doctors.length === 0 ? "Loading doctors..." : "Select attending doctor"} />
               </SelectTrigger>
-              <SelectContent>
-                {doctors.map((doctor) => (
-                  <SelectItem key={doctor.user_id} value={doctor.user_id}>
-                    {doctor.username}
-                  </SelectItem>
-                ))}
+              <SelectContent className="bg-background border border-border shadow-lg z-50">
+                {doctors.length === 0 ? (
+                  <SelectItem value="" disabled>No doctors available</SelectItem>
+                ) : (
+                  doctors.map((doctor) => (
+                    <SelectItem key={doctor.user_id} value={doctor.user_id}>
+                      {doctor.username}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
