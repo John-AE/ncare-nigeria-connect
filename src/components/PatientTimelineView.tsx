@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, Calendar, FileText, Download, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "./AuthProvider";
+import { DashboardToggle } from "./DashboardToggle";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
@@ -50,10 +51,10 @@ interface VisitRecord {
 }
 
 interface PatientTimelineViewProps {
-  onBack: () => void;
+  onNavigate?: (mode: 'outpatients' | 'inpatients' | 'timeline') => void;
 }
 
-export const PatientTimelineView = ({ onBack }: PatientTimelineViewProps) => {
+export const PatientTimelineView = ({ onNavigate }: PatientTimelineViewProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -348,16 +349,24 @@ export const PatientTimelineView = ({ onBack }: PatientTimelineViewProps) => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Button variant="ghost" onClick={onBack} className="mb-4">
-            ← Back to Dashboard
-          </Button>
-          <h1 className="text-3xl font-bold">Patient Visit Timeline</h1>
-          <p className="text-muted-foreground">Search and view complete patient visit history</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      {/* Navigation Header */}
+      {onNavigate && (
+        <div className="bg-white dark:bg-slate-800 border-b border-border shadow-sm">
+          <DashboardToggle 
+            viewMode="timeline" 
+            onToggle={onNavigate} 
+          />
         </div>
-      </div>
+      )}
+      
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Patient Visit Timeline</h1>
+            <p className="text-muted-foreground">Search and view complete patient visit history</p>
+          </div>
+        </div>
 
       {/* Search Section */}
       <Card>
@@ -586,6 +595,7 @@ export const PatientTimelineView = ({ onBack }: PatientTimelineViewProps) => {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 };

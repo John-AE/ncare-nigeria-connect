@@ -82,7 +82,7 @@ const NurseDashboard = () => {
   };
 
   if (viewMode === 'timeline') {
-    return <PatientTimelineView onBack={() => setViewMode('outpatients')} />;
+    return <PatientTimelineView onNavigate={setViewMode} />;
   }
 
   if (viewMode === 'inpatients') {
