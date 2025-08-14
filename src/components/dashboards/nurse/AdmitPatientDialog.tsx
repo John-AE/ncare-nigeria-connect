@@ -149,15 +149,11 @@ export const AdmitPatientDialog = ({
                 <SelectValue placeholder={doctors.length === 0 ? "Loading doctors..." : "Select attending doctor"} />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border shadow-lg z-50">
-                {doctors.length === 0 ? (
-                  <SelectItem value="" disabled>No doctors available</SelectItem>
-                ) : (
-                  doctors.map((doctor) => (
-                    <SelectItem key={doctor.user_id} value={doctor.user_id}>
-                      {doctor.username}
-                    </SelectItem>
-                  ))
-                )}
+                {doctors.map((doctor) => (
+                  <SelectItem key={doctor.user_id} value={doctor.user_id}>
+                    {doctor.username}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
