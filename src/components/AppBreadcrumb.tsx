@@ -8,7 +8,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Home } from "lucide-react";
 
 interface BreadcrumbConfig {
   path: string;
@@ -95,14 +94,12 @@ export const AppBreadcrumb = () => {
             <div key={item.path} className="flex items-center">
               <BreadcrumbItem>
                 {item.isLast ? (
-                  <BreadcrumbPage className="flex items-center gap-2">
-                    {item.path === "/" && <Home className="h-4 w-4" />}
+                  <BreadcrumbPage>
                     {item.label}
                   </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
-                    <Link to={item.path} className="flex items-center gap-2 hover:text-primary transition-colors">
-                      {item.path === "/" && <Home className="h-4 w-4" />}
+                    <Link to={item.path} className="hover:text-primary transition-colors">
                       {item.label}
                     </Link>
                   </BreadcrumbLink>
