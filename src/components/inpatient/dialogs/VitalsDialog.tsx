@@ -71,13 +71,13 @@ export const VitalsDialog = ({ open, onOpenChange, admissionId, patientId }: Vit
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Temperature (°F)</Label>
+              <Label>Temperature (°C)</Label>
               <Input
                 type="number"
                 step="0.1"
                 value={formData.temperature}
                 onChange={(e) => setFormData(prev => ({ ...prev, temperature: e.target.value }))}
-                placeholder="98.6"
+                placeholder="36.5"
               />
             </div>
             <div>
