@@ -12,16 +12,17 @@ import {
   Thermometer, 
   Pill, 
   FileText, 
-  Stethoscope,
-  ClipboardList
+  ClipboardList,
+  Scissors
 } from 'lucide-react';
 
 interface InpatientQuickActionsProps {
   onRecordVitals: () => void;
   onAdministerMedication: () => void;
-  onCreateDoctorNote: () => void;
-  onCreateNursingNote: () => void;
+  onCreateDoctorNote?: () => void;
+  onCreateNursingNote?: () => void;
   onRecordProcedure: () => void;
+  userRole?: string;
 }
 
 export const InpatientQuickActions = ({
@@ -29,7 +30,8 @@ export const InpatientQuickActions = ({
   onAdministerMedication,
   onCreateDoctorNote,
   onCreateNursingNote,
-  onRecordProcedure
+  onRecordProcedure,
+  userRole
 }: InpatientQuickActionsProps) => {
   const actions = [
     {
@@ -62,7 +64,7 @@ export const InpatientQuickActions = ({
     },
     {
       label: 'Procedure',
-      icon: Stethoscope,
+      icon: Scissors,
       onClick: onRecordProcedure,
       className: 'bg-red-500 hover:bg-red-600 text-white',
       shortcut: 'Alt+P'
@@ -77,6 +79,10 @@ export const InpatientQuickActions = ({
         </div>
         
         {actions.map((action) => {
+          // Hide doctor notes for nurses and nursing notes for doctors
+          if (action.label === 'Doctor Note' && userRole === 'nurse') return null;
+          if (action.label === 'Nursing Note' && userRole === 'doctor') return null;
+          
           const IconComponent = action.icon;
           return (
             <Button

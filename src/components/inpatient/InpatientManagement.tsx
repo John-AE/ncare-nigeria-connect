@@ -326,6 +326,7 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
                 onCreateDoctorNote={() => setDoctorNoteDialogOpen(true)}
                 onCreateNursingNote={() => setNursingNoteDialogOpen(true)}
                 onRecordProcedure={() => setProcedureDialogOpen(true)}
+                userRole={profile?.role}
               />
 
               {/* Timeline */}
@@ -389,6 +390,7 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
             onOpenChange={setProcedureDialogOpen}
             admissionId={selectedAdmission.id}
             patientId={selectedAdmission.patient.id}
+            onSuccess={() => triggerRefresh('timeline')}
           />
         </>
       )}

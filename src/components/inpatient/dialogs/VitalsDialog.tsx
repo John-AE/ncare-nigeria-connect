@@ -24,7 +24,6 @@ export const VitalsDialog = ({ open, onOpenChange, admissionId, patientId, onSuc
     systolic: '',
     diastolic: '',
     heartRate: '',
-    respiratoryRate: '',
     oxygenSaturation: '',
     painScale: '',
     notes: ''
@@ -43,7 +42,6 @@ export const VitalsDialog = ({ open, onOpenChange, admissionId, patientId, onSuc
         blood_pressure_systolic: formData.systolic ? parseInt(formData.systolic) : null,
         blood_pressure_diastolic: formData.diastolic ? parseInt(formData.diastolic) : null,
         heart_rate: formData.heartRate ? parseInt(formData.heartRate) : null,
-        respiratory_rate: formData.respiratoryRate ? parseInt(formData.respiratoryRate) : null,
         oxygen_saturation: formData.oxygenSaturation ? parseFloat(formData.oxygenSaturation) : null,
         pain_scale: formData.painScale ? parseInt(formData.painScale) : null,
         notes: formData.notes || null,
@@ -53,7 +51,7 @@ export const VitalsDialog = ({ open, onOpenChange, admissionId, patientId, onSuc
       if (error) throw error;
 
       toast({ title: "Success", description: "Vital signs recorded successfully" });
-      setFormData({ temperature: '', systolic: '', diastolic: '', heartRate: '', respiratoryRate: '', oxygenSaturation: '', painScale: '', notes: '' });
+      setFormData({ temperature: '', systolic: '', diastolic: '', heartRate: '', oxygenSaturation: '', painScale: '', notes: '' });
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
@@ -107,15 +105,6 @@ export const VitalsDialog = ({ open, onOpenChange, admissionId, patientId, onSuc
                 value={formData.diastolic}
                 onChange={(e) => setFormData(prev => ({ ...prev, diastolic: e.target.value }))}
                 placeholder="80"
-              />
-            </div>
-            <div>
-              <Label>Respiratory Rate</Label>
-              <Input
-                type="number"
-                value={formData.respiratoryRate}
-                onChange={(e) => setFormData(prev => ({ ...prev, respiratoryRate: e.target.value }))}
-                placeholder="16"
               />
             </div>
             <div>
