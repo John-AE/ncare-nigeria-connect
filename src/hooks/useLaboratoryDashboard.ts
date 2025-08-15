@@ -108,9 +108,9 @@ export const useLaboratoryDashboard = () => {
       
       // Count actual orders
       dailyOrdersData?.forEach(order => {
-        const date = order.order_date;
-        if (dailyOrdersMap.has(date)) {
-          dailyOrdersMap.set(date, (dailyOrdersMap.get(date) || 0) + 1);
+        const dateOnly = order.order_date.split('T')[0]; // Extract date part from timestamp
+        if (dailyOrdersMap.has(dateOnly)) {
+          dailyOrdersMap.set(dateOnly, (dailyOrdersMap.get(dateOnly) || 0) + 1);
         }
       });
 
