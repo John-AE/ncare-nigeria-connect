@@ -96,16 +96,31 @@ export const useLaboratoryDashboard = () => {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 
-      // Group daily orders
+      // Group daily orders - generate all days in the range
       const dailyOrdersMap = new Map();
+      
+      // Initialize all days in the last 30 days with 0 orders
+      for (let i = 0; i < 30; i++) {
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        const dateStr = date.toISOString().split('T')[0];
+        dailyOrdersMap.set(dateStr, 0);
+      }
+      
+      // Count actual orders
       dailyOrdersData?.forEach(order => {
         const date = order.order_date;
-        dailyOrdersMap.set(date, (dailyOrdersMap.get(date) || 0) + 1);
+        if (dailyOrdersMap.has(date)) {
+          dailyOrdersMap.set(date, (dailyOrdersMap.get(date) || 0) + 1);
+        }
       });
 
       const dailyOrders = Array.from(dailyOrdersMap.entries())
-        .map(([date, orders]) => ({ date, orders }))
-        .sort((a, b) => a.date.localeCompare(b.date));
+        .map(([date, orders]) => ({ 
+          date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
+          orders 
+        }))
+        .reverse() // Show oldest to newest
+        .slice(0, 30); // Limit to 30 days
 
       return {
         totalOrdersToday: todayOrders?.length || 0,

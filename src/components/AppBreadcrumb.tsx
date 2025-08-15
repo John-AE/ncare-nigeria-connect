@@ -50,12 +50,7 @@ export const AppBreadcrumb = () => {
   // Build breadcrumb items
   const breadcrumbItems = [];
 
-  // Always add home
-  breadcrumbItems.push({
-    path: "/",
-    label: "Home",
-    isLast: false
-  });
+  // Skip adding home to breadcrumb items
 
   // Add dashboard based on user role
   if (profile?.role) {
