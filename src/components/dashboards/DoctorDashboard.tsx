@@ -65,7 +65,23 @@ const DoctorDashboard = () => {
   }
 
   if (viewMode === 'inpatients') {
-    return <InpatientManagement />;
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <DashboardHeader
+          title="Doctor Dashboard"
+          subtitle={`Welcome back, Dr. ${profile?.username}`}
+        />
+
+        {/* Dashboard Toggle */}
+        <DashboardToggle 
+          viewMode={viewMode} 
+          onToggle={(mode: 'outpatients' | 'inpatients' | 'timeline') => setViewMode(mode)} 
+        />
+
+        <InpatientManagement />
+      </div>
+    );
   }
 
   return (
