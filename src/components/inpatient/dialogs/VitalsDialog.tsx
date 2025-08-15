@@ -13,9 +13,10 @@ interface VitalsDialogProps {
   onOpenChange: (open: boolean) => void;
   admissionId: string;
   patientId: string;
+  onSuccess?: () => void;
 }
 
-export const VitalsDialog = ({ open, onOpenChange, admissionId, patientId }: VitalsDialogProps) => {
+export const VitalsDialog = ({ open, onOpenChange, admissionId, patientId, onSuccess }: VitalsDialogProps) => {
   const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -53,6 +54,7 @@ export const VitalsDialog = ({ open, onOpenChange, admissionId, patientId }: Vit
 
       toast({ title: "Success", description: "Vital signs recorded successfully" });
       setFormData({ temperature: '', systolic: '', diastolic: '', heartRate: '', respiratoryRate: '', oxygenSaturation: '', painScale: '', notes: '' });
+      onSuccess?.();
       onOpenChange(false);
     } catch (error) {
       console.error('Error recording vitals:', error);

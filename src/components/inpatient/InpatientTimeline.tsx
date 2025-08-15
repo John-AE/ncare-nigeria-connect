@@ -7,13 +7,14 @@
  * @author NCare Nigeria Development Team
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Search, 
   Filter,
@@ -29,6 +30,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
+import { useUnifiedRefresh } from '@/hooks/useUnifiedRefresh';
 
 interface TimelineEvent {
   id: string;
@@ -42,9 +44,10 @@ interface TimelineEvent {
 
 interface InpatientTimelineProps {
   admissionId: string;
+  refreshTrigger?: ((fn: () => void) => void);
 }
 
-export const InpatientTimeline = ({ admissionId }: InpatientTimelineProps) => {
+export const InpatientTimeline = ({ admissionId, refreshTrigger }: InpatientTimelineProps) => {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<TimelineEvent[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -94,7 +97,9 @@ export const InpatientTimeline = ({ admissionId }: InpatientTimelineProps) => {
     }
   };
 
-  // Set up real-time subscription
+  // Set up refresh and real-time updates
+  useUnifiedRefresh(refreshTrigger, fetchEvents);
+
   useEffect(() => {
     fetchEvents();
 
@@ -288,7 +293,8 @@ export const InpatientTimeline = ({ admissionId }: InpatientTimelineProps) => {
       </div>
 
       {/* Timeline */}
-      <div className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-auto">
+      <ScrollArea className="h-[600px]">
+        <div className="p-4 space-y-4">
         {filteredEvents.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
             {searchQuery || selectedFilter !== 'all' 
@@ -359,7 +365,8 @@ export const InpatientTimeline = ({ admissionId }: InpatientTimelineProps) => {
             );
           })
         )}
-      </div>
+        </div>
+      </ScrollArea>
     </div>
   );
 };

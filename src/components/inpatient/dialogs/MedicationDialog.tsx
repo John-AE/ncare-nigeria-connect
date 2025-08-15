@@ -15,6 +15,7 @@ interface MedicationDialogProps {
   onOpenChange: (open: boolean) => void;
   admissionId: string;
   patientId: string;
+  onSuccess?: () => void;
 }
 
 interface MedicationItem {
@@ -25,7 +26,7 @@ interface MedicationItem {
   total_price: number;
 }
 
-export const MedicationDialog = ({ open, onOpenChange, admissionId, patientId }: MedicationDialogProps) => {
+export const MedicationDialog = ({ open, onOpenChange, admissionId, patientId, onSuccess }: MedicationDialogProps) => {
   const [medicationItems, setMedicationItems] = useState<MedicationItem[]>([]);
   const [dosage, setDosage] = useState('');
   const [route, setRoute] = useState('');
@@ -84,6 +85,7 @@ export const MedicationDialog = ({ open, onOpenChange, admissionId, patientId }:
       setDosage('');
       setRoute('');
       setNotes('');
+      onSuccess?.();
       onOpenChange(false);
     } catch (error) {
       console.error('Error administering medication:', error);

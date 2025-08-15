@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
+import { useUnifiedRefresh } from '@/hooks/useUnifiedRefresh';
 
 interface LatestVitals {
   id: string;
@@ -39,9 +40,10 @@ interface LatestVitals {
 
 interface InpatientVitalsPanelProps {
   admissionId: string;
+  refreshTrigger?: ((fn: () => void) => void);
 }
 
-export const InpatientVitalsPanel = ({ admissionId }: InpatientVitalsPanelProps) => {
+export const InpatientVitalsPanel = ({ admissionId, refreshTrigger }: InpatientVitalsPanelProps) => {
   const [latestVitals, setLatestVitals] = useState<LatestVitals | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -87,7 +89,9 @@ export const InpatientVitalsPanel = ({ admissionId }: InpatientVitalsPanelProps)
     }
   };
 
-  // Set up real-time subscription
+  // Set up refresh and real-time updates
+  useUnifiedRefresh(refreshTrigger, fetchLatestVitals);
+
   useEffect(() => {
     fetchLatestVitals();
 

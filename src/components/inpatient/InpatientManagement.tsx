@@ -43,6 +43,7 @@ import { DoctorNoteDialog } from './dialogs/DoctorNoteDialog';
 import { NursingNoteDialog } from './dialogs/NursingNoteDialog';
 import { ProcedureDialog } from './dialogs/ProcedureDialog';
 import { format } from 'date-fns';
+import { useRefreshManager } from '@/hooks/useRefreshManager';
 
 interface Patient {
   id: string;
@@ -82,6 +83,9 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
   const [doctorNoteDialogOpen, setDoctorNoteDialogOpen] = useState(false);
   const [nursingNoteDialogOpen, setNursingNoteDialogOpen] = useState(false);
   const [procedureDialogOpen, setProcedureDialogOpen] = useState(false);
+
+  // Refresh management
+  const { registerRefresh, triggerRefresh } = useRefreshManager();
 
   // Fetch active admissions
   const fetchAdmissions = async () => {
@@ -326,11 +330,17 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
 
               {/* Timeline */}
               <div className="flex-1">
-                <InpatientTimeline admissionId={selectedAdmission.id} />
+                <InpatientTimeline 
+                  admissionId={selectedAdmission.id} 
+                  refreshTrigger={(callback: () => void) => registerRefresh('timeline', callback)}
+                />
               </div>
 
               {/* Right Panel - Current Vitals */}
-              <InpatientVitalsPanel admissionId={selectedAdmission.id} />
+              <InpatientVitalsPanel 
+                admissionId={selectedAdmission.id}
+                refreshTrigger={(callback: () => void) => registerRefresh('vitals', callback)}
+              />
             </div>
           </div>
         )}
@@ -344,6 +354,10 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
             onOpenChange={setVitalsDialogOpen}
             admissionId={selectedAdmission.id}
             patientId={selectedAdmission.patient.id}
+            onSuccess={() => {
+              triggerRefresh('timeline');
+              triggerRefresh('vitals');
+            }}
           />
           
           <MedicationDialog
@@ -351,6 +365,7 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
             onOpenChange={setMedicationDialogOpen}
             admissionId={selectedAdmission.id}
             patientId={selectedAdmission.patient.id}
+            onSuccess={() => triggerRefresh('timeline')}
           />
           
           <DoctorNoteDialog
@@ -358,6 +373,7 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
             onOpenChange={setDoctorNoteDialogOpen}
             admissionId={selectedAdmission.id}
             patientId={selectedAdmission.patient.id}
+            onSuccess={() => triggerRefresh('timeline')}
           />
           
           <NursingNoteDialog
@@ -365,6 +381,7 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
             onOpenChange={setNursingNoteDialogOpen}
             admissionId={selectedAdmission.id}
             patientId={selectedAdmission.patient.id}
+            onSuccess={() => triggerRefresh('timeline')}
           />
           
           <ProcedureDialog
