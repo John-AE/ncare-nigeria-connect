@@ -36,12 +36,14 @@ interface BillItem {
 interface InpatientBillingAggregatorProps {
   admissionId: string;
   patientId: string;
+  refreshTrigger?: (callback: () => void) => void;
   onBillCreated?: () => void;
 }
 
 export const InpatientBillingAggregator = ({
   admissionId,
   patientId,
+  refreshTrigger,
   onBillCreated
 }: InpatientBillingAggregatorProps) => {
   const { profile } = useAuth();
@@ -54,6 +56,12 @@ export const InpatientBillingAggregator = ({
   useEffect(() => {
     fetchBillItems();
   }, [admissionId]);
+
+  useEffect(() => {
+    if (refreshTrigger) {
+      refreshTrigger(fetchBillItems);
+    }
+  }, [refreshTrigger]);
 
   const fetchBillItems = async () => {
     if (!profile?.hospital_id) return;
@@ -69,12 +77,19 @@ export const InpatientBillingAggregator = ({
 
       if (medError) throw medError;
 
-      // Fetch services with service details
+      // Fetch services with service details - fix the query
       const { data: services, error: servicesError } = await supabase
         .from('inpatient_services')
         .select(`
-          *,
-          services(name)
+          id,
+          quantity,
+          unit_price,
+          total_price,
+          administered_at,
+          service_id,
+          services (
+            name
+          )
         `)
         .eq('admission_id', admissionId)
         .eq('hospital_id', profile.hospital_id);
@@ -95,7 +110,7 @@ export const InpatientBillingAggregator = ({
       // Process services
       const serviceItems: BillItem[] = (services || []).map(service => ({
         id: service.id,
-        name: (service.services as any)?.name || 'Unknown Service',
+        name: service.services?.name || 'Unknown Service',
         quantity: service.quantity,
         unit_price: service.unit_price,
         total_price: service.total_price,

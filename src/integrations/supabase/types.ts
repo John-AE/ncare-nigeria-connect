@@ -604,7 +604,29 @@ export type Database = {
           total_price?: number
           unit_price?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_inpatient_services_admission_id"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "inpatient_admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_services_patient_id"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_inpatient_services_service_id"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inpatient_timeline_events: {
         Row: {

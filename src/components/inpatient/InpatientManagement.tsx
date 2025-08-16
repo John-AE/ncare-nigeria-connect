@@ -353,6 +353,7 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
                 <InpatientBillingAggregator
                   admissionId={selectedAdmission.id}
                   patientId={selectedAdmission.patient.id}
+                  refreshTrigger={(callback: () => void) => registerRefresh('billing', callback)}
                   onBillCreated={() => {
                     triggerRefresh('timeline');
                     toast({
@@ -394,7 +395,10 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
             onOpenChange={setMedicationDialogOpen}
             admissionId={selectedAdmission.id}
             patientId={selectedAdmission.patient.id}
-            onSuccess={() => triggerRefresh('timeline')}
+            onSuccess={() => {
+              triggerRefresh('timeline');
+              triggerRefresh('billing'); // Refresh billing aggregator
+            }}
           />
           
           <DoctorNoteDialog
@@ -426,7 +430,10 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
             onOpenChange={setAddServiceDialogOpen}
             admissionId={selectedAdmission.id}
             patientId={selectedAdmission.patient.id}
-            onServiceAdded={() => triggerRefresh('timeline')}
+            onServiceAdded={() => {
+              triggerRefresh('timeline');
+              triggerRefresh('billing'); // Refresh billing aggregator
+            }}
           />
           
           <DischargePatientDialog
