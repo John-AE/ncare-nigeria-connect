@@ -13,7 +13,8 @@ import {
   Pill, 
   FileText, 
   ClipboardList,
-  Scissors
+  Scissors,
+  Plus
 } from 'lucide-react';
 
 interface InpatientQuickActionsProps {
@@ -22,6 +23,7 @@ interface InpatientQuickActionsProps {
   onCreateDoctorNote?: () => void;
   onCreateNursingNote?: () => void;
   onRecordProcedure: () => void;
+  onAddService: () => void;
   userRole?: string;
 }
 
@@ -31,6 +33,7 @@ export const InpatientQuickActions = ({
   onCreateDoctorNote,
   onCreateNursingNote,
   onRecordProcedure,
+  onAddService,
   userRole
 }: InpatientQuickActionsProps) => {
   const actions = [
@@ -68,6 +71,13 @@ export const InpatientQuickActions = ({
       onClick: onRecordProcedure,
       className: 'bg-red-500 hover:bg-red-600 text-white',
       shortcut: 'Alt+P'
+    },
+    {
+      label: 'Add Service',
+      icon: Plus,
+      onClick: onAddService,
+      className: 'bg-purple-500 hover:bg-purple-600 text-white',
+      shortcut: 'Alt+S'
     }
   ];
 

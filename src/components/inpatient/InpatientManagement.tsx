@@ -42,6 +42,9 @@ import { MedicationDialog } from './dialogs/MedicationDialog';
 import { DoctorNoteDialog } from './dialogs/DoctorNoteDialog';
 import { NursingNoteDialog } from './dialogs/NursingNoteDialog';
 import { ProcedureDialog } from './dialogs/ProcedureDialog';
+import { AddServiceDialog } from './dialogs/AddServiceDialog';
+import { DischargePatientDialog } from './dialogs/DischargePatientDialog';
+import { InpatientBillingAggregator } from './InpatientBillingAggregator';
 import { format } from 'date-fns';
 import { useRefreshManager } from '@/hooks/useRefreshManager';
 
@@ -83,6 +86,8 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
   const [doctorNoteDialogOpen, setDoctorNoteDialogOpen] = useState(false);
   const [nursingNoteDialogOpen, setNursingNoteDialogOpen] = useState(false);
   const [procedureDialogOpen, setProcedureDialogOpen] = useState(false);
+  const [addServiceDialogOpen, setAddServiceDialogOpen] = useState(false);
+  const [dischargeDialogOpen, setDischargeDialogOpen] = useState(false);
 
   // Refresh management
   const { registerRefresh, triggerRefresh } = useRefreshManager();
@@ -326,6 +331,7 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
                 onCreateDoctorNote={() => setDoctorNoteDialogOpen(true)}
                 onCreateNursingNote={() => setNursingNoteDialogOpen(true)}
                 onRecordProcedure={() => setProcedureDialogOpen(true)}
+                onAddService={() => setAddServiceDialogOpen(true)}
                 userRole={profile?.role}
               />
 
@@ -337,11 +343,33 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
                 />
               </div>
 
-              {/* Right Panel - Current Vitals */}
-              <InpatientVitalsPanel 
-                admissionId={selectedAdmission.id}
-                refreshTrigger={(callback: () => void) => registerRefresh('vitals', callback)}
-              />
+              {/* Right Panel - Current Vitals and Billing */}
+              <div className="w-80 bg-white dark:bg-slate-800 border-l border-border p-4 space-y-4">
+                <InpatientVitalsPanel 
+                  admissionId={selectedAdmission.id}
+                  refreshTrigger={(callback: () => void) => registerRefresh('vitals', callback)}
+                />
+                
+                <InpatientBillingAggregator
+                  admissionId={selectedAdmission.id}
+                  patientId={selectedAdmission.patient.id}
+                  onBillCreated={() => {
+                    triggerRefresh('timeline');
+                    toast({
+                      title: "Success",
+                      description: "Inpatient bill created successfully"
+                    });
+                  }}
+                />
+
+                <Button
+                  onClick={() => setDischargeDialogOpen(true)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Discharge Patient
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -391,6 +419,25 @@ export const InpatientManagement = ({ onNavigate }: InpatientManagementProps) =>
             admissionId={selectedAdmission.id}
             patientId={selectedAdmission.patient.id}
             onSuccess={() => triggerRefresh('timeline')}
+          />
+          
+          <AddServiceDialog
+            isOpen={addServiceDialogOpen}
+            onOpenChange={setAddServiceDialogOpen}
+            admissionId={selectedAdmission.id}
+            patientId={selectedAdmission.patient.id}
+            onServiceAdded={() => triggerRefresh('timeline')}
+          />
+          
+          <DischargePatientDialog
+            isOpen={dischargeDialogOpen}
+            onOpenChange={setDischargeDialogOpen}
+            admissionId={selectedAdmission.id}
+            patientName={`${selectedAdmission.patient.first_name} ${selectedAdmission.patient.last_name}`}
+            onPatientDischarged={() => {
+              fetchAdmissions(); // Refresh to remove discharged patient
+              setSelectedAdmission(null);
+            }}
           />
         </>
       )}

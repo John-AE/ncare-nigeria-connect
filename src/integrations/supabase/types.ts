@@ -287,9 +287,12 @@ export type Database = {
           admitting_diagnosis: string | null
           attending_doctor_id: string
           bed_number: string | null
+          billing_acknowledged: boolean | null
           created_at: string
           created_by: string
           discharge_date: string | null
+          discharge_diagnosis: string | null
+          discharge_summary: string | null
           hospital_id: string
           id: string
           patient_id: string
@@ -303,9 +306,12 @@ export type Database = {
           admitting_diagnosis?: string | null
           attending_doctor_id: string
           bed_number?: string | null
+          billing_acknowledged?: boolean | null
           created_at?: string
           created_by: string
           discharge_date?: string | null
+          discharge_diagnosis?: string | null
+          discharge_summary?: string | null
           hospital_id: string
           id?: string
           patient_id: string
@@ -319,9 +325,12 @@ export type Database = {
           admitting_diagnosis?: string | null
           attending_doctor_id?: string
           bed_number?: string | null
+          billing_acknowledged?: boolean | null
           created_at?: string
           created_by?: string
           discharge_date?: string | null
+          discharge_diagnosis?: string | null
+          discharge_summary?: string | null
           hospital_id?: string
           id?: string
           patient_id?: string
@@ -551,6 +560,51 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      inpatient_services: {
+        Row: {
+          administered_at: string
+          administered_by: string
+          admission_id: string
+          created_at: string
+          hospital_id: string
+          id: string
+          notes: string | null
+          patient_id: string
+          quantity: number
+          service_id: string
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          administered_at?: string
+          administered_by: string
+          admission_id: string
+          created_at?: string
+          hospital_id: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          quantity?: number
+          service_id: string
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          administered_at?: string
+          administered_by?: string
+          admission_id?: string
+          created_at?: string
+          hospital_id?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          quantity?: number
+          service_id?: string
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: []
       }
       inpatient_timeline_events: {
         Row: {
