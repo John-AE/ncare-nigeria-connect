@@ -72,10 +72,10 @@ export const InpatientBillingAggregator = ({
 
     setIsLoading(true);
     try {
-      // Fetch medications - FIXED: Get medication_id from inpatient_medications
+      // Fetch medications - Get available columns from inpatient_medications
       const { data: medications, error: medError } = await supabase
         .from('inpatient_medications')
-        .select('id, medication_id, medication_name, dosage, administered_at')
+        .select('*')
         .eq('admission_id', admissionId)
         .eq('hospital_id', profile.hospital_id);
 
@@ -100,7 +100,7 @@ export const InpatientBillingAggregator = ({
 
       if (servicesError) throw servicesError;
 
-      // Process medications - FIXED: Include medication_id for bill_items
+      // Process medications - Handle missing medication_id field
       const medicationItems: BillItem[] = (medications || []).map(med => ({
         id: med.id,
         name: `${med.medication_name} (${med.dosage})`,
@@ -109,7 +109,7 @@ export const InpatientBillingAggregator = ({
         total_price: 500,
         type: 'medication' as const,
         administered_at: med.administered_at,
-        medication_id: med.medication_id // This is what goes to bill_items.medication_id
+        medication_id: null // Will be handled differently in bill creation
       }));
 
       // Process services - FIXED: Include service_id for bill_items
@@ -142,69 +142,104 @@ export const InpatientBillingAggregator = ({
 
     setIsCreatingBill(true);
     try {
-      // Check if bill already exists for this admission to prevent duplicates
-      const { data: existingBill, error: checkError } = await supabase
-        .from('bills')
-        .select('id')
-        .eq('patient_id', patientId)
-        .eq('bill_type', 'inpatient')
-        .eq('description', `Inpatient Services and Medications - Admission ${admissionId}`)
-        .single();
+      // Option 1: Use Supabase RPC function (recommended)
+      const { data: result, error: rpcError } = await supabase.rpc('create_inpatient_bill', {
+        p_patient_id: patientId,
+        p_admission_id: admissionId,
+        p_hospital_id: profile.hospital_id,
+        p_created_by: profile.user_id,
+        p_total_amount: totalAmount
+      });
 
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
-        throw checkError;
+      if (rpcError) {
+        // If RPC function doesn't exist, fall back to direct insertion
+        console.warn('RPC function not found, using direct insertion:', rpcError);
+        await createBillDirectly();
+      } else {
+        toast.success('Inpatient bill created successfully');
+        setShowPreviewDialog(false);
+        onBillCreated?.();
       }
-
-      if (existingBill) {
-        toast.error('Bill already exists for this admission');
-        return;
-      }
-
-      // Create the main bill with unique description
-      const { data: bill, error: billError } = await supabase
-        .from('bills')
-        .insert({
-          patient_id: patientId,
-          amount: totalAmount,
-          description: `Inpatient Services and Medications - Admission ${admissionId}`,
-          created_by: profile.user_id,
-          hospital_id: profile.hospital_id,
-          bill_type: 'inpatient'
-        })
-        .select()
-        .single();
-
-      if (billError) throw billError;
-
-      // FIXED: Create bill items with correct medication_id and service_id
-      const billItemsData = billItems.map(item => ({
-        bill_id: bill.id,
-        service_id: item.type === 'service' ? item.service_id : null,
-        medication_id: item.type === 'medication' ? item.medication_id : null,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('bill_items')
-        .insert(billItemsData);
-
-      if (itemsError) throw itemsError;
-
-      toast.success('Inpatient bill created successfully');
-      setShowPreviewDialog(false);
-      onBillCreated?.();
     } catch (error) {
       console.error('Error creating bill:', error);
-      if (error.code === '23505') { // Unique constraint violation
-        toast.error('Bill already exists for this admission');
-      } else {
-        toast.error('Failed to create bill: ' + error.message);
-      }
+      toast.error('Failed to create bill: ' + error.message);
     } finally {
       setIsCreatingBill(false);
     }
+  };
+
+  const createBillDirectly = async () => {
+    // Check if bill already exists for this admission to prevent duplicates
+    const { data: existingBill, error: checkError } = await supabase
+      .from('bills')
+      .select('id')
+      .eq('patient_id', patientId)
+      .eq('bill_type', 'inpatient')
+      .eq('description', `Inpatient Services and Medications - Admission ${admissionId}`)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      throw checkError;
+    }
+
+    if (existingBill) {
+      toast.error('Bill already exists for this admission');
+      return;
+    }
+
+    // Create the main bill with unique description
+    const { data: bill, error: billError } = await supabase
+      .from('bills')
+      .insert({
+        patient_id: patientId,
+        amount: totalAmount,
+        description: `Inpatient Services and Medications - Admission ${admissionId}`,
+        created_by: profile.user_id,
+        hospital_id: profile.hospital_id,
+        bill_type: 'inpatient'
+      })
+      .select()
+      .single();
+
+    if (billError) throw billError;
+
+    // Create bill items - Store medication info without foreign key reference
+    const billItemsData = billItems.map(item => {
+      if (item.type === 'medication') {
+        // For medications, we'll store the info without medication_id since 
+        // inpatient_medications doesn't reference a medications table
+        return {
+          bill_id: bill.id,
+          service_id: null,
+          medication_id: null, // No foreign key reference available
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+          // Note: You might want to add a description field to bill_items 
+          // to store the medication name and dosage
+        };
+      } else {
+        // For services, use the service_id
+        return {
+          bill_id: bill.id,
+          service_id: item.service_id,
+          medication_id: null,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price
+        };
+      }
+    });
+
+    const { error: itemsError } = await supabase
+      .from('bill_items')
+      .insert(billItemsData);
+
+    if (itemsError) throw itemsError;
+
+    toast.success('Inpatient bill created successfully');
+    setShowPreviewDialog(false);
+    onBillCreated?.();
   };
 
   if (isLoading) {
