@@ -237,7 +237,7 @@ export const AddServiceDialog = ({
 
         <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 p-3">
           {/* Available Services */}
-          <Card className="flex flex-col h-full">
+          <Card className="flex flex-col h-full min-h-0">
             <CardHeader className="pb-1 px-2 py-2 shrink-0">
               <div className="flex items-center justify-between mb-1">
                 <CardTitle className="text-xs font-medium">Available Services</CardTitle>
@@ -270,8 +270,8 @@ export const AddServiceDialog = ({
               </div>
             </CardHeader>
             
-            <CardContent className="flex-1 overflow-auto p-2">
-              <div className="space-y-2">
+            <CardContent className="flex-1 p-2 overflow-hidden">
+              <ScrollArea className="h-full pr-2">
                 {isLoading ? (
                   <div className="flex items-center justify-center h-20">
                     <div className="text-[10px] text-muted-foreground">Loading services...</div>
@@ -281,26 +281,26 @@ export const AddServiceDialog = ({
                     <div className="text-[10px] text-muted-foreground">No services found</div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {Object.entries(groupedServices).map(([category, categoryServices]) => 
                       categoryServices.length > 0 && (
-                        <div key={category}>
-                          <h4 className="font-medium text-[10px] text-muted-foreground mb-1 uppercase tracking-wide">
+                        <div key={category} className="space-y-2">
+                          <h4 className="font-medium text-[10px] text-muted-foreground mb-2 uppercase tracking-wide sticky top-0 bg-background py-1">
                             {category}
                           </h4>
-                          <div className="space-y-1">
+                          <div className="space-y-1.5">
                             {categoryServices.map(service => (
                               <div
                                 key={service.id}
-                                className="flex items-center justify-between p-1.5 border rounded-sm hover:bg-muted/50 transition-colors"
+                                className="flex items-center justify-between p-2 border rounded-sm hover:bg-muted/50 transition-colors"
                               >
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 pr-2">
                                   <div className="font-medium text-[10px] truncate">{service.name}</div>
                                   <div className="text-[9px] text-primary font-semibold">
                                     ₦{service.price.toLocaleString()}
                                   </div>
                                   {service.description && (
-                                    <div className="text-[8px] text-muted-foreground mt-0.5 line-clamp-1">
+                                    <div className="text-[8px] text-muted-foreground mt-0.5 line-clamp-2">
                                       {service.description}
                                     </div>
                                   )}
@@ -308,9 +308,9 @@ export const AddServiceDialog = ({
                                 <Button
                                   size="sm"
                                   onClick={() => addService(service)}
-                                  className="ml-1.5 h-5 w-5 p-0"
+                                  className="h-6 w-6 p-0 shrink-0"
                                 >
-                                  <Plus className="h-2.5 w-2.5" />
+                                  <Plus className="h-3 w-3" />
                                 </Button>
                               </div>
                             ))}
@@ -320,36 +320,36 @@ export const AddServiceDialog = ({
                     )}
                   </div>
                 )}
-              </div>
+              </ScrollArea>
             </CardContent>
           </Card>
 
           {/* Selected Services */}
-          <Card className="flex flex-col h-full">
+          <Card className="flex flex-col h-full min-h-0">
             <CardHeader className="pb-1 px-2 py-2 shrink-0">
               <CardTitle className="text-xs font-medium">Selected Services</CardTitle>
             </CardHeader>
             
-            <CardContent className="flex-1 overflow-auto p-2">
-              <div className="space-y-1.5">
+            <CardContent className="flex-1 p-2 overflow-hidden">
+              <ScrollArea className="h-full pr-2">
                 {serviceItems.length === 0 ? (
                   <div className="flex items-center justify-center h-20">
                     <div className="text-[10px] text-muted-foreground">No services selected</div>
                   </div>
                 ) : (
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {serviceItems.map(item => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between p-1.5 border rounded-sm"
+                        className="flex items-center justify-between p-2 border rounded-sm"
                       >
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 pr-2">
                           <div className="font-medium text-[10px] truncate">{item.name}</div>
                           <div className="text-[9px] text-muted-foreground">
                             ₦{item.unit_price.toLocaleString()} each
                           </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 shrink-0">
                           <Button
                             size="sm"
                             variant="outline"
@@ -358,7 +358,7 @@ export const AddServiceDialog = ({
                           >
                             <Minus className="h-2.5 w-2.5" />
                           </Button>
-                          <span className="w-5 text-center text-[10px]">{item.quantity}</span>
+                          <span className="w-6 text-center text-[10px]">{item.quantity}</span>
                           <Button
                             size="sm"
                             variant="outline"
@@ -367,16 +367,16 @@ export const AddServiceDialog = ({
                           >
                             <Plus className="h-2.5 w-2.5" />
                           </Button>
-                          <div className="ml-1 font-medium text-[10px] min-w-0">
+                          <div className="ml-2 font-medium text-[10px] min-w-0">
                             ₦{item.total_price.toLocaleString()}
                           </div>
                         </div>
                       </div>
                     ))}
                     
-                    <Separator className="my-1.5" />
+                    <Separator className="my-2" />
                     
-                    <div className="flex justify-between items-center p-1.5 bg-muted rounded-sm">
+                    <div className="flex justify-between items-center p-2 bg-muted rounded-sm sticky bottom-0">
                       <span className="font-medium text-[10px]">Total:</span>
                       <span className="font-bold text-xs">
                         ₦{calculateTotal().toLocaleString()}
@@ -384,7 +384,7 @@ export const AddServiceDialog = ({
                     </div>
                   </div>
                 )}
-              </div>
+              </ScrollArea>
             </CardContent>
           </Card>
         </div>
