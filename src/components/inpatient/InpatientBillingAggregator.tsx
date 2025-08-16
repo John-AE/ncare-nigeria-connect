@@ -142,13 +142,13 @@ export const InpatientBillingAggregator = ({
 
     setIsCreatingBill(true);
     try {
-      // Check if bill already exists for this admission to prevent duplicates
+      // Check if bill already exists (use patient_id + bill_type check)
       const { data: existingBill, error: checkError } = await supabase
         .from('bills')
         .select('id')
         .eq('patient_id', patientId)
         .eq('bill_type', 'inpatient')
-        .eq('description', `Inpatient Services and Medications - Admission ${admissionId}`)
+        .eq('description', 'Inpatient Services and Medications')
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -160,13 +160,13 @@ export const InpatientBillingAggregator = ({
         return;
       }
 
-      // Create the main bill with unique description
+      // Create the main bill with shorter description (no UUID)
       const { data: bill, error: billError } = await supabase
         .from('bills')
         .insert({
           patient_id: patientId,
           amount: totalAmount,
-          description: `Inpatient Services and Medications - Admission ${admissionId}`,
+          description: 'Inpatient Services and Medications',
           created_by: profile.user_id,
           hospital_id: profile.hospital_id,
           bill_type: 'inpatient'
@@ -176,11 +176,11 @@ export const InpatientBillingAggregator = ({
 
       if (billError) throw billError;
 
-      // Create bill items - medication_id will be null
+      // Create bill items - Now with proper medication_id
       const billItemsData = billItems.map(item => ({
         bill_id: bill.id,
         service_id: item.type === 'service' ? item.service_id : null,
-        medication_id: null, // Always null since no medication reference exists
+        medication_id: item.type === 'medication' ? item.medication_id : null,
         quantity: item.quantity,
         unit_price: item.unit_price,
         total_price: item.total_price
