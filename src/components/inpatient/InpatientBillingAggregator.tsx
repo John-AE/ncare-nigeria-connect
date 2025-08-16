@@ -211,13 +211,13 @@ export const InpatientBillingAggregator = ({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Receipt className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Receipt className="h-4 w-4" />
             Billing Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-muted-foreground">Loading...</div>
+          <div className="text-center text-muted-foreground text-xs">Loading...</div>
         </CardContent>
       </Card>
     );
@@ -227,20 +227,20 @@ export const InpatientBillingAggregator = ({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Receipt className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Receipt className="h-4 w-4" />
             Billing Summary
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Total Items:</span>
-            <Badge variant="secondary">{billItems.length}</Badge>
+            <span className="text-xs text-muted-foreground">Total Items:</span>
+            <Badge variant="secondary" className="text-xs">{billItems.length}</Badge>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-lg font-medium">Minimum Total Bill:</span>
-            <span className="text-xl font-bold text-primary">
+            <span className="text-sm font-medium">Minimum Total Bill:</span>
+            <span className="text-lg font-bold text-primary">
               ₦{totalAmount.toLocaleString()}
             </span>
           </div>
@@ -250,9 +250,10 @@ export const InpatientBillingAggregator = ({
               variant="outline"
               onClick={() => setShowPreviewDialog(true)}
               disabled={billItems.length === 0}
-              className="flex-1"
+              className="flex-1 text-xs"
+              size="sm"
             >
-              <Eye className="h-4 w-4 mr-2" />
+              <Eye className="h-3 w-3 mr-1" />
               Preview Bill
             </Button>
           </div>
@@ -263,30 +264,30 @@ export const InpatientBillingAggregator = ({
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Inpatient Bill Details</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg">Inpatient Bill Details</DialogTitle>
+            <DialogDescription className="text-sm">
               Review the bill items before finalizing the inpatient bill.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6">
-            <div className="grid gap-4">
-              <h3 className="font-medium">Bill Items</h3>
+          <div className="space-y-4">
+            <div className="grid gap-3">
+              <h3 className="font-medium text-sm">Bill Items</h3>
               <div className="space-y-2">
                 {billItems.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div key={index} className="flex items-center justify-between p-2 border rounded-lg">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{item.name}</span>
-                        <Badge variant={item.type === 'medication' ? 'default' : 'secondary'}>
+                        <span className="font-medium text-sm">{item.name}</span>
+                        <Badge variant={item.type === 'medication' ? 'default' : 'secondary'} className="text-xs">
                           {item.type}
                         </Badge>
                       </div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         Quantity: {item.quantity} × ₦{item.unit_price.toLocaleString()}
                       </div>
                     </div>
-                    <div className="font-medium">
+                    <div className="font-medium text-sm">
                       ₦{item.total_price.toLocaleString()}
                     </div>
                   </div>
@@ -296,22 +297,26 @@ export const InpatientBillingAggregator = ({
 
             <Separator />
 
-            <div className="flex items-center justify-between text-lg font-medium">
+            <div className="flex items-center justify-between text-base font-medium">
               <span>Total Amount:</span>
               <span>₦{totalAmount.toLocaleString()}</span>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex justify-end space-x-2 pt-3">
               <Button
                 variant="outline"
                 onClick={() => setShowPreviewDialog(false)}
                 disabled={isCreatingBill}
+                size="sm"
+                className="text-xs"
               >
                 Close
               </Button>
               <Button
                 onClick={handleFinalizeBill}
                 disabled={isCreatingBill}
+                size="sm"
+                className="text-xs"
               >
                 {isCreatingBill ? 'Creating Bill...' : 'Finalize Bill'}
               </Button>
