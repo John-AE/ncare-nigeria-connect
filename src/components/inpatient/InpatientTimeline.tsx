@@ -26,7 +26,8 @@ import {
   Stethoscope,
   ClipboardList,
   Clock,
-  User
+  User,
+  Activity
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
@@ -167,6 +168,8 @@ export const InpatientTimeline = ({ admissionId, refreshTrigger }: InpatientTime
         return ClipboardList;
       case 'procedure':
         return Stethoscope;
+      case 'service':
+        return Activity;
       default:
         return FileText;
     }
@@ -184,6 +187,8 @@ export const InpatientTimeline = ({ admissionId, refreshTrigger }: InpatientTime
         return 'bg-orange-50 border-orange-200 dark:bg-orange-950 dark:border-orange-800';
       case 'procedure':
         return 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800';
+      case 'service':
+        return 'bg-purple-50 border-purple-200 dark:bg-purple-950 dark:border-purple-800';
       default:
         return 'bg-gray-50 border-gray-200 dark:bg-gray-950 dark:border-gray-800';
     }
@@ -201,6 +206,8 @@ export const InpatientTimeline = ({ admissionId, refreshTrigger }: InpatientTime
         return 'bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-100';
       case 'procedure':
         return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100';
+      case 'service':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
     }
@@ -226,6 +233,18 @@ export const InpatientTimeline = ({ admissionId, refreshTrigger }: InpatientTime
             <div className="font-medium">{eventData.medication_name}</div>
             <div>Dosage: {eventData.dosage}</div>
             <div>Route: {eventData.route}</div>
+            {eventData.notes && <div className="text-muted-foreground">Notes: {eventData.notes}</div>}
+          </div>
+        );
+      case 'service':
+        return (
+          <div className="text-sm space-y-1">
+            {eventData.quantity && <div>Quantity: {eventData.quantity}</div>}
+            {eventData.unit_price && <div>Unit Price: ₦{eventData.unit_price.toLocaleString()}</div>}
+            {eventData.total_price && <div className="font-medium">Total Price: ₦{eventData.total_price.toLocaleString()}</div>}
+            {eventData.administered_at && (
+              <div>Administered: {format(new Date(eventData.administered_at), 'MMM dd, yyyy HH:mm')}</div>
+            )}
             {eventData.notes && <div className="text-muted-foreground">Notes: {eventData.notes}</div>}
           </div>
         );
@@ -288,6 +307,7 @@ export const InpatientTimeline = ({ admissionId, refreshTrigger }: InpatientTime
             <option value="doctor_note">Doctor Notes</option>
             <option value="nursing_note">Nursing Notes</option>
             <option value="procedure">Procedures</option>
+            <option value="service">Services</option>
           </select>
         </div>
       </div>
