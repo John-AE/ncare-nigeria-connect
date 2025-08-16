@@ -1,5 +1,5 @@
 /**
- * Inpatient Billing Aggregator
+ * Inpatient Billing Aggregator - FIXED VERSION
  * 
  * Displays minimum total bill for inpatient services and medications.
  * Provides preview and finalize bill functionality.
@@ -20,6 +20,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
@@ -31,6 +32,9 @@ interface BillItem {
   total_price: number;
   type: 'medication' | 'service';
   administered_at: string;
+  // Add these fields to properly map to bill_items table
+  medication_id?: string;
+  service_id?: string;
 }
 
 interface InpatientBillingAggregatorProps {
@@ -68,16 +72,16 @@ export const InpatientBillingAggregator = ({
 
     setIsLoading(true);
     try {
-      // Fetch medications - use separate query for pricing
+      // Fetch medications - FIXED: Get medication_id from inpatient_medications
       const { data: medications, error: medError } = await supabase
         .from('inpatient_medications')
-        .select('*')
+        .select('id, medication_id, medication_name, dosage, administered_at')
         .eq('admission_id', admissionId)
         .eq('hospital_id', profile.hospital_id);
 
       if (medError) throw medError;
 
-      // Fetch services with service details - fix the query
+      // Fetch services with service details - FIXED: Get service_id properly
       const { data: services, error: servicesError } = await supabase
         .from('inpatient_services')
         .select(`
@@ -96,7 +100,7 @@ export const InpatientBillingAggregator = ({
 
       if (servicesError) throw servicesError;
 
-      // Process medications with estimated pricing (₦500 per dose as default)
+      // Process medications - FIXED: Include medication_id for bill_items
       const medicationItems: BillItem[] = (medications || []).map(med => ({
         id: med.id,
         name: `${med.medication_name} (${med.dosage})`,
@@ -104,10 +108,11 @@ export const InpatientBillingAggregator = ({
         unit_price: 500, // Default medication cost
         total_price: 500,
         type: 'medication' as const,
-        administered_at: med.administered_at
+        administered_at: med.administered_at,
+        medication_id: med.medication_id // This is what goes to bill_items.medication_id
       }));
 
-      // Process services
+      // Process services - FIXED: Include service_id for bill_items
       const serviceItems: BillItem[] = (services || []).map(service => ({
         id: service.id,
         name: service.services?.name || 'Unknown Service',
@@ -115,7 +120,8 @@ export const InpatientBillingAggregator = ({
         unit_price: service.unit_price,
         total_price: service.total_price,
         type: 'service' as const,
-        administered_at: service.administered_at
+        administered_at: service.administered_at,
+        service_id: service.service_id // This is what goes to bill_items.service_id
       }));
 
       const allItems = [...medicationItems, ...serviceItems];
@@ -136,13 +142,31 @@ export const InpatientBillingAggregator = ({
 
     setIsCreatingBill(true);
     try {
-      // Create the main bill
+      // Check if bill already exists for this admission to prevent duplicates
+      const { data: existingBill, error: checkError } = await supabase
+        .from('bills')
+        .select('id')
+        .eq('patient_id', patientId)
+        .eq('bill_type', 'inpatient')
+        .eq('description', `Inpatient Services and Medications - Admission ${admissionId}`)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        throw checkError;
+      }
+
+      if (existingBill) {
+        toast.error('Bill already exists for this admission');
+        return;
+      }
+
+      // Create the main bill with unique description
       const { data: bill, error: billError } = await supabase
         .from('bills')
         .insert({
           patient_id: patientId,
           amount: totalAmount,
-          description: 'Inpatient Services and Medications',
+          description: `Inpatient Services and Medications - Admission ${admissionId}`,
           created_by: profile.user_id,
           hospital_id: profile.hospital_id,
           bill_type: 'inpatient'
@@ -152,11 +176,11 @@ export const InpatientBillingAggregator = ({
 
       if (billError) throw billError;
 
-      // Create bill items
+      // FIXED: Create bill items with correct medication_id and service_id
       const billItemsData = billItems.map(item => ({
         bill_id: bill.id,
-        service_id: item.type === 'service' ? item.id : null,
-        medication_id: item.type === 'medication' ? item.id : null,
+        service_id: item.type === 'service' ? item.service_id : null,
+        medication_id: item.type === 'medication' ? item.medication_id : null,
         quantity: item.quantity,
         unit_price: item.unit_price,
         total_price: item.total_price
@@ -173,7 +197,11 @@ export const InpatientBillingAggregator = ({
       onBillCreated?.();
     } catch (error) {
       console.error('Error creating bill:', error);
-      toast.error('Failed to create bill');
+      if (error.code === '23505') { // Unique constraint violation
+        toast.error('Bill already exists for this admission');
+      } else {
+        toast.error('Failed to create bill: ' + error.message);
+      }
     } finally {
       setIsCreatingBill(false);
     }
@@ -231,11 +259,14 @@ export const InpatientBillingAggregator = ({
         </CardContent>
       </Card>
 
-      {/* Bill Preview Dialog */}
+      {/* Bill Preview Dialog - FIXED: Added DialogDescription */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Inpatient Bill Details</DialogTitle>
+            <DialogDescription>
+              Review the bill items before finalizing the inpatient bill.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
