@@ -230,77 +230,78 @@ export const AddServiceDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Add Service to Timeline</DialogTitle>
-          </DialogHeader>
+      <DialogContent className="max-w-6xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 py-4 border-b">
+          <DialogTitle className="text-base">Add Service to Timeline</DialogTitle>
+        </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
-            {/* Available Services */}
-            <Card className="flex flex-col">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Available Services</CardTitle>
-                  <ServiceManagementDialog onServiceUpdated={fetchServices} />
-                </div>
-                
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search services..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardHeader>
+        <div className="grid grid-cols-2 gap-4 flex-1 min-h-0 p-4">
+          {/* Available Services */}
+          <Card className="flex flex-col h-full">
+            <CardHeader className="pb-2 px-3 py-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium">Available Services</CardTitle>
+                <ServiceManagementDialog onServiceUpdated={fetchServices} />
+              </div>
               
-              <CardContent className="flex-1 overflow-hidden">
-                <ScrollArea className="h-full">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <Input
+                    placeholder="Search services..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-7 h-8 text-xs"
+                  />
+                </div>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-[140px] h-8 text-xs">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent className="z-50">
+                    <SelectItem value="all" className="text-xs">All Categories</SelectItem>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category} className="text-xs">
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="flex-1 overflow-hidden p-3">
+              <ScrollArea className="h-full">
+                <div className="pr-3">
                   {isLoading ? (
-                    <div className="flex items-center justify-center h-32">
-                      <div className="text-sm text-muted-foreground">Loading services...</div>
+                    <div className="flex items-center justify-center h-24">
+                      <div className="text-xs text-muted-foreground">Loading services...</div>
                     </div>
                   ) : Object.keys(groupedServices).length === 0 ? (
-                    <div className="flex items-center justify-center h-32">
-                      <div className="text-sm text-muted-foreground">No services found</div>
+                    <div className="flex items-center justify-center h-24">
+                      <div className="text-xs text-muted-foreground">No services found</div>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {Object.entries(groupedServices).map(([category, categoryServices]) => 
                         categoryServices.length > 0 && (
                           <div key={category}>
-                            <h4 className="font-medium text-sm text-muted-foreground mb-2">
+                            <h4 className="font-medium text-xs text-muted-foreground mb-1.5 uppercase tracking-wide">
                               {category}
                             </h4>
-                            <div className="space-y-2">
+                            <div className="space-y-1.5">
                               {categoryServices.map(service => (
                                 <div
                                   key={service.id}
-                                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                                  className="flex items-center justify-between p-2 border rounded-md hover:bg-muted/50 transition-colors"
                                 >
-                                  <div className="flex-1">
-                                    <div className="font-medium">{service.name}</div>
-                                    <div className="text-sm text-primary font-semibold">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-xs truncate">{service.name}</div>
+                                    <div className="text-xs text-primary font-semibold">
                                       ₦{service.price.toLocaleString()}
                                     </div>
                                     {service.description && (
-                                      <div className="text-xs text-muted-foreground mt-1">
+                                      <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
                                         {service.description}
                                       </div>
                                     )}
@@ -308,9 +309,9 @@ export const AddServiceDialog = ({
                                   <Button
                                     size="sm"
                                     onClick={() => addService(service)}
-                                    className="ml-2"
+                                    className="ml-2 h-6 w-6 p-0"
                                   >
-                                    <Plus className="h-4 w-4" />
+                                    <Plus className="h-3 w-3" />
                                   </Button>
                                 </div>
                               ))}
@@ -320,89 +321,96 @@ export const AddServiceDialog = ({
                       )}
                     </div>
                   )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
 
-            {/* Selected Services */}
-            <Card className="flex flex-col">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Selected Services</CardTitle>
-              </CardHeader>
-              
-              <CardContent className="flex-1 overflow-hidden">
-                <ScrollArea className="h-full">
+          {/* Selected Services */}
+          <Card className="flex flex-col h-full">
+            <CardHeader className="pb-2 px-3 py-3">
+              <CardTitle className="text-sm font-medium">Selected Services</CardTitle>
+            </CardHeader>
+            
+            <CardContent className="flex-1 overflow-hidden p-3">
+              <ScrollArea className="h-full">
+                <div className="pr-3">
                   {serviceItems.length === 0 ? (
-                    <div className="flex items-center justify-center h-32">
-                      <div className="text-sm text-muted-foreground">No services selected</div>
+                    <div className="flex items-center justify-center h-24">
+                      <div className="text-xs text-muted-foreground">No services selected</div>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {serviceItems.map(item => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between p-3 border rounded-lg"
+                          className="flex items-center justify-between p-2 border rounded-md"
                         >
-                          <div className="flex-1">
-                            <div className="font-medium">{item.name}</div>
-                            <div className="text-sm text-muted-foreground">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-xs truncate">{item.name}</div>
+                            <div className="text-[10px] text-muted-foreground">
                               ₦{item.unit_price.toLocaleString()} each
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="h-6 w-6 p-0"
                             >
-                              <Minus className="h-4 w-4" />
+                              <Minus className="h-3 w-3" />
                             </Button>
-                            <span className="w-8 text-center">{item.quantity}</span>
+                            <span className="w-6 text-center text-xs">{item.quantity}</span>
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="h-6 w-6 p-0"
                             >
-                              <Plus className="h-4 w-4" />
+                              <Plus className="h-3 w-3" />
                             </Button>
-                            <div className="ml-2 font-medium">
+                            <div className="ml-1.5 font-medium text-xs">
                               ₦{item.total_price.toLocaleString()}
                             </div>
                           </div>
                         </div>
                       ))}
                       
-                      <Separator />
+                      <Separator className="my-2" />
                       
-                      <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                        <span className="font-medium">Total:</span>
-                        <span className="font-bold text-lg">
+                      <div className="flex justify-between items-center p-2 bg-muted rounded-md">
+                        <span className="font-medium text-xs">Total:</span>
+                        <span className="font-bold text-sm">
                           ₦{calculateTotal().toLocaleString()}
                         </span>
                       </div>
                     </div>
                   )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
 
-          <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isAdding}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddServices}
-              disabled={serviceItems.length === 0 || isAdding}
-            >
-              {isAdding ? 'Adding...' : `Add ${serviceItems.length} Service(s)`}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        <div className="flex justify-end space-x-2 p-4 border-t bg-background">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isAdding}
+            className="h-8 text-xs"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAddServices}
+            disabled={serviceItems.length === 0 || isAdding}
+            className="h-8 text-xs"
+          >
+            {isAdding ? 'Adding...' : `Add ${serviceItems.length} Service(s)`}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
