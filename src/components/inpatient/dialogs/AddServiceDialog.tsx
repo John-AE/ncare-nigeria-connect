@@ -230,38 +230,38 @@ export const AddServiceDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
-        <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle className="text-base">Add Service to Timeline</DialogTitle>
+      <DialogContent className="max-w-5xl max-h-[80vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-4 py-2 border-b shrink-0">
+          <DialogTitle className="text-sm">Add Service to Timeline</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-4 flex-1 min-h-0 p-4">
+        <div className="grid grid-cols-2 gap-3 flex-1 min-h-0 p-3">
           {/* Available Services */}
           <Card className="flex flex-col h-full">
-            <CardHeader className="pb-2 px-3 py-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">Available Services</CardTitle>
+            <CardHeader className="pb-1 px-2 py-2 shrink-0">
+              <div className="flex items-center justify-between mb-1">
+                <CardTitle className="text-xs font-medium">Available Services</CardTitle>
                 <ServiceManagementDialog onServiceUpdated={fetchServices} />
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 <div className="relative flex-1">
-                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                  <Search className="absolute left-1.5 top-1/2 transform -translate-y-1/2 h-2.5 w-2.5 text-muted-foreground" />
                   <Input
                     placeholder="Search services..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-7 h-8 text-xs"
+                    className="pl-6 h-6 text-[10px]"
                   />
                 </div>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[140px] h-8 text-xs">
+                  <SelectTrigger className="w-[120px] h-6 text-[10px]">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
-                  <SelectContent className="z-50">
-                    <SelectItem value="all" className="text-xs">All Categories</SelectItem>
+                  <SelectContent className="z-[100] max-h-48">
+                    <SelectItem value="all" className="text-[10px]">All Categories</SelectItem>
                     {categories.map(category => (
-                      <SelectItem key={category} value={category} className="text-xs">
+                      <SelectItem key={category} value={category} className="text-[10px]">
                         {category}
                       </SelectItem>
                     ))}
@@ -270,142 +270,138 @@ export const AddServiceDialog = ({
               </div>
             </CardHeader>
             
-            <CardContent className="flex-1 overflow-hidden p-3">
-              <ScrollArea className="h-full">
-                <div className="pr-3">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center h-24">
-                      <div className="text-xs text-muted-foreground">Loading services...</div>
-                    </div>
-                  ) : Object.keys(groupedServices).length === 0 ? (
-                    <div className="flex items-center justify-center h-24">
-                      <div className="text-xs text-muted-foreground">No services found</div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {Object.entries(groupedServices).map(([category, categoryServices]) => 
-                        categoryServices.length > 0 && (
-                          <div key={category}>
-                            <h4 className="font-medium text-xs text-muted-foreground mb-1.5 uppercase tracking-wide">
-                              {category}
-                            </h4>
-                            <div className="space-y-1.5">
-                              {categoryServices.map(service => (
-                                <div
-                                  key={service.id}
-                                  className="flex items-center justify-between p-2 border rounded-md hover:bg-muted/50 transition-colors"
-                                >
-                                  <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-xs truncate">{service.name}</div>
-                                    <div className="text-xs text-primary font-semibold">
-                                      ₦{service.price.toLocaleString()}
-                                    </div>
-                                    {service.description && (
-                                      <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
-                                        {service.description}
-                                      </div>
-                                    )}
+            <CardContent className="flex-1 overflow-auto p-2">
+              <div className="space-y-2">
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-20">
+                    <div className="text-[10px] text-muted-foreground">Loading services...</div>
+                  </div>
+                ) : Object.keys(groupedServices).length === 0 ? (
+                  <div className="flex items-center justify-center h-20">
+                    <div className="text-[10px] text-muted-foreground">No services found</div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {Object.entries(groupedServices).map(([category, categoryServices]) => 
+                      categoryServices.length > 0 && (
+                        <div key={category}>
+                          <h4 className="font-medium text-[10px] text-muted-foreground mb-1 uppercase tracking-wide">
+                            {category}
+                          </h4>
+                          <div className="space-y-1">
+                            {categoryServices.map(service => (
+                              <div
+                                key={service.id}
+                                className="flex items-center justify-between p-1.5 border rounded-sm hover:bg-muted/50 transition-colors"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-[10px] truncate">{service.name}</div>
+                                  <div className="text-[9px] text-primary font-semibold">
+                                    ₦{service.price.toLocaleString()}
                                   </div>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => addService(service)}
-                                    className="ml-2 h-6 w-6 p-0"
-                                  >
-                                    <Plus className="h-3 w-3" />
-                                  </Button>
+                                  {service.description && (
+                                    <div className="text-[8px] text-muted-foreground mt-0.5 line-clamp-1">
+                                      {service.description}
+                                    </div>
+                                  )}
                                 </div>
-                              ))}
-                            </div>
+                                <Button
+                                  size="sm"
+                                  onClick={() => addService(service)}
+                                  className="ml-1.5 h-5 w-5 p-0"
+                                >
+                                  <Plus className="h-2.5 w-2.5" />
+                                </Button>
+                              </div>
+                            ))}
                           </div>
-                        )
-                      )}
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
           {/* Selected Services */}
           <Card className="flex flex-col h-full">
-            <CardHeader className="pb-2 px-3 py-3">
-              <CardTitle className="text-sm font-medium">Selected Services</CardTitle>
+            <CardHeader className="pb-1 px-2 py-2 shrink-0">
+              <CardTitle className="text-xs font-medium">Selected Services</CardTitle>
             </CardHeader>
             
-            <CardContent className="flex-1 overflow-hidden p-3">
-              <ScrollArea className="h-full">
-                <div className="pr-3">
-                  {serviceItems.length === 0 ? (
-                    <div className="flex items-center justify-center h-24">
-                      <div className="text-xs text-muted-foreground">No services selected</div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {serviceItems.map(item => (
-                        <div
-                          key={item.id}
-                          className="flex items-center justify-between p-2 border rounded-md"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-xs truncate">{item.name}</div>
-                            <div className="text-[10px] text-muted-foreground">
-                              ₦{item.unit_price.toLocaleString()} each
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="h-6 w-6 p-0"
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="w-6 text-center text-xs">{item.quantity}</span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="h-6 w-6 p-0"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                            <div className="ml-1.5 font-medium text-xs">
-                              ₦{item.total_price.toLocaleString()}
-                            </div>
+            <CardContent className="flex-1 overflow-auto p-2">
+              <div className="space-y-1.5">
+                {serviceItems.length === 0 ? (
+                  <div className="flex items-center justify-center h-20">
+                    <div className="text-[10px] text-muted-foreground">No services selected</div>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {serviceItems.map(item => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-1.5 border rounded-sm"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-[10px] truncate">{item.name}</div>
+                          <div className="text-[9px] text-muted-foreground">
+                            ₦{item.unit_price.toLocaleString()} each
                           </div>
                         </div>
-                      ))}
-                      
-                      <Separator className="my-2" />
-                      
-                      <div className="flex justify-between items-center p-2 bg-muted rounded-md">
-                        <span className="font-medium text-xs">Total:</span>
-                        <span className="font-bold text-sm">
-                          ₦{calculateTotal().toLocaleString()}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="h-5 w-5 p-0"
+                          >
+                            <Minus className="h-2.5 w-2.5" />
+                          </Button>
+                          <span className="w-5 text-center text-[10px]">{item.quantity}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="h-5 w-5 p-0"
+                          >
+                            <Plus className="h-2.5 w-2.5" />
+                          </Button>
+                          <div className="ml-1 font-medium text-[10px] min-w-0">
+                            ₦{item.total_price.toLocaleString()}
+                          </div>
+                        </div>
                       </div>
+                    ))}
+                    
+                    <Separator className="my-1.5" />
+                    
+                    <div className="flex justify-between items-center p-1.5 bg-muted rounded-sm">
+                      <span className="font-medium text-[10px]">Total:</span>
+                      <span className="font-bold text-xs">
+                        ₦{calculateTotal().toLocaleString()}
+                      </span>
                     </div>
-                  )}
-                </div>
-              </ScrollArea>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="flex justify-end space-x-2 p-4 border-t bg-background">
+        <div className="flex justify-end space-x-2 p-3 border-t bg-background shrink-0">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isAdding}
-            className="h-8 text-xs"
+            className="h-7 text-[10px] px-3"
           >
             Cancel
           </Button>
           <Button
             onClick={handleAddServices}
             disabled={serviceItems.length === 0 || isAdding}
-            className="h-8 text-xs"
+            className="h-7 text-[10px] px-3"
           >
             {isAdding ? 'Adding...' : `Add ${serviceItems.length} Service(s)`}
           </Button>
