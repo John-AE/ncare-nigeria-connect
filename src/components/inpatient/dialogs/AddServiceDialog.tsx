@@ -210,7 +210,7 @@ export const AddServiceDialog = ({
         }
       }
 
-      toast.success(`${serviceItems.length} service(s) added to patient timeline`);
+      toast.success(`${serviceItems.length} service(s) added to timeline`);
       setServiceItems([]);
       onServiceAdded?.();
       onOpenChange(false);
@@ -230,12 +230,12 @@ export const AddServiceDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-7xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Add Service to Patient Timeline</DialogTitle>
+            <DialogTitle>Add Service to Timeline</DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-6 h-[600px]">
+          <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
             {/* Available Services */}
             <Card className="flex flex-col">
               <CardHeader className="pb-3">
